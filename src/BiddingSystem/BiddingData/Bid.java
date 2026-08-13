@@ -12,21 +12,13 @@ public class Bid{
         this.suit = s;
     }
 
-    public int getLevel() {
-        return level;
-    }
+    public int getLevel() {return level; }
 
-    public Suit getSuit() {
-        return suit;
-    }
+    public Suit getSuit() { return suit; }
 
-    public void setLevel(int level) {
-        this.level = level;
-    }
+    public void setLevel(int level) { this.level = level; }
 
-    public void setSuit(Suit suit) {
-        this.suit = suit;
-    }
+    public void setSuit(Suit suit) { this.suit = suit; }
 
 
     public int compareBid(Bid otherBid) {
