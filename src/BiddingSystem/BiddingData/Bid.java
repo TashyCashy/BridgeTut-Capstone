@@ -2,12 +2,13 @@ package BiddingSystem.BiddingData;
 
 import logic.Suit;
 
-public class Bid implements Comparable<Bid>{
+public class Bid{
     private int level; //# from 1-7
     private  Suit suit; //the suit that was bid
 
     public Bid(int l, Suit s) {
         this.level = l;
+        this.level = Math.clamp(level, 1, 7); // value cant be bigger than 7 or smaller than 1
         this.suit = s;
     }
 
@@ -27,8 +28,8 @@ public class Bid implements Comparable<Bid>{
         this.suit = suit;
     }
 
-    @Override
-    public int compareTo(Bid otherBid) {
+
+    public int compareBid(Bid otherBid) {
         //the bid being compared to is already bigger if it's level is higher
         if (otherBid.getLevel() > this.level) {
             return -1; // this instance is smaller than the argued instance
