@@ -13,5 +13,11 @@ public class BidEntry {
         this.player = p;
     }
 
+    public PlayerAction getAction() {
+        return action;
+    }
 
+    public Player getPlayer() {
+        return player;
+    }
 }
