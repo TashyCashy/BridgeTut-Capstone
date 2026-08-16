@@ -1,6 +1,7 @@
 package BiddingSystem.BiddingData;
 
 import BiddingSystem.BiddingData.Actions.ContractBid;
+import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.Player;
 
 import java.util.ArrayList;
@@ -46,22 +47,18 @@ public class BiddingHistory {
     }
 
     public BidEntry getLargestBid() {
-        if (!bidsMade.isEmpty()) {
-            int count = 0;
-            //bid history is not empty can look for the highest
-            BidEntry max = bidsMade.getFirst();
-            while (count < bidsMade.size()) {
-                if (max.getAction().isBigger(bidsMade.get(count).getAction())) {
-                    max = bidsMade.get(count);
-                    count++;
-                }
-                count++;
+        BidEntry max = null;
+        for (BidEntry entry : bidsMade){
+            //only look at contractual bids, skip passes will work on doubles and redoubles when added
+            if (!(entry.getAction() instanceof ContractBid)){
+                //skip
+                continue;
             }
-            return max;
-
+            if(max ==null || !max.getAction().isBigger(entry.getAction())){
+                max = entry;
+            }
         }
-        //bidsMade is empty, return nothing
-        return null;
+        return max;
     }
 
     public boolean checkNoContractBidMade (){
