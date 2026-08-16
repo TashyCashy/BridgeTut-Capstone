@@ -21,7 +21,7 @@ public class ContractBid extends PlayerAction {
     public void setSuit(Suit suit) { this.suit = suit; }
 
 
-    public boolean isBigger(ContractBid otherBid) {
+    public boolean isBigger(PlayerAction otherBid) {
         //the bid being compared to is already bigger if it's level is higher
         if (otherBid.getLevel() > this.level) {
             return false; // this instance is smaller than the argued instance

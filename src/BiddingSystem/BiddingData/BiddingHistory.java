@@ -1,5 +1,6 @@
 package BiddingSystem.BiddingData;
 
+import BiddingSystem.BiddingData.Actions.ContractBid;
 import BiddingSystem.Player;
 
 import java.util.ArrayList;
@@ -8,34 +9,35 @@ import java.util.List;
 public class BiddingHistory {
     //since we append to the arraylist the latestbid will always be the highest bid made, but what about passes?
     ArrayList<BidEntry> bidsMade;
-    public BiddingHistory (){
+
+    public BiddingHistory() {
         bidsMade = new ArrayList<>();
     }
 
-    public void addBid (BidEntry bid){
+    public void addBid(BidEntry bid) {
         bidsMade.add(bid);
     }
 
-    public void clearHistory (){
+    public void clearHistory() {
         //in the case of passing out, we will clear the list so we can reuse it for the new bidding phase
         bidsMade.clear();
     }
 
     //number of bids made so far
-    public int getSize (){
+    public int getSize() {
         return bidsMade.size();
     }
 
-    public BidEntry getFirstBid (){
+    public BidEntry getFirstBid() {
         return bidsMade.getFirst();
     }
 
-    public BidEntry getLastBid (){
+    public BidEntry getLastBid() {
         return bidsMade.getLast();
     }
 
-    public BidEntry getEntryAtIndex (int index){
-        if (index < this.getSize()){
+    public BidEntry getEntryAtIndex(int index) {
+        if (index < this.getSize()) {
             // <= because index starts at 0
             return bidsMade.get(index);
         }
@@ -43,18 +45,33 @@ public class BiddingHistory {
         return null;
     }
 
-    public BidEntry getLargestBid () {
+    public BidEntry getLargestBid() {
         if (!bidsMade.isEmpty()) {
-            int count = 0
+            int count = 0;
             //bid history is not empty can look for the highest
             BidEntry max = bidsMade.getFirst();
             while (count < bidsMade.size()) {
-
-
+                if (max.getAction().isBigger(bidsMade.get(count).getAction())) {
+                    max = bidsMade.get(count);
+                    count++;
+                }
+                count++;
             }
+            return max;
 
         }
+        //bidsMade is empty, return nothing
+        return null;
     }
 
-
+    public boolean checkNoContractBidMade (){
+        //check if there have been any contractual bids made yet
+        for (BidEntry bid: bidsMade){
+            if (bid.getAction() instanceof ContractBid){
+                return false;
+            }
+        }
+        //if not that means only passes have been made (no double or redouble added yet)
+        return true;
+    }
 }
