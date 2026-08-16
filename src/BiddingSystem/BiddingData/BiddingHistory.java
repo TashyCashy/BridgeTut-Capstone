@@ -35,7 +35,8 @@ public class BiddingHistory {
     }
 
     public BidEntry getEntryAtIndex (int index){
-        if (index <= this.getSize()){
+        if (index < this.getSize()){
+            // <= because index starts at 0
             return bidsMade.get(index);
         }
         //index is bigger than number of current bids
