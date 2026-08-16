@@ -43,5 +43,18 @@ public class BiddingHistory {
         return null;
     }
 
+    public BidEntry getLargestBid () {
+        if (!bidsMade.isEmpty()) {
+            int count = 0
+            //bid history is not empty can look for the highest
+            BidEntry max = bidsMade.getFirst();
+            while (count < bidsMade.size()) {
+
+
+            }
+
+        }
+    }
+
 
 }

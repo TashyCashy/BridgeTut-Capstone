@@ -8,7 +8,7 @@ public class ContractBid extends PlayerAction {
 
     public ContractBid(int l, Suit s) {
         this.level = l;
-        this.level = Math.clamp(level, 1, 7); // value cant be bigger than 7 or smaller than 1
+        //this.level = Math.clamp(level, 1, 7); // value cant be bigger than 7 or smaller than 1
         this.suit = s;
     }
 
