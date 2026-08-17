@@ -16,7 +16,7 @@ public class BiddingValidator {
             //any bid is valid, since only passes have been made, will add a check for passing out or 3 passes later.
             return true;
         }
-        else {
+
             BidEntry highestBid = bH.getLargestBid();
             if (pA instanceof ContractBid cB) {
                 //if proposed action is bigger than the current largest bid return true
@@ -30,7 +30,7 @@ public class BiddingValidator {
             }
 
 
-        }
+
 
         }
 }

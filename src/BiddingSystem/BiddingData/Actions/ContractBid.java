@@ -42,6 +42,6 @@ public class ContractBid extends PlayerAction {
 
     @Override
     public String getDisplayString() {
-        return "ContractBid";
+        return "ContractBid-> " + "Level: " +level + ", Suit: " + suit;
     }
 }

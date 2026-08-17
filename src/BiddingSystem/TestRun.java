@@ -70,11 +70,8 @@ public class TestRun {
         Player actingPlayer = manager.getCurrentPlayer();
         System.out.println(actingPlayer.getUsername() + " attempts: " + action.getDisplayString());
 
-        manager.ActionPlayed(action);
-        // TODO once Option A is implemented:
         boolean accepted = manager.ActionPlayed(action);
          System.out.println("  -> " + (accepted ? "ACCEPTED" : "REJECTED"));
-
         System.out.println("  Next to act: " + manager.getCurrentPlayer().getUsername());
     }
 }
