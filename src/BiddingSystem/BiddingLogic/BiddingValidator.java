@@ -7,18 +7,17 @@ import BiddingSystem.BiddingData.BidEntry;
 import BiddingSystem.BiddingData.BiddingHistory;
 
 public class BiddingValidator {
-    BiddingHistory biddingHistory;
-    public BiddingValidator (BiddingHistory bH){
-        this.biddingHistory = bH;
+    //BiddingHistory biddingHistory;
+    public BiddingValidator (){
     }
 
-   public boolean validateBid (PlayerAction pA){
-        if (biddingHistory.checkNoContractBidMade()){
+   public boolean validateBid (PlayerAction pA, BiddingHistory bH){
+        if (bH.checkNoContractBidMade()){
             //any bid is valid, since only passes have been made, will add a check for passing out or 3 passes later.
             return true;
         }
         else {
-            BidEntry highestBid = biddingHistory.getLargestBid();
+            BidEntry highestBid = bH.getLargestBid();
             if (pA instanceof ContractBid cB) {
                 //if proposed action is bigger than the current largest bid return true
                 //if not return false
