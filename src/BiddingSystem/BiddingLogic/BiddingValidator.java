@@ -12,24 +12,26 @@ public class BiddingValidator {
         this.biddingHistory = bH;
     }
 
-    boolean validateBid (){
-       BidEntry latestBid = biddingHistory.getLastBid();
-        if (latestBid != null){
-            PlayerAction latestAction = biddingHistory.getLastBid().getAction();
-            //no need to check if it is an instance of playeraction because the array of biddinghistory onluy accepts playeraction objects
-            if (latestAction instanceof PassAction){
-                //is a pass no need to check any further can move to next player
+   public boolean validateBid (PlayerAction pA){
+        if (biddingHistory.checkNoContractBidMade()){
+            //any bid is valid, since only passes have been made, will add a check for passing out or 3 passes later.
+            return true;
+        }
+        else {
+            BidEntry highestBid = biddingHistory.getLargestBid();
+            if (pA instanceof ContractBid cB) {
+                //if proposed action is bigger than the current largest bid return true
+                //if not return false
+                return cB.isBigger(highestBid.getAction());
+            }
+            //again double and redouble have not been implemented yet.
+            else {
+                //if proposed bid is a pass it is valid, the only thing needed to be added now it the double and redouble feature where i will check if the player who played before is an enemy or team member
                 return true;
             }
-            else if (latestAction instanceof ContractBid){
-                //check if this bid is greater than the current maximum bid.
-               if (latestBid.getAction().isBigger(biddingHistory.getLargestBid().getAction())){
-                   return true;
-                }
-            }
+
 
         }
-        return false;
+
         }
-    //checks if bids are legal
 }
