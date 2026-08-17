@@ -80,115 +80,189 @@ class LoginPage(Frame):
 
 
 class HomePage(Frame):
-    def __init__(self, parent, controller):
-            super().__init__(parent, background="#0f4d3f")
+     def __init__(self, parent, controller):
+          super().__init__(parent, background="#0f4d3f")
+          self.controller= controller
 
-            self.grid_rowconfigure(0, weight=0)
-            self.grid_rowconfigure(1, weight=1)
-            self.grid_columnconfigure(0, weight=1)
+          menu= Frame(self, bg="#0f4d3f")
+          menu.place(relx=0.5, rely=0.5, anchor="center")
 
-            header_frame= Frame(self, bg="darkgreen", height=80)
-            header_frame.grid_propagate(False)
-            table_frame= Frame(self, bg="darkgreen")
+          Label(menu,
+                text="Welcome!",
+                font=("Georgia", 38, "italic"),
+                bg="#0f4d3f",
+                fg="white").pack(pady=(0,40))
 
-            header_frame.grid(row=0, column=0, sticky="ew")
-            table_frame.grid(row=1, column=0, sticky="nsew")
+          Button(menu,
+                 text="Play Game",
+                 font=("Arial",13,"bold"),
+                 bg="#126B4F",
+                 width=40,
+                 fg="white",
+                 relief="flat",
+                 command=lambda: controller.show_frame(GamePage)).pack(fill="x",pady=18, ipady=10)
 
-            Label(header_frame,
-                  text="North/South tricks: 0   East/West tricks:0",
-                  bg="darkgreen",
-                  fg="white"
-                ).grid(row=0, column=0, pady=20)
+          Button(menu,
+                 text="Tutorial",
+                 font=("Arial",13,"bold"),
+                 width=40,
+                 bg="#126B4F",
+                 fg="white",
+                 relief="flat",
+                 command=lambda: controller.show_frame(TutorialPage)).pack(fill="x",pady=18, ipady=10)
 
-            table_frame.grid_rowconfigure(0, minsize=50)
-            table_frame.grid_rowconfigure(1, weight=1)
-            table_frame.grid_rowconfigure(2, minsize=50)
+          Button(menu,
+                 text="Game History",
+                 font=("Arial",13,"bold"),
+                 bg="#126B4F",
+                 width=40,
+                 fg="white",
+                 relief="flat",
+                 command=lambda: controller.show_frame(ResultPage)).pack(fill="x",pady=18, ipady=10)  
 
-            table_frame.grid_columnconfigure(0, minsize=70)
-            table_frame.grid_columnconfigure(1, weight=10)
-            table_frame.grid_columnconfigure(2, minsize=70)
-
-            north_frame= Frame(table_frame, bg="darkgreen")
-            west_frame= Frame(table_frame, bg="darkgreen")
-            centre_frame= Frame(table_frame, bg="darkgreen")
-            east_frame= Frame(table_frame, bg="darkgreen")
-            south_frame= Frame(table_frame, bg="darkgreen")
-
-            north_frame.grid(row=0, column=0, columnspan=3, sticky="n")
-            west_frame.grid(row=1, column=0)
-            centre_frame.grid(row=1, column=1, sticky="nsew")
-            east_frame.grid(row=1, column=2)
-            south_frame.grid(row=2, column=0, columnspan=3, sticky="s")
-
-            centre_frame.grid_rowconfigure(0, weight=1)
-            centre_frame.grid_columnconfigure(0, weight=1)
-            self.centre_card_label=Label( centre_frame,
-                                         text="",
-                                         font=("Arial",16),
-                                         bg="green",
-                                         fg="white")
-            self.centre_card_label.grid(row=0, column=0, padx=20, pady=20)
-            #displaying cards on all sides
-            #south
-            self.card_images=[]
-
-            for i in range(13):
-                 img= self.resize_cards("png/C2.png")
-                 self.card_images.append(img)
-
-                 btn= Button(south_frame, 
-                             image=img, 
-                             borderwidth=0,
-                             command=lambda i=img: self.play_card(i))
-                 btn.grid(row=0, column=i, padx=0)
-
-            #north
-            for i in range(13):
-                img= self.resize_cards("png/S2.png")
-                self.card_images.append(img)
-            
-                btn= Button(north_frame, 
-                            image=img, 
-                            borderwidth=0,
-                            command=lambda i=img: self.play_card(i))
-                btn.grid(row=0, column=i, padx=0)
-
-            #east
-            for i in range(13):
-                 img= self.resize_cards("png/D2.png")
-                 self.card_images.append(img)
-            
-                 btn= Button(east_frame, 
-                             image=img, 
-                             borderwidth=0,
-                             command=lambda i=img: self.play_card(i))
-                 btn.grid(row=i, column=0, pady=0)
-            self.after(100, lambda: print(east_frame.winfo_height()))
-
-            #west
-            for i in range(13):
-                img= self.resize_cards("png/H2.png", 30, 45)
-                self.card_images.append(img)
-            
-                btn= Button(west_frame, 
-                            image=img, 
-                            borderwidth=0,
-                            command=lambda i=img: self.play_card(i))
-                btn.grid(row=i, column=0, pady=0)
-
-    def play_card(self, image):
-         self.centre_card_label.config(image= image)
-         self.centre_card_label.image=image
-
-    def resize_cards(self, card, width=40, height=60):
-      card_image=Image.open(card)
-      resized_card= card_image.resize((width,height))   
-      return ImageTk.PhotoImage(resized_card)        
 
 class GamePage(Frame):
      def __init__(self, parent, controller):
-             super().__init__(parent)
-             Label(self, text="").pack()
+             super().__init__(parent, background="#0f4d3f")
+             self.controller= controller
+
+             #grid layout for the board
+             self.grid_rowconfigure(0, weight=0)
+             self.grid_rowconfigure(1, weight=1)
+             self.grid_rowconfigure(2, weight=0)
+             self.grid_columnconfigure(0, weight=1)
+
+             #Creating header which has the option to go back to menu and clues
+             header= Frame(self, bg="#123f35", height=60)
+             header.grid(row=0, column=0, sticky="ew")
+             header.grid_propagate(False)
+
+             Label(header,
+                   text="North/South tricks: 0   East/West tricks:0",
+                   font=("Arial",12,"bold"),
+                   bg="darkgreen",
+                   fg="white").pack(side="left", padx=30)
+
+             menu_button= Menubutton(header,
+                                     text="Menu",
+                                     font=("Arial",13,"bold"),
+                                     bg="#126B4F",
+                                     fg="white",
+                                     relief="flat")
+             menu_button.pack(side="right", padx=30)
+
+             drop_down= Menu(menu_button,
+                             tearoff=0,
+                             bg="white",
+                             fg="#126B4F",
+                             font=("Arial",11))
+
+             drop_down.add_command(label="Home",
+                                   command= lambda: controller.show_frame(HomePage))
+
+             drop_down.add_command(label="Hint",
+                                    command= lambda: controller.show_hint)
+
+             drop_down.add_command(label="History",
+                                   command= lambda: controller.show_frame(ResultPage))
+
+             drop_down.add_command(label="Logout",
+                                   command= lambda: controller.show_frame(LoginPage))
+
+             menu_button.config(menu=drop_down)
+
+             #Creating game table
+             table= Frame(self,
+                          bg="#126B4F",
+                          bd=5,
+                          relief="ridge")
+             table.grid(row=1, column=0, sticky="nsew")
+
+             #Creating correct table grid
+             table.grid_rowconfigure(0, minsize=70)
+             table.grid_rowconfigure(1, weight=1)
+             table.grid_rowconfigure(2, minsize=80)
+             
+             table.grid_columnconfigure(0, minsize=100)
+             table.grid_columnconfigure(1, weight=1)
+             table.grid_columnconfigure(2, minsize=100)
+
+             north_frame= Frame(table, bg="darkgreen")
+             west_frame= Frame(table, bg="darkgreen")
+             centre_frame= Frame(table, bg="darkgreen", bd=3, relief="ridge")
+             east_frame= Frame(table, bg="darkgreen")
+             south_frame= Frame(table, bg="darkgreen")
+             
+             north_frame.grid(row=0, column=0, columnspan=3, sticky="n")
+             west_frame.grid(row=1, column=0, sticky="ns")
+             centre_frame.grid(row=1, column=1, sticky="nsew", padx=30, pady=20)
+             east_frame.grid(row=1, column=2, sticky="ns")
+             south_frame.grid(row=2, column=0, columnspan=3, sticky="s")
+
+             centre_frame.grid_rowconfigure(0, weight=1)
+             centre_frame.grid_columnconfigure(0, weight=1)
+
+             self.centre_card_label=Label( centre_frame,
+                                          text="",
+                                          font=("Arial",16),
+                                          bg="green",
+                                          fg="white")
+             self.centre_card_label.grid(row=1, column=0, padx=40, pady=20)
+             #displaying cards on all sides
+             #south
+             self.card_images=[]
+             
+             for i in range(13):
+                  img= self.resize_cards("png/C2.png", 40, 60)
+                  self.card_images.append(img)
+             
+                  btn= Button(south_frame, 
+                              image=img, 
+                              borderwidth=0,
+                              command=lambda image=img: self.play_card(image))
+                  btn.pack(side="left", padx=1)
+             
+             #north
+             for i in range(13):
+                 img= self.resize_cards("png/S2.png", 40, 60)
+                 self.card_images.append(img)
+             
+                 btn= Button(north_frame, 
+                             image=img, 
+                             borderwidth=0,
+                             command=lambda image=img: self.play_card(image))
+                 btn.pack(side="left", padx=1)
+             
+             #east
+             for i in range(13):
+                  img= self.resize_cards("png/D2.png", 40, 60)
+                  self.card_images.append(img)
+             
+                  btn= Button(east_frame, 
+                              image=img, 
+                              borderwidth=0,
+                              command=lambda image=img: self.play_card(image))
+                  btn.pack(pady=0)
+             
+             #west
+             for i in range(13):
+                 img= self.resize_cards("png/H2.png", 40, 60)
+                 self.card_images.append(img)
+             
+                 btn= Button(west_frame, 
+                             image=img, 
+                             borderwidth=0,
+                             command=lambda image=img: self.play_card(image))
+                 btn.pack(pady=0)
+
+     def play_card(self, image):
+        self.centre_card_label.config(image= image)
+        self.centre_card_label.image=image
+    
+     def resize_cards(self, card, width=40, height=60):
+        card_image=Image.open(card)
+        resized_card= card_image.resize((width,height))   
+        return ImageTk.PhotoImage(resized_card)
 
 class TutorialPage(Frame):
      def __init__(self, parent, controller):
