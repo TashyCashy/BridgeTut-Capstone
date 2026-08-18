@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # NiteMeh BridgeTut
+=======
+# Nitemeh
+>>>>>>> origin/1-design-and-implement-data-structures-for-trick-playedcard-and-turn-sequence
 
 
 
@@ -15,14 +19,22 @@ Already a pro? Just edit this README.md and make it your own. Want to make it ea
 
 ```
 cd existing_repo
+<<<<<<< HEAD
 git remote add origin https://gitlab.cs.uct.ac.za/frnjoy002/nitemeh-bridgetut.git
+=======
+git remote add origin https://gitlab.cs.uct.ac.za/mhcnat001/nitemeh.git
+>>>>>>> origin/1-design-and-implement-data-structures-for-trick-playedcard-and-turn-sequence
 git branch -M main
 git push -uf origin main
 ```
 
 ## Integrate with your tools
 
+<<<<<<< HEAD
 - [ ] [Set up project integrations](https://gitlab.cs.uct.ac.za/frnjoy002/nitemeh-bridgetut/-/settings/integrations)
+=======
+- [ ] [Set up project integrations](https://gitlab.cs.uct.ac.za/mhcnat001/nitemeh/-/settings/integrations)
+>>>>>>> origin/1-design-and-implement-data-structures-for-trick-playedcard-and-turn-sequence
 
 ## Collaborate with your team
 
