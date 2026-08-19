@@ -129,11 +129,12 @@ class GamePage(Frame):
              #Initialising game states
              self.card_images=[]
              self.bid_pos=0
+             self.current_player=0
              self.selected_level=None
              self.selected_suit=None
              self.players=["West","North","East","South"]
              self.bid_history_data=[]
-             self.bidding=True
+             self.bidding_phase=True
 
              #grid layout for the board
              self.grid_rowconfigure(0, weight=0)
@@ -207,16 +208,19 @@ class GamePage(Frame):
              self.table.grid_rowconfigure(1, weight=1)
              self.table.grid_rowconfigure(2, minsize=150)
              
-             self.table.grid_columnconfigure(0, minsize=110)
+             self.table.grid_columnconfigure(0, minsize=100, weight=0)
              self.table.grid_columnconfigure(1, weight=1)
-             self.table.grid_columnconfigure(2, minsize=110)
+             self.table.grid_columnconfigure(2, minsize=100, weight=0)
 
              #creating 4 frames for the 4 hand display and the centre where cards get played
              self.north_frame= Frame(self.table, bg="darkgreen")
-             self.west_frame= Frame(self.table, bg="darkgreen")
+             self.west_frame= Frame(self.table, bg="darkgreen", width=100)
              self.centre_frame= Frame(self.table, bg="darkgreen", bd=3, relief="ridge")
-             self.east_frame= Frame(self.table, bg="darkgreen")
+             self.east_frame= Frame(self.table, bg="darkgreen", width=100)
              self.south_frame= Frame(self.table, bg="darkgreen")
+
+             self.west_frame.grid_propagate(False)
+             self.east_frame.grid_propagate(False)
 
              #Placing frames in desired spots
              self.north_frame.grid(row=0, column=0, columnspan=3, sticky="n")
@@ -252,33 +256,36 @@ class GamePage(Frame):
                    fg="white").pack(pady=(8,5))
              
              self.players_frame=Frame(self.bidding, bg="#a9cdf0")
-             self.players_frame.pack(fill="x", padx=5)
+             self.players_frame.pack(fill="x", padx=20)
              
-             players=["West","North","East","South"]
              
-             for i, player in enumerate(players):
-                  self.players_frame.grid_columnconfigure(i, weight=1)
+             for p in self.players:
                   Label(self.players_frame,
-                        text=player,
+                        text=p,
                         font=("Arial", 11, "bold"),
                         bg="#a9cdf0",
-                        fg="white").grid(row=0, column=i, sticky="ew")
+                        fg="white").pack(side="left", expand=True)
 
              #storing the bidding history
              self.bid_history= Frame(self.bidding, bg="#a9cdf0")
              self.bid_history.pack(fill="both", expand=True, padx=20, pady=5)
 
-             for i in range(4):
-                   self.bid_history.grid_columnconfigure(i, weight=1)
-             #displaying the current contract
-             self.contract=Label(self.bidding,
-                   text="Current contract: ",
-                   font=("Arial", 16, "bold"),
-                   bg="#a9cdf0",
-                   fg="#123f35").pack(pady=5)
-             
+             self.contract = Label(self.bidding,
+                                   text="Current contract: None",
+                                   font=("Arial", 14, "bold"),
+                                   bg="#a9cdf0",
+                                   fg="#123f35")
+             self.contract.pack(pady=5)
              #calling create_bid_btns which displays the various button options
              self.create_bid_btns()
+             #Added close button for testing purposes
+             Button(self.bidding,
+                    text="Close Bidding",
+                    font=("Arial", 11, "bold"),
+                    bg="#126B4F",
+                    fg="white",
+                    relief="flat",
+                    command=self.bidding.grid_remove()).pack(pady=10)
 
      def add_bid(self, bid):
              players=["West","North","East","South"]
@@ -330,9 +337,9 @@ class GamePage(Frame):
 
              suit = ["♣","♦","♥","♠","NT" ]
              self.suits_btn=[]
-             for s, in suit:
+             for s in suit:
                   s_btn=Button(suits,
-                        text= suits,
+                        text= s,
                         font=("Arial", 10, "bold"),
                         fg= "#123f35",
                         command=lambda st=s: self.select_suit(st))
@@ -359,11 +366,72 @@ class GamePage(Frame):
                   
      def make_bid(self, bid):
              player= self.players[self.current_player]
-             self.bid_history_data.append(player, bid)
-             self.dispay_bid(player, bid)
+             self.bid_history_data.append((player, bid))
+             self.display_bid(player, bid)
              if bid != "Pass":
                    self.contract.confiq(text= f"Current contract: {bid}")
              self.current_player=(self.current_player+1)%4
+
+     def display_bid(self, player, bid):
+           player_idx=self.players.index(player)
+           bid_num= len(self.bid_history_data)-1
+           row= bid_num // 4
+
+           Label(self.bid_history,
+                 text=bid,
+                 font=("Arial", 11, "bold"),
+                 bg="#a9cdf0",
+                 fg="#123f35").grid(row=row, column=player_idx, padx=10, pady=4)          
+
+     def show_bids(self):
+           bid_window= Toplevel(self)
+           bid_window.title("Bidding History")
+           bid_window.geometry("650x450")
+           bid_window.configure(bg="#0f4d3f")
+
+           Label(bid_window,
+                 text="Bidding History",
+                 font=("Georgia", 22, "bold"),
+                 bg="#0f4d3f",
+                 fg="#D4AF37").pack(pady=15)
+
+           hist= Frame(bid_window,
+                       bd=2,
+                       bg="#a9cdf0",
+                       relief="ridge")
+           hist.pack(fill="both", expand=True, padx=30, pady=10)
+
+           for column, player in enumerate(self.players):
+                 Label(hist,
+                       text= player,
+                       font=("Arial", 11, "bold"),
+                       bg="#a9cdf0",
+                       fg="#123f35",
+                       width=7).grid(row=0, column=column, padx=20, pady=10)
+
+           for i, (player, bid) in enumerate(self.bid_history_data):
+                 row=(i//4)+1
+                 col= self.players.index(player)
+                 Label(hist,
+                       text= bid,
+                       font=("Arial", 11, "bold"),
+                       bg="#a9cdf0",
+                       fg="#123f35").grid(row=row, column=col, padx=20, pady=5)
+
+           Label(bid_window,
+                  text= self.contract.cget("text"),
+                  font=("Arial", 14, "bold"),
+                  bg="#0f4d3f",
+                  fg="white").grid(pady=5)
+
+           Button(bid_window,
+                  text="Close",
+                  font=("Arial",11, "bold"),
+                  bg="#D4AF37",
+                  fg="#123f35",
+                  relief="flat",
+                  command=bid_window.destroy).pack(pady=10)
+                 
 
      def player_hands(self):
            #south
@@ -399,7 +467,7 @@ class GamePage(Frame):
                             image=img, 
                             borderwidth=0,
                             command=lambda image=img: self.play_card(image))
-                btn.place(x=20, y=i*45)
+                btn.place(x=20,y=i * 35)
            
            #west
            for i in range(13):
@@ -410,11 +478,17 @@ class GamePage(Frame):
                            image=img, 
                            borderwidth=0,
                            command=lambda image=img: self.play_card(image))
-               btn.place(x=20, y=i*45)
+               btn.place(x=20,y=i * 35)
 
      def play_card(self, image):
+        if self.bidding_phase:
+              self.finish_bidding()
         self.centre_card_label.config(image= image)
         self.centre_card_label.image=image
+
+     def finish_bidding(self):
+           self.bidding_phase=False
+           self.bidding.place_forget()
     
      def resize_cards(self, card):
         card_image=Image.open(card)
