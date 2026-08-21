@@ -202,22 +202,23 @@ class GamePage(Frame):
                           bd=5,
                           relief="ridge")
              self.table.grid(row=1, column=0, sticky="nsew")
+             self.table.grid_propagate(False)
              
              #Creating correct table grid
-             self.table.grid_rowconfigure(0, minsize=120)
-             self.table.grid_rowconfigure(1, weight=1)
-             self.table.grid_rowconfigure(2, minsize=150)
+             self.table.grid_rowconfigure(0, minsize=90)
+             self.table.grid_rowconfigure(1, minsize=520)
+             self.table.grid_rowconfigure(2, minsize=90)
              
-             self.table.grid_columnconfigure(0, minsize=100, weight=0)
+             self.table.grid_columnconfigure(0, minsize=80, weight=0)
              self.table.grid_columnconfigure(1, weight=1)
-             self.table.grid_columnconfigure(2, minsize=100, weight=0)
+             self.table.grid_columnconfigure(2, minsize=80, weight=0)
 
              #creating 4 frames for the 4 hand display and the centre where cards get played
-             self.north_frame= Frame(self.table, bg="darkgreen")
-             self.west_frame= Frame(self.table, bg="darkgreen", width=100)
+             self.north_frame= Frame(self.table, bg="#126B4F")
+             self.west_frame= Frame(self.table, bg="#126B4F", width=120)
              self.centre_frame= Frame(self.table, bg="darkgreen", bd=3, relief="ridge")
-             self.east_frame= Frame(self.table, bg="darkgreen", width=100)
-             self.south_frame= Frame(self.table, bg="darkgreen")
+             self.east_frame= Frame(self.table, bg="#126B4F", width=120)
+             self.south_frame= Frame(self.table, bg="#126B4F")
 
              self.west_frame.grid_propagate(False)
              self.east_frame.grid_propagate(False)
@@ -225,7 +226,7 @@ class GamePage(Frame):
              #Placing frames in desired spots
              self.north_frame.grid(row=0, column=0, columnspan=3, sticky="n")
              self.west_frame.grid(row=1, column=0, sticky="ns")
-             self.centre_frame.grid(row=1, column=1, sticky="nsew", padx=25, pady=20)
+             self.centre_frame.grid(row=1, column=1, sticky="nsew", padx=15, pady=10)
              self.east_frame.grid(row=1, column=2, sticky="ns")
              self.south_frame.grid(row=2, column=0, columnspan=3, sticky="s")
              
@@ -233,12 +234,17 @@ class GamePage(Frame):
              self.centre_frame.grid_columnconfigure(0, weight=1)
 
              #Creating card area
-             self.centre_card_label=Label( self.centre_frame,
-                                          text="",
-                                          font=("Arial",16),
-                                          bg="green",
-                                          fg="white")
-             self.centre_card_label.grid(row=1, column=0)
+             self.trick_labels={}
+             offsets = { "North" : (0, -25),
+                        "East": (25,0),
+                        "South": (0,25),
+                        "West": (-25,0)}
+             self.trick_offsets= offsets
+             for player in self.players:
+                   lbl=Label(self.centre_frame, bd=0)
+                   lbl.place(relx=0.5, rely=0.5, anchor="center",
+                             x=offsets[player][0], y= offsets[player][1])
+                   self.trick_labels[player]=lbl
              
 
              #Creating bidding panel
@@ -259,7 +265,7 @@ class GamePage(Frame):
              self.players_frame.pack(fill="x", padx=20)
              
              
-             for p in self.players:
+             for col, p in enumerate(self.players):
                   Label(self.players_frame,
                         text=p,
                         font=("Arial", 11, "bold"),
@@ -269,6 +275,9 @@ class GamePage(Frame):
              #storing the bidding history
              self.bid_history= Frame(self.bidding, bg="#a9cdf0")
              self.bid_history.pack(fill="both", expand=True, padx=20, pady=5)
+
+             for col in range(4):
+                   self.bid_history.grid_columnconfigure(col, weight=1, uniform="bidcol")
 
              self.contract = Label(self.bidding,
                                    text="Current contract: None",
@@ -285,22 +294,7 @@ class GamePage(Frame):
                     bg="#126B4F",
                     fg="white",
                     relief="flat",
-                    command=self.bidding.grid_remove()).pack(pady=10)
-
-     def add_bid(self, bid):
-             players=["West","North","East","South"]
-             col= self.bid_pos%4
-             row= self.bid_pos //4
-
-             Label(self.bid_history,
-                   text= bid,
-                   font=("Arial", 11, "bold"),
-                   bg="#a9cdf0",
-                   fg="#123f35",
-                   width=7).grid(row=row, column=col, padx=5, pady=3)
-             if bid != "Pass":
-                   self.contract.confiq(text= f"Current contract: {bid}")
-             self.bid_pos+=1
+                    command=lambda: self.bidding.grid_remove()).pack(pady=10)
 
      def create_bid_btns(self):
              btn_frame= Frame(self.bidding, bg="#a9cdf0")
@@ -323,7 +317,7 @@ class GamePage(Frame):
                           font=("Arial", 10, "bold"),
                           command=lambda n=num: self.select_level(n))
                    l_btn.pack(side="left", padx=2)
-             self.level_btns.append(l_btn)
+                   self.level_btns.append(l_btn)
 
              suits= Frame(btn_frame, bg="#a9cdf0")
              suits.pack(pady=3)
@@ -353,6 +347,8 @@ class GamePage(Frame):
              
      def select_level(self, level):
            self.selected_level=level
+           for i, btn in enumerate(self.level_btns, start=1):
+                 btn.config(relief="sunken" if i==level else "raised")
            print("Selected level: ", level)
 
      def select_suit(self, suit):
@@ -362,6 +358,8 @@ class GamePage(Frame):
            bid= f"{self.selected_level}{suit}"
            self.make_bid(bid)
            self.selected_level=None
+           for btn in self.level_btns:
+                 btn.config(relief="raised")
                          
                   
      def make_bid(self, bid):
@@ -369,19 +367,38 @@ class GamePage(Frame):
              self.bid_history_data.append((player, bid))
              self.display_bid(player, bid)
              if bid != "Pass":
-                   self.contract.confiq(text= f"Current contract: {bid}")
+                   self.contract.config(text= f"Current contract: {bid} by {player}")
+                   self.last_bidder= self.current_player
+                   self.pass_count=0
+                   self.current_level= int(bid[0])
+                   self.update_lvl()
+             else:
+                   self.pass_count = getattr(self, "pass_count", 0)+1
+
              self.current_player=(self.current_player+1)%4
+             #added for testing purposes
+             if (self.pass_count == 3 and hasattr(self, "last_bidder")) or \
+                  (self.pass_count == 4):
+                   self.finish_bidding()
+
+     def update_lvl(self):
+           min_lvl= getattr(self, "current_level", 0)
+           for i, btn in enumerate(self.level_btns, start=1):
+                 btn.config(state="disabled" if i < min_lvl else "normal")
+
 
      def display_bid(self, player, bid):
            player_idx=self.players.index(player)
            bid_num= len(self.bid_history_data)-1
-           row= bid_num // 4
+           row= (bid_num // 4)+1
 
            Label(self.bid_history,
                  text=bid,
                  font=("Arial", 11, "bold"),
                  bg="#a9cdf0",
-                 fg="#123f35").grid(row=row, column=player_idx, padx=10, pady=4)          
+                 fg="#123f35",
+                 width=10,
+                 anchor="w").grid(row=row, column=player_idx, sticky="w", padx=10, pady=4)          
 
      def show_bids(self):
            bid_window= Toplevel(self)
@@ -434,6 +451,10 @@ class GamePage(Frame):
                  
 
      def player_hands(self):
+           frame_height = 520
+           card_height = 100
+           n = 13
+           step = (frame_height - card_height) / (n - 1)
            #south
            self.card_images=[]
            
@@ -443,9 +464,9 @@ class GamePage(Frame):
            
                 btn= Button(self.south_frame, 
                             image=img, 
-                            borderwidth=0,
-                            command=lambda image=img: self.play_card(image))
-                btn.pack(side="left", padx=1)
+                            borderwidth=0)
+                btn.config(command=lambda image=img, b=btn: self.play_card(image, "South", b))
+                btn.pack(side="left", padx=3)
            
            #north
            for i in range(13):
@@ -454,9 +475,9 @@ class GamePage(Frame):
            
                btn= Button(self.north_frame, 
                            image=img, 
-                           borderwidth=0,
-                           command=lambda image=img: self.play_card(image))
-               btn.pack(side="left", padx=1)
+                           borderwidth=0)
+               btn.config(command=lambda image=img, b=btn: self.play_card(image, "North", b))
+               btn.pack(side="left", padx=3)
            
            #east
            for i in range(13):
@@ -465,9 +486,9 @@ class GamePage(Frame):
            
                 btn= Button(self.east_frame, 
                             image=img, 
-                            borderwidth=0,
-                            command=lambda image=img: self.play_card(image))
-                btn.place(x=20,y=i * 35)
+                            borderwidth=0)
+                btn.config(command=lambda image=img, b=btn: self.play_card(image, "East", b))
+                btn.place(x=15,y=i * step)
            
            #west
            for i in range(13):
@@ -476,23 +497,39 @@ class GamePage(Frame):
            
                btn= Button(self.west_frame, 
                            image=img, 
-                           borderwidth=0,
-                           command=lambda image=img: self.play_card(image))
-               btn.place(x=20,y=i * 35)
+                           borderwidth=0)
+               btn.config(command=lambda image=img, b=btn: self.play_card(image,"West", b))
+               btn.place(x=0,y=i * step)
 
-     def play_card(self, image):
+     def play_card(self, image, player, btn):
         if self.bidding_phase:
               self.finish_bidding()
-        self.centre_card_label.config(image= image)
-        self.centre_card_label.image=image
+        if player is None:
+              player= self.player[self.current_player]
+
+        lbl= self.trick_labels[player]
+        lbl.config(image=image)
+        lbl.lift()
+
+        btn.destroy()
+
+        self.trick_count= getattr(self, "trick_count",0)+1
+        if self.trick_count==4:
+              self.after(1200, self.clear_trick)
+
+     def clear_trick(self):
+           for lbl in self.trick_labels.values():
+                 lbl.config(image="")
+                 lbl.image=None
+           self.trick_count=0
 
      def finish_bidding(self):
            self.bidding_phase=False
-           self.bidding.place_forget()
+           self.bidding.grid_remove()
     
      def resize_cards(self, card):
         card_image=Image.open(card)
-        resized_card= card_image.resize((40,60))   
+        resized_card= card_image.resize((70,100))   
         return ImageTk.PhotoImage(resized_card)
 
 class TutorialPage(Frame):
