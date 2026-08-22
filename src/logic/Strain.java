@@ -1,5 +1,9 @@
 package logic;
 
+/*
+"Strain" in bridge means what a contract is played in. 
+There are five possibilitites.
+*/
 public enum Strain {
     CLUBS, DIAMONDS, HEARTS, SPADES, NO_TRUMP;
 
@@ -19,4 +23,7 @@ public enum Strain {
                 throw new IllegalStateException();
         }
     }
+    // for Vezi: 
+    // Suit trumpSuit = winningBid.getStrain().toSuit();
+    // automatically returns null if the contract was NO_TRUMP
 }
