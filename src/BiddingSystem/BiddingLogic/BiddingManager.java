@@ -16,7 +16,7 @@ public class BiddingManager {
     final private Player[] players;//this array will hold the players in the order of their seats so S, W, N, E
     final private BiddingHistory biddingHistory;
     final BiddingValidator biddingValidator;
-    public Suit trumpSuit;
+    public BidEntry winningBid;
 
 
     public BiddingManager(PlayerPosition startingPos, Player[] plyrs, Deck d) {
@@ -53,7 +53,7 @@ public class BiddingManager {
         if (!(biddingHistory.checkNoContractBidMade()) && biddingHistory.countConsecutivePasses() == 3) {
             //a bid must have been made , there exists a single contractual bid that was made (for this to work, this method has to be called after every player action -- since we loop backwards when checking consective passes)
             //this is the trump suit
-            trumpSuit = biddingHistory.getLargestBid().getAction().getSuit();
+            winningBid = biddingHistory.getLargestBid();
             return true;
             //end the game
         }
