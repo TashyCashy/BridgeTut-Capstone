@@ -28,8 +28,8 @@ abstract public class PlayerAction {
          return this.suit.ordinal() > otherBid.getSuit().ordinal();
      }
 
-     int getLevel(){ return level;}
+     public int getLevel(){ return level;}
 
-    Suit getSuit() { return suit; }
+    public Suit getSuit() { return suit; }
 
 }

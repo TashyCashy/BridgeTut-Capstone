@@ -49,23 +49,23 @@ public class BiddingHistory {
 
     public BidEntry getLargestBid() {
         BidEntry max = null;
-        for (BidEntry entry : bidsMade){
+        for (BidEntry entry : bidsMade) {
             //only look at contractual bids, skip passes will work on doubles and redoubles when added
-            if (!(entry.getAction() instanceof ContractBid)){
+            if (!(entry.getAction() instanceof ContractBid)) {
                 //skip
                 continue;
             }
-            if(max ==null || !max.getAction().isBigger(entry.getAction())){
+            if (max == null || !max.getAction().isBigger(entry.getAction())) {
                 max = entry;
             }
         }
         return max;
     }
 
-    public boolean checkNoContractBidMade (){
+    public boolean checkNoContractBidMade() {
         //check if there have been any contractual bids made yet
-        for (BidEntry bid: bidsMade){
-            if (bid.getAction() instanceof ContractBid){
+        for (BidEntry bid : bidsMade) {
+            if (bid.getAction() instanceof ContractBid) {
                 return false;
             }
         }
@@ -73,7 +73,7 @@ public class BiddingHistory {
         return true;
     }
 
-    public int countConsecutivePasses () {
+    public int countConsecutivePasses() {
         int count = 0;
         for (int i = bidsMade.size() - 1; i >= 0; i--) {
             //loop backwards counting # of passes
@@ -87,3 +87,4 @@ public class BiddingHistory {
         return count;
     }
 }
+
