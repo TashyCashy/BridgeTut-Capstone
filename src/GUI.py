@@ -263,14 +263,16 @@ class GamePage(Frame):
              
              self.players_frame=Frame(self.bidding, bg="#a9cdf0")
              self.players_frame.pack(fill="x", padx=20)
-             
+
+             for col in range(4):
+                   self.players_frame.grid_columnconfigure(col, weight=1, uniform="playercol")
              
              for col, p in enumerate(self.players):
                   Label(self.players_frame,
                         text=p,
                         font=("Arial", 11, "bold"),
                         bg="#a9cdf0",
-                        fg="white").pack(side="left", expand=True)
+                        fg="white").grid(row=0, column=col, sticky="w", padx=10)
 
              #storing the bidding history
              self.bid_history= Frame(self.bidding, bg="#a9cdf0")
@@ -396,9 +398,7 @@ class GamePage(Frame):
                  text=bid,
                  font=("Arial", 11, "bold"),
                  bg="#a9cdf0",
-                 fg="#123f35",
-                 width=10,
-                 anchor="w").grid(row=row, column=player_idx, sticky="w", padx=10, pady=4)          
+                 fg="#123f35").grid(row=row, column=player_idx, sticky="w", padx=10, pady=4)          
 
      def show_bids(self):
            bid_window= Toplevel(self)
@@ -439,7 +439,7 @@ class GamePage(Frame):
                   text= self.contract.cget("text"),
                   font=("Arial", 14, "bold"),
                   bg="#0f4d3f",
-                  fg="white").grid(pady=5)
+                  fg="white").pack(pady=5)
 
            Button(bid_window,
                   text="Close",
