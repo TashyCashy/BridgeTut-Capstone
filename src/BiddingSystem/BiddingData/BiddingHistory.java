@@ -1,6 +1,7 @@
 package BiddingSystem.BiddingData;
 
 import BiddingSystem.BiddingData.Actions.ContractBid;
+import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.Player;
 
@@ -70,5 +71,19 @@ public class BiddingHistory {
         }
         //if not that means only passes have been made (no double or redouble added yet)
         return true;
+    }
+
+    public int countConsecutivePasses () {
+        int count = 0;
+        for (int i = bidsMade.size() - 1; i >= 0; i--) {
+            //loop backwards counting # of passes
+            if (bidsMade.get(i).getAction() instanceof PassAction) {
+                count++;
+            } else {
+                //the moment we encounter an action that isn't a pass we jump out the loop.
+                break;
+            }
+        }
+        return count;
     }
 }

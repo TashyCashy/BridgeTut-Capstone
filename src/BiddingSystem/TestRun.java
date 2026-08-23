@@ -6,6 +6,7 @@ import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.BiddingLogic.BiddingManager;
 import logic.Deck;
+import logic.PlayerPosition;
 import logic.Suit; // ADJUST: use your actual Suit enum's package/values
 
 import static java.lang.IO.println;
@@ -31,14 +32,14 @@ public class TestRun {
 
     public static void main(String[] args) {
         // Seats: 0=North, 1=East, 2=South, 3=West
-        Player north = new Player("North", null, 0);
-        Player east  = new Player("East",  null, 1);
-        Player south = new Player("South", null, 2);
-        Player west  = new Player("West", null, 3);
-        Player[] players = { north, east, south, west };
+        Player north = new Player("North", null, PlayerPosition.NORTH);
+        Player east  = new Player("East",  null, PlayerPosition.EAST);
+        Player south = new Player("South", null, PlayerPosition.SOUTH);
+        Player west  = new Player("West", null, PlayerPosition.WEST);
+        Player[] players = { south, west, east, north };
 
         // Dealer = North (seat 0) for this test
-        BiddingManager manager = new BiddingManager(0, players);
+        BiddingManager manager = new BiddingManager(PlayerPosition.SOUTH, players, new Deck());
 
         System.out.println("=== Test 1: basic legal escalation ===");
         playAndReport(manager, new PassAction());                    // North passes

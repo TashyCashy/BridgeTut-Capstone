@@ -4,7 +4,7 @@ import logic.Suit;
 
 public class ContractBid extends PlayerAction {
     private int level; //# from 1-7
-    private Suit suit; //the suit that was bid
+    private Suit suit; //the suit that was bid /strain
 
     public ContractBid(int l, Suit s) {
         this.level = l;
