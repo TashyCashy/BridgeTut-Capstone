@@ -24,9 +24,13 @@ public class Deck {
         return cards.removeLast();
     }
 
+    public int size(){
+        return cards.size();
+    }
+
     public void printDeck() {
         for (Card card: cards) {
-            System.out.println(card);
+            System.out.print(card);
         }
     }
 }

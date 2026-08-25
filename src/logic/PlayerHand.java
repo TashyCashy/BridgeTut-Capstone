@@ -33,7 +33,7 @@ public class PlayerHand {
     }
 
     /**
-     * 
+     *
      * @param suit
      * @return true if player has cards of the given suit
      */
@@ -62,6 +62,12 @@ public class PlayerHand {
                 j--;
             }
             hand.set(j+1, card);
+        }
+    }
+
+    public void printHand(){
+        for (Card c: hand){
+            System.out.print(c + ", ");
         }
     }
 }
