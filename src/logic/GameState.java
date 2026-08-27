@@ -36,7 +36,7 @@ public class GameState {
         return this.currentPlayerTurn;
     }
 
-    public void dealHand(PlayerPosition position, List<Card> cards) {
+    public void dealHand(PlayerPosition position, List<Card> cards) { // ensure the cards are dealt before game play, so during the bidding phase
         PlayerHand hand = new PlayerHand(position);
         for (Card card: cards) {
             hand.addCard(card);
