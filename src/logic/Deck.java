@@ -16,9 +16,21 @@ public class Deck {
         Collections.shuffle(cards);
     }
 
+    //this method was added by me so we can pull from the deck and give cards to players.
+    public Card drawCard (){
+        if (cards.isEmpty()){
+            return null;
+        }
+        return cards.removeLast();
+    }
+
+    public int size(){
+        return cards.size();
+    }
+
     public void printDeck() {
         for (Card card: cards) {
-            System.out.println(card);
+            System.out.print(card);
         }
     }
 }
