@@ -1,10 +1,11 @@
 package BiddingSystem.BiddingData.Actions;
 
+import logic.Strain;
 import logic.Suit;
 
 public class PassAction extends PlayerAction {
     private final int level = 0;
-    private final Suit suit = null;
+    private final Strain strain = null;
 
     public PassAction() {
     }

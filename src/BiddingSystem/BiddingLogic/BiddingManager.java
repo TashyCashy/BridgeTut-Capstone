@@ -49,7 +49,7 @@ public class BiddingManager {
 
     public boolean checkBiddingOver() {
         //this method will check if the bidding phase has ended either by passing out(4 initial passes) or 3 consecutive passes (ends the biddinng)
-        //must also make the game still end if highest bid possible is made thart would be 7NT
+        //must also make the game still end if highest bid possible is made thart would be 7NT (already implemented as everyone would have to pass)
         if (!(biddingHistory.checkNoContractBidMade()) && biddingHistory.countConsecutivePasses() == 3) {
             //a bid must have been made , there exists a single contractual bid that was made (for this to work, this method has to be called after every player action -- since we loop backwards when checking consective passes)
             //this is the trump suit

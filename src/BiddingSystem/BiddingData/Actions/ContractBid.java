@@ -1,24 +1,25 @@
 package BiddingSystem.BiddingData.Actions;
 
+import logic.Strain;
 import logic.Suit;
 
 public class ContractBid extends PlayerAction {
     private int level; //# from 1-7
-    private Suit suit; //the suit that was bid /strain
+    private Strain strain; //the suit that was bid /strain
 
-    public ContractBid(int l, Suit s) {
+    public ContractBid(int l, Strain s) {
         this.level = l;
         //this.level = Math.clamp(level, 1, 7); // value cant be bigger than 7 or smaller than 1
-        this.suit = s;
+        this.strain = s;
     }
 
     public int getLevel() {return level; }
 
-    public Suit getSuit() { return suit; }
+    public Strain getStrain() { return strain; }
 
     public void setLevel(int level) { this.level = level; }
 
-    public void setSuit(Suit suit) { this.suit = suit; }
+    public void setStrain(Strain s) { this.strain = s; }
 
 
     public boolean isBigger(PlayerAction otherBid) {
@@ -37,11 +38,11 @@ public class ContractBid extends PlayerAction {
         }
         // else compare suits, after confirming that they are the same level
         //true if this bid is bigger, false if otherBid is bigger
-        return this.suit.ordinal() > otherBid.getSuit().ordinal();
+        return this.strain.ordinal() > otherBid.getStrain().ordinal();
     }
 
     @Override
     public String getDisplayString() {
-        return "ContractBid-> " + "Level: " +level + ", Suit: " + suit;
+        return "ContractBid-> " + "Level: " +level + ", Suit: " + strain;
     }
 }

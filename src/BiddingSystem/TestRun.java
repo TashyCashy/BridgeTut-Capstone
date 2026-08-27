@@ -7,6 +7,7 @@ import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.BiddingLogic.BiddingManager;
 import logic.Deck;
 import logic.PlayerPosition;
+import logic.Strain;
 import logic.Suit; // ADJUST: use your actual Suit enum's package/values
 
 import static java.lang.IO.println;
@@ -43,25 +44,32 @@ public class TestRun {
 
         System.out.println("=== Test 1: basic legal escalation ===");
         playAndReport(manager, new PassAction());                    // North passes
-        playAndReport(manager, new ContractBid(1, Suit.CLUBS));      // East bids 1C
+        playAndReport(manager, new ContractBid(1, Strain.CLUBS));      // East bids 1C
         playAndReport(manager, new PassAction());                    // South passes
-        playAndReport(manager, new ContractBid(2, Suit.HEARTS));     // West bids 2H (should be legal, higher level)
+        playAndReport(manager, new ContractBid(2, Strain.HEARTS));     // West bids 2H (should be legal, higher level)
 
         System.out.println();
         System.out.println("=== Test 2: illegal lower bid (should be rejected once validation is wired in) ===");
         // NOTE: until you wire validateBid into ActionPlayed, this will currently
         // just get logged with no rejection — that's the gap you're about to close.
-        playAndReport(manager, new ContractBid(1, Suit.SPADES));     // North tries 1S after 2H — illegal, lower level
+        playAndReport(manager, new ContractBid(1, Strain.SPADES));     // North tries 1S after 2H — illegal, lower level
 
         System.out.println();
         System.out.println("=== Test 3: same-level, lower-suit bid (should be rejected) ===");
-        playAndReport(manager, new ContractBid(2, Suit.CLUBS));      // 2C after 2H — same level, lower suit, illegal
+        playAndReport(manager, new ContractBid(2, Strain.CLUBS));      // 2C after 2H — same level, lower suit, illegal
 
         System.out.println();
         System.out.println("=== Test 4: same-level, higher-suit bid (should be legal) ===");
-        playAndReport(manager, new ContractBid(2, Suit.SPADES));     // 2S after 2H — same level, higher suit, legal
+        playAndReport(manager, new ContractBid(2, Strain.SPADES));     // 2S after 2H — same level, higher suit, legal
 
         // Add more sequences here as you build out auction-end detection,
+        System.out.println();
+        System.out.println("=== Test 5: testing if no trump bids can be made, higher-suit bid (should be legal) ===");
+        playAndReport(manager, new ContractBid(2, Strain.NO_TRUMP));
+
+        System.out.println();
+        System.out.println("=== Test 5: testing if no trump comparisons are correct, next player bids the same thing (should be rejected) ===");
+        playAndReport(manager, new ContractBid(2, Strain.NO_TRUMP));
         // e.g. three consecutive passes after a bid, or four passes with no bid.
     }
 
