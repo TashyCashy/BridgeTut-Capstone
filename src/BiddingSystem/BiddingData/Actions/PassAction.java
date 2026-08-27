@@ -13,7 +13,7 @@ public class PassAction extends PlayerAction {
         return "Pass";
     }
 
-    public boolean isBigger(PlayerAction otherBid) {
+    /*public boolean isBigger(PlayerAction otherBid) {
         //the bid being compared to is already bigger if it's level is higher
         //before checking if which is bigger between the two if other bid is an instance of passaction no need to check
         if (!(otherBid instanceof ContractBid)){
@@ -30,5 +30,5 @@ public class PassAction extends PlayerAction {
         // else compare suits, after confirming that they are the same level
         //true if this bid is bigger, false if otherBid is bigger
         return this.suit.ordinal() > otherBid.getSuit().ordinal();
-    }
+    }*/
 }

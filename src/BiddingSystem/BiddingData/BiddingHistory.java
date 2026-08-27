@@ -55,7 +55,7 @@ public class BiddingHistory {
                 //skip
                 continue;
             }
-            if (max == null || !max.getAction().isBigger(entry.getAction())) {
+            if (max == null || !((ContractBid) max.getAction()).isBigger(entry.getAction())) {
                 max = entry;
             }
         }
