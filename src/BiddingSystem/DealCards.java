@@ -6,7 +6,7 @@ import logic.PlayerHand;
 
 public class DealCards {
 
-   static void dealHands (Deck d, Player[] players){
+  public static void dealHands (Deck d, Player[] players){
        if (d.size() != 52){{
            throw new IllegalStateException("Deck must have exactly 52 cards before dealing");
        }}

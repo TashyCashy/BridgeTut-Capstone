@@ -40,7 +40,12 @@ public class TestRun {
         Player[] players = { south, west, east, north };
 
         // Dealer = North (seat 0) for this test
-        BiddingManager manager = new BiddingManager(PlayerPosition.SOUTH, players, new Deck());
+        Deck deck = new Deck();
+        deck.shuffle();
+        DealCards.dealHands(deck, players);
+        //will print player hands
+        BiddingManager manager = new BiddingManager(PlayerPosition.SOUTH, players);
+        for (manager.getPl
 
         System.out.println("=== Test 1: basic legal escalation ===");
         playAndReport(manager, new PassAction());                    // North passes

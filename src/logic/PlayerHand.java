@@ -70,4 +70,8 @@ public class PlayerHand {
             System.out.print(c + ", ");
         }
     }
+
+    public void clearHand(){
+        hand.clear();
+    }
 }

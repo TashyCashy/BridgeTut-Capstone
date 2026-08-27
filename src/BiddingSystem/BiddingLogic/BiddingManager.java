@@ -1,5 +1,6 @@
 package BiddingSystem.BiddingLogic;
 
+import BiddingSystem.BiddingData.Actions.ContractBid;
 import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.BiddingData.BidEntry;
@@ -7,25 +8,32 @@ import BiddingSystem.BiddingData.BiddingHistory;
 import BiddingSystem.Player;
 import logic.Deck;
 import logic.PlayerPosition;
+import logic.Strain;
 import logic.Suit;
 
 public class BiddingManager {
     //this class keeps track of turns and has the logic that will find the final bid
     private PlayerPosition currentSeat;
-    Deck deck;
     final private Player[] players;//this array will hold the players in the order of their seats so S, W, N, E
     final private BiddingHistory biddingHistory;
     final BiddingValidator biddingValidator;
-    public BidEntry winningBid;
+    private BidEntry winningEntry;
+    private Strain winningStrain;
+    private Player declarer;
+    private PlayerAction  winningContract;
+    //adding this to hodl reference to the starting position in the case of passing out, we need what it was after modifying it
+    private PlayerPosition startingPosition;
+    private boolean passedOut = false;
 
 
-    public BiddingManager(PlayerPosition startingPos, Player[] plyrs, Deck d) {
+
+    public BiddingManager(PlayerPosition startPos, Player[] plyrs) {
         //the player who will do the first bid, not sure if Sonia wants us to start from North everytime as in the game's rules it is usually the person who dealt the cards
-        this.currentSeat = startingPos;
+        this.startingPosition = startPos;
+        this.currentSeat = startPos;
         this.players = plyrs;
         this.biddingHistory = new BiddingHistory();
         this.biddingValidator = new BiddingValidator();
-        this.deck = d;
     }
 
     public void advanceTurn() {
@@ -52,21 +60,30 @@ public class BiddingManager {
         //must also make the game still end if highest bid possible is made thart would be 7NT (already implemented as everyone would have to pass)
         if (!(biddingHistory.checkNoContractBidMade()) && biddingHistory.countConsecutivePasses() == 3) {
             //a bid must have been made , there exists a single contractual bid that was made (for this to work, this method has to be called after every player action -- since we loop backwards when checking consective passes)
-            //this is the trump suit
-            winningBid = biddingHistory.getLargestBid();
+            winningEntry = biddingHistory.getLargestBid();
+            //store the specifc strain that won
+            winningStrain = ((ContractBid) winningEntry.getAction()).getStrain();
+            //as well as the action.
+            winningContract = (ContractBid) winningEntry.getAction();
+            declarer = biddingHistory.determineDeclarer(winningStrain, winningEntry.getPlayer());
             return true;
+
             //end the game
         }
+        //created a boolean flag, that will telll the main game class, that the reason bidding is over, is because of passing out, and that will result in it calling gamereset.
         if (biddingHistory.checkNoContractBidMade() && biddingHistory.countConsecutivePasses() == 4) {
-            //passing out case
-            //restart the game
-            //new deck
-            //new hands for the players.
-            //all first
+            passedOut = true;
             return true;
-
         }
         return false;
-
     }
+
+    public Player [] getPlayers (){
+        return players;
+    }
+
+    public PlayerPosition getStartingPosition(){
+        return startingPosition;
+    }
+
 }
