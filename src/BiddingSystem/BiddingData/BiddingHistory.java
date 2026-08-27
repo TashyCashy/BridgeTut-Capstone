@@ -4,6 +4,7 @@ import BiddingSystem.BiddingData.Actions.ContractBid;
 import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.Player;
+import logic.Strain;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,5 +87,19 @@ public class BiddingHistory {
         }
         return count;
     }
+
+    public Player determineDeclarer(Strain winningStrain, Player winningBidder) {
+        for (BidEntry b : bidsMade) {
+            if (!(b.getAction() instanceof ContractBid)) {
+                continue;
+            } else {
+                if ((b.getAction().getStrain() == winningStrain) && (b.getPlayer().getSeatPosition() == winningBidder.getSeatPosition() || b.getPlayer().getSeatPosition() == winningBidder.getSeatPosition().partner())) {
+                    return b.getPlayer();
+                }
+            }
+        }
+        return null;
+    }
 }
+
 
