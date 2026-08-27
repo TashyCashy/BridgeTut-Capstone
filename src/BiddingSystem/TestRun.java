@@ -5,10 +5,7 @@ import BiddingSystem.BiddingData.Actions.ContractBid;
 import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.BiddingLogic.BiddingManager;
-import logic.Deck;
-import logic.PlayerPosition;
-import logic.Strain;
-import logic.Suit; // ADJUST: use your actual Suit enum's package/values
+import logic.*;
 
 import static java.lang.IO.println;
 
@@ -33,19 +30,22 @@ public class TestRun {
 
     public static void main(String[] args) {
         // Seats: 0=North, 1=East, 2=South, 3=West
-        Player north = new Player("North", null, PlayerPosition.NORTH);
-        Player east  = new Player("East",  null, PlayerPosition.EAST);
-        Player south = new Player("South", null, PlayerPosition.SOUTH);
-        Player west  = new Player("West", null, PlayerPosition.WEST);
+        Player north = new Player("North", new PlayerHand(PlayerPosition.NORTH), PlayerPosition.NORTH);
+        Player east  = new Player("East",  new PlayerHand(PlayerPosition.EAST), PlayerPosition.EAST);
+        Player south = new Player("South", new PlayerHand(PlayerPosition.SOUTH), PlayerPosition.SOUTH);
+        Player west  = new Player("West", new PlayerHand(PlayerPosition.WEST), PlayerPosition.WEST);
         Player[] players = { south, west, east, north };
 
         // Dealer = North (seat 0) for this test
         Deck deck = new Deck();
         deck.shuffle();
         DealCards.dealHands(deck, players);
-        //will print player hands
+
+        // print player hands
         BiddingManager manager = new BiddingManager(PlayerPosition.SOUTH, players);
-        for (manager.getPl
+        for (Player p: manager.getPlayers()){
+            p.getPlayerHand().printHand();
+        }
 
         System.out.println("=== Test 1: basic legal escalation ===");
         playAndReport(manager, new PassAction());                    // North passes
@@ -61,21 +61,39 @@ public class TestRun {
 
         System.out.println();
         System.out.println("=== Test 3: same-level, lower-suit bid (should be rejected) ===");
-        playAndReport(manager, new ContractBid(2, Strain.CLUBS));      // 2C after 2H — same level, lower suit, illegal
+        playAndReport(manager, new ContractBid(2, Strain.CLUBS));   // 2C after 2H — same level, lower suit, illegal
+        manager.checkBiddingOver();
 
         System.out.println();
         System.out.println("=== Test 4: same-level, higher-suit bid (should be legal) ===");
         playAndReport(manager, new ContractBid(2, Strain.SPADES));     // 2S after 2H — same level, higher suit, legal
+        manager.checkBiddingOver();
 
         // Add more sequences here as you build out auction-end detection,
         System.out.println();
         System.out.println("=== Test 5: testing if no trump bids can be made, higher-suit bid (should be legal) ===");
+        manager.checkBiddingOver();
         playAndReport(manager, new ContractBid(2, Strain.NO_TRUMP));
 
         System.out.println();
         System.out.println("=== Test 5: testing if no trump comparisons are correct, next player bids the same thing (should be rejected) ===");
         playAndReport(manager, new ContractBid(2, Strain.NO_TRUMP));
+        manager.checkBiddingOver();
         // e.g. three consecutive passes after a bid, or four passes with no bid.
+
+        System.out.println();
+        System.out.println("=== Test 6: testing if 3 passes end the game gracefully ===");
+        playAndReport(manager, new PassAction());
+        manager.checkBiddingOver();
+        System.out.println();
+
+        playAndReport(manager, new PassAction());
+        manager.checkBiddingOver();
+        System.out.println();
+
+        playAndReport(manager, new PassAction());
+        manager.checkBiddingOver();
+        System.out.println();
     }
 
     /**

@@ -66,6 +66,7 @@ public class BiddingManager {
             //as well as the action.
             winningContract = (ContractBid) winningEntry.getAction();
             declarer = biddingHistory.determineDeclarer(winningStrain, winningEntry.getPlayer());
+            System.out.println("Bidding is over: The winning contract is " + winningStrain + ", at level " + winningContract.getLevel() + " and the declarer is seated at " + declarer.getSeatPosition());
             return true;
 
             //end the game
@@ -75,6 +76,7 @@ public class BiddingManager {
             passedOut = true;
             return true;
         }
+        System.out.println("Bidding is still in ongoing!");
         return false;
     }
 
