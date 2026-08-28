@@ -6,10 +6,8 @@ import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.BiddingData.BidEntry;
 import BiddingSystem.BiddingData.BiddingHistory;
 import BiddingSystem.Player;
-import logic.Deck;
 import logic.PlayerPosition;
 import logic.Strain;
-import logic.Suit;
 
 public class BiddingManager {
     //this class keeps track of turns and has the logic that will find the final bid
@@ -17,12 +15,10 @@ public class BiddingManager {
     final private Player[] players;//this array will hold the players in the order of their seats so S, W, N, E
     final private BiddingHistory biddingHistory;
     final BiddingValidator biddingValidator;
-    private BidEntry winningEntry;
-    private Strain winningStrain;
     private Player declarer;
-    private PlayerAction  winningContract;
+    private ContractBid  winningContract;
     //adding this to hodl reference to the starting position in the case of passing out, we need what it was after modifying it
-    private PlayerPosition startingPosition;
+    private final PlayerPosition startingPosition;
     private boolean passedOut = false;
 
 
@@ -60,9 +56,9 @@ public class BiddingManager {
         //must also make the game still end if highest bid possible is made thart would be 7NT (already implemented as everyone would have to pass)
         if (!(biddingHistory.checkNoContractBidMade()) && biddingHistory.countConsecutivePasses() == 3) {
             //a bid must have been made , there exists a single contractual bid that was made (for this to work, this method has to be called after every player action -- since we loop backwards when checking consective passes)
-            winningEntry = biddingHistory.getLargestBid();
+            BidEntry winningEntry = biddingHistory.getLargestBid();
             //store the specifc strain that won
-            winningStrain = ((ContractBid) winningEntry.getAction()).getStrain();
+            Strain winningStrain = ((ContractBid) winningEntry.getAction()).getStrain();
             //as well as the action.
             winningContract = (ContractBid) winningEntry.getAction();
             declarer = biddingHistory.determineDeclarer(winningStrain, winningEntry.getPlayer());
@@ -88,4 +84,15 @@ public class BiddingManager {
         return startingPosition;
     }
 
+    public Player getDeclarer() {
+        return declarer;
+    }
+
+    public boolean isPassedOut() {
+        return passedOut;
+    }
+
+    public ContractBid getWinningContract() {
+        return winningContract;
+    }
 }
