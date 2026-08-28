@@ -1,15 +1,12 @@
 package BiddingSystem.BiddingLogic;
 
 import BiddingSystem.BiddingData.Actions.ContractBid;
-import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.BiddingData.BidEntry;
 import BiddingSystem.BiddingData.BiddingHistory;
 import BiddingSystem.Player;
-import logic.Deck;
 import logic.PlayerPosition;
 import logic.Strain;
-import logic.Suit;
 
 public class BiddingManager {
     //this class keeps track of turns and has the logic that will find the final bid
@@ -88,4 +85,16 @@ public class BiddingManager {
         return startingPosition;
     }
 
+    // accessor methods tash added to assist with the main driver class
+    public Player getDeclarer() {
+        return this.declarer;
+    }
+
+    public Strain getWinningStrain() {
+        return this.winningStrain;
+    }
+
+    public boolean isPassedOut() {
+        return this.passedOut;
+    }
 }
