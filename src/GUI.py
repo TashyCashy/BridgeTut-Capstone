@@ -1,7 +1,9 @@
 from tkinter import *
+from tkinter import messagebox
 import random
 from PIL import Image, ImageTk
 import os 
+from db import create_user, verify_user
 
 class GUI(Tk):
     def __init__(self):
@@ -58,24 +60,53 @@ class LoginPage(Frame):
               text="Username",
               font=("Arial", 11, "bold")).pack(anchor="w", padx=30)
 
-        username=Entry(login, font=("Arial",13), width=35)
-        username.pack(fill="x", padx=60, ipady=8, pady=(5,20))
+        self.username=Entry(login, font=("Arial",13), width=35)
+        self.username.pack(fill="x", padx=60, ipady=8, pady=(5,20))
 
         Label(login,
               text="Password",
               font=("Arial", 11, "bold")).pack(anchor="w", padx=30)
         
-        password=Entry(login, font=("Arial",13),width=35, show="*")
-        password.pack(fill="x", padx=60, ipady=8, pady=(5,30))
+        self.password=Entry(login, font=("Arial",13),width=35, show="*")
+        self.password.pack(fill="x", padx=60, ipady=8, pady=(5,30))
 
         Button(login,
-               text="Sign in",
+               text="Sign up",
                font=("Arial",12,"bold"),
                bg="#C9A42C",
                fg="#055341",
                relief="flat",
-               command=lambda: controller.show_frame(HomePage)).pack(fill="x", padx=60, ipady=10)
+               command=self.sign_up).pack(side="left", padx=10, ipady=10, ipadx=20)
 
+        Button(login,
+               text="Log in",
+               font=("Arial",12,"bold"),
+               bg="#C9A42C",
+               fg="#055341",
+               relief="flat",
+               command=self.log_in).pack(side="left", padx=10, ipady=10, ipadx=20)
+
+    def sign_up(self):
+          username= self.username.get()
+          password= self.password.get()
+          if create_user(username, password):
+                messagebox.showinfo("Success","Account added.")
+                self.controller.show_frame(GamePage)
+          else:
+                messagebox.showinfo("Sign up failed", "Try again. Username may be already taken")
+
+                
+
+    def log_in(self):
+          username= self.username.get()
+          password= self.password.get()
+          if verify_user(username, password):
+                messagebox.showinfo("Login Successful!", "Welcome!")
+                self.controller.show_frame(GamePage)
+          else:
+                messagebox.showinfo("Login failed","Incorrect username or password")
+                
+                
 
 class HomePage(Frame):
      def __init__(self, parent, controller):
