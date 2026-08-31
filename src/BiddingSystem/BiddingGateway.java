@@ -4,11 +4,15 @@ import BiddingSystem.BiddingData.Actions.ContractBid;
 import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingLogic.BiddingManager;
 import BiddingSystem.BiddingLogic.GameReset;
+import logic.Card;
 import logic.Deck;
 import logic.PlayerPosition;
 import logic.Strain;
 
 import py4j.GatewayServer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Entry point exposed to the Python GUI via Py4J. Wraps BiddingManager so
@@ -103,6 +107,16 @@ public class BiddingGateway {
     public int resetAfterPassedOut() {
         this.manager = GameReset.resetGame(this.manager);
         return getCurrentSeatIndex();
+    }
+
+    //for getting the rigth cards shown on the gui
+    public List<String> getHandForSeat(int seatIndex) {
+        Player p = manager.getPlayers()[seatIndex];
+        List<String> cardStrings = new ArrayList<>();
+        for (Card c : p.getPlayerHand().getHand()) {
+            cardStrings.add(c.getRank().name() + "_" + c.getSuit().name());
+        }
+        return cardStrings;
     }
 
     public static void main(String[] args) {
