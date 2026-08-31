@@ -7,7 +7,7 @@ import logic.Deck;
 import logic.PlayerPosition;
 
 public class GameReset {
-   static BiddingManager resetGame (BiddingManager manager){
+   public static BiddingManager resetGame (BiddingManager manager){
             Player [] players = manager.getPlayers();
             for (Player p : players){
                 p.getPlayerHand().clearHand();

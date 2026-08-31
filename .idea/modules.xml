@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/BridgeTut.iml" filepath="$PROJECT_DIR$/BridgeTut.iml" />
+      <module fileurl="file://$PROJECT_DIR$/src/GUI/GUI.iml" filepath="$PROJECT_DIR$/src/GUI/GUI.iml" />
     </modules>
   </component>
 </project>
