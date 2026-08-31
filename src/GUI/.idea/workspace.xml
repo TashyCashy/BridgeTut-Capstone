@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="692c64ac-f58c-451d-8a49-b8bb5386b5ff" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../GUI.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../db.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/C10.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/C2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/C3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/C4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/C5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/C6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/C7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/C8.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/C9.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/CA.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/CJ.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/CK.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/CQ.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/D10.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/D2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/D3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/D4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/D5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/D6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/D7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/D8.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/D9.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/DA.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/DJ.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/DK.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/DQ.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/H10.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/H2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/H3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/H4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/H5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/H6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/H7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/H8.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/H9.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/HA.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/HJ.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/HK.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/HQ.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/S10.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/S2.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/S3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/S4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/S5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/S6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/S7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/S8.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/S9.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/SA.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/SJ.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/SK.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../png/SQ.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../test_gui.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3Ig1c6uDGoeGY0ocjJIhItZjgJw" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.GUI.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "integratingBackendToGUI",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/konkevezi/eclipse-workspace/BridgeTut/src/GUI",
+    "project.structure.last.edited": "SDKs",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.27258.48" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.27258.48" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="692c64ac-f58c-451d-8a49-b8bb5386b5ff" name="Changes" comment="" />
+      <created>1788171473472</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1788171473472</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
