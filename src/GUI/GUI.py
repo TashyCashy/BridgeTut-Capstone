@@ -544,58 +544,36 @@ class GamePage(Frame):
            card_height = 100
            n = 13
            step = (frame_height - card_height) / (n - 1)
-           #south
            self.card_images=[]
+            #seats
+           seat_positions = [(0, self.south_frame, "South", "left"),
+           (1, self.west_frame,  "West",  "place"),
+           (2, self.north_frame, "North", "left"),
+           (3, self.east_frame,  "East",  "place"),
+           ]
+           # seat indices: SOUTH=0, WEST=1, NORTH=2, EAST=3 pretty sure this is how it's ordered on playerposition
+           for seat_index, frame, name, layout in seat_positions:
+               #runs the java gateway method
+                hand = entry_point.getHandForSeat(seat_index)
+                for i, card_code in enumerate(hand):
+                    img = self.resize_cards(f"png/{card_code}.png")
+                    #add the relevant card image for the card in cardcodes
+                    self.card_images.append(img)
 
-           for i in range(13):
-                img= self.resize_cards("png/C2.png")
-                self.card_images.append(img)
+                    btn = Button(frame, image=img, borderwidth=0)
+                    btn.config(command=lambda image=img, b=btn, n=name: self.play_card(image, n, b))
 
-                btn= Button(self.south_frame,
-                            image=img,
-                            borderwidth=0)
-                btn.config(command=lambda image=img, b=btn: self.play_card(image, "South", b))
-                btn.pack(side="left", padx=3)
-
-           #north
-           for i in range(13):
-               img= self.resize_cards("png/S2.png")
-               self.card_images.append(img)
-
-               btn= Button(self.north_frame,
-                           image=img,
-                           borderwidth=0)
-               btn.config(command=lambda image=img, b=btn: self.play_card(image, "North", b))
-               btn.pack(side="left", padx=3)
-
-           #east
-           for i in range(13):
-                img= self.resize_cards("png/D2.png")
-                self.card_images.append(img)
-
-                btn= Button(self.east_frame,
-                            image=img,
-                            borderwidth=0)
-                btn.config(command=lambda image=img, b=btn: self.play_card(image, "East", b))
-                btn.place(x=15,y=i * step)
-
-           #west
-           for i in range(13):
-               img= self.resize_cards("png/H2.png")
-               self.card_images.append(img)
-
-               btn= Button(self.west_frame,
-                           image=img,
-                           borderwidth=0)
-               btn.config(command=lambda image=img, b=btn: self.play_card(image,"West", b))
-               btn.place(x=0,y=i * step)
+                    if layout == "left":
+                         btn.pack(side="left", padx=3)
+                    else:
+                         btn.place(x=15 if name == "East" else 0, y=i * step)
 
      def play_card(self, image, player, btn):
         """moves card to playing board and removes it from player hand"""
         if self.bidding_phase:
               self.finish_bidding()
         if player is None:
-              player= self.player[self.current_player]
+              player= self.players[self.current_player]
 
         lbl= self.trick_labels[player]
         lbl.config(image=image)

@@ -112,11 +112,14 @@ public class BiddingGateway {
     //for getting the rigth cards shown on the gui
     public List<String> getHandForSeat(int seatIndex) {
         Player p = manager.getPlayers()[seatIndex];
-        List<String> cardStrings = new ArrayList<>();
+        List<String> cardCodes = new ArrayList<>();
         for (Card c : p.getPlayerHand().getHand()) {
-            cardStrings.add(c.getRank().name() + "_" + c.getSuit().name());
+            //adjusted for standard formula between backend and gui
+            cardCodes.add(c.getSuit().getSuitLetter() + c.getRank().getRankLetter());
         }
-        return cardStrings;
+        //for checking the cards are the same as their actual hand
+        System.out.println("Hand for " +p.getUsername()+ " " + cardCodes);
+        return cardCodes;
     }
 
     public static void main(String[] args) {
