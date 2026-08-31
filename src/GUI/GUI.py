@@ -173,7 +173,8 @@ class GamePage(Frame):
              self.card_images=[]
              self.current_player=0
              self.selected_level=None
-             self.players=["West","North","East","South"]
+             ##changed to reflect the java ordering.
+             self.players=["South","West","North","East"]
              self.bid_history_data=[]
              self.bidding_phase=True
 
@@ -426,24 +427,45 @@ class GamePage(Frame):
 
      def make_bid(self, bid):
              """Adds and displays bid made by user"""
+             if bid == "Pass":
+                 accepted = entry_point.submitPass()
+             else:
+                 level = int(bid[0])
+                 suit_symbol = bid[1:]
+                 if suit_symbol not in SUIT_SYMBOL_TO_STRAIN:
+                     print(f"Unknown bid symbol: {suit_symbol}")  # catches "Dbl" for now
+                     return
+                 strain_name = SUIT_SYMBOL_TO_STRAIN[suit_symbol]
+                 accepted = entry_point.submitBid(level,strain_name)
+             if not accepted:
+                 messagebox.showinfo("Illegal bid", "Bid is not legal right now")
+                 return
+
              #Mostly backend but added for testing purposes
              player= self.players[self.current_player]
              self.bid_history_data.append((player, bid))
              self.display_bid(player, bid)
              if bid != "Pass":
                    self.contract.config(text= f"Current contract: {bid} by {player}")
-                   self.last_bidder= self.current_player
-                   self.pass_count=0
+                #removed joyes's logic to have java be the single source of truth
                    self.current_level= int(bid[0])
                    self.update_lvl()
-             else:
-                   self.pass_count = getattr(self, "pass_count", 0)+1
 
-             self.current_player=(self.current_player+1)%4
-             #added for testing purposes
-             if (self.pass_count == 3 and hasattr(self, "last_bidder")) or \
-                  (self.pass_count == 4):
-                   self.finish_bidding()
+             self.current_player = entry_point.getCurrentSeatIndex()
+
+             if entry_point.checkBiddingOver():
+                 if entry_point.isPassedOut():
+                     new_seat = entry_point.resetAfterPassedOut()
+                     self.current_player = new_seat
+                     messagebox.showinfo("Passed out", "No bids made — redealing.")
+                     #passed out so reset game -- later
+                 else:
+                     self.finish_bidding()
+                     declarer = entry_point.getDeclarerName()
+                     contract_str = entry_point.getWinningContractString()
+                     self.contract.config(text=f"Final: {contract_str} - Declarer: {declarer}")
+
+
 
      def update_lvl(self):
            """Displays lower contract level buttons once clicked and a round of bidding passed"""
