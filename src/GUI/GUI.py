@@ -2,8 +2,21 @@ from tkinter import *
 from tkinter import messagebox
 import random
 from PIL import Image, ImageTk
-import os 
+import os
 from db import create_user, verify_user
+##this is needed for the py4j gateway to be able to be used for translation
+from py4j.java_gateway import JavaGateway
+gateway = JavaGateway()
+##where python code is going through
+entry_point = gateway.entry_point
+##for conversion
+SUIT_SYMBOL_TO_STRAIN = {
+    "♣": "CLUBS",
+    "♦": "DIAMONDS",
+    "♥": "HEARTS",
+    "♠": "SPADES",
+    "NT": "NO_TRUMP",
+}
 
 class GUI(Tk):
     def __init__(self):
@@ -66,7 +79,7 @@ class LoginPage(Frame):
         Label(login,
               text="Password",
               font=("Arial", 11, "bold")).pack(anchor="w", padx=30)
-        
+
         self.password=Entry(login, font=("Arial",13),width=35, show="*")
         self.password.pack(fill="x", padx=60, ipady=8, pady=(5,30))
 
@@ -95,7 +108,7 @@ class LoginPage(Frame):
           else:
                 messagebox.showinfo("Sign up failed", "Try again. Username may be already taken")
 
-                
+
 
     def log_in(self):
           username= self.username.get()
@@ -105,8 +118,8 @@ class LoginPage(Frame):
                 self.controller.show_frame(GamePage)
           else:
                 messagebox.showinfo("Login failed","Incorrect username or password")
-                
-                
+
+
 
 class HomePage(Frame):
      def __init__(self, parent, controller):
@@ -148,7 +161,7 @@ class HomePage(Frame):
                  width=40,
                  fg="white",
                  relief="flat",
-                 command=lambda: controller.show_frame(ResultPage)).pack(fill="x",pady=18, ipady=10)  
+                 command=lambda: controller.show_frame(ResultPage)).pack(fill="x",pady=18, ipady=10)
 
 
 class GamePage(Frame):
@@ -175,13 +188,13 @@ class GamePage(Frame):
              self.player_table()
              self.bidding_panel()
              self.player_hands()
-             
+
      def header_display(self):
              #Creating header which has the option to go back to menu and clues
              header= Frame(self, bg="#055341", height=60)
              header.grid(row=0, column=0, sticky="ew")
              header.grid_propagate(False) #Ensuring fixed size of the header
-             
+
              Label(header,
                    text="North/South tricks: 0   East/West tricks:0",
                    font=("Arial",12,"bold"),
@@ -195,7 +208,7 @@ class GamePage(Frame):
                      fg="white",
                      relief="flat",
                      command= self.show_bids).pack(side="right", padx=10)
-             
+
              menu_button= Menubutton(header,
                                      text="Menu",
                                      font=("Arial",13,"bold"),
@@ -203,25 +216,25 @@ class GamePage(Frame):
                                      fg="white",
                                      relief="flat")
              menu_button.pack(side="right", padx=30)
-             
+
              drop_down= Menu(menu_button,
                              tearoff=0,
                              bg="white",
                              fg="#055341",
                              font=("Arial",11))
-             
+
              drop_down.add_command(label="Home",
                                    command= lambda: self.controller.show_frame(HomePage))
-             
+
              drop_down.add_command(label="Instructions",
                                     command= lambda: self.controller.show_instructions())
-             
+
              drop_down.add_command(label="History",
                                    command= lambda: self.controller.show_frame(ResultPage))
-             
+
              drop_down.add_command(label="Logout",
                                    command= lambda: self.controller.show_frame(LoginPage))
-             
+
              menu_button.config(menu=drop_down)
 
      def player_table(self):
@@ -232,12 +245,12 @@ class GamePage(Frame):
                           relief="ridge")
              self.table.grid(row=1, column=0, sticky="nsew")
              self.table.grid_propagate(False)
-             
+
              #Creating desired table grid
              self.table.grid_rowconfigure(0, minsize=90)
              self.table.grid_rowconfigure(1, minsize=520)
              self.table.grid_rowconfigure(2, minsize=90)
-             
+
              self.table.grid_columnconfigure(0, minsize=80, weight=0)
              self.table.grid_columnconfigure(1, weight=1)
              self.table.grid_columnconfigure(2, minsize=80, weight=0)
@@ -259,7 +272,7 @@ class GamePage(Frame):
              self.centre_frame.grid(row=1, column=1, sticky="nsew", padx=15, pady=10)
              self.east_frame.grid(row=1, column=2, sticky="ns")
              self.south_frame.grid(row=2, column=0, columnspan=3, sticky="s")
-             
+
              self.centre_frame.grid_rowconfigure(0, weight=1)
              self.centre_frame.grid_columnconfigure(0, weight=1)
 
@@ -275,7 +288,7 @@ class GamePage(Frame):
                    lbl.place(relx=0.5, rely=0.5, anchor="center",
                              x=offsets[player][0], y= offsets[player][1])
                    self.trick_labels[player]=lbl
-             
+
 
      def bidding_panel(self):
              """ Creating bidding panel where bids take place"""
@@ -284,13 +297,13 @@ class GamePage(Frame):
                            bd=2,
                            relief="ridge")
              self.bidding.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
-             
+
              Label(self.bidding,
                    text="Bidding",
                    font=("Arial", 16, "bold"),
                    bg="#7B7D7E",
                    fg="white").pack(pady=(8,5))
-             
+
              self.players_frame=Frame(self.bidding, bg="#7B7D7E")
              self.players_frame.pack(fill="x", padx=20)
 
@@ -392,7 +405,7 @@ class GamePage(Frame):
                   font=("Arial", 12, "bold"),
                   width=5,
                   command=lambda: self.make_bid("Pass")).pack(pady=4)
-             
+
      def select_level(self, level):
            """Highligts the clicked level button"""
            self.selected_level=level
@@ -409,8 +422,8 @@ class GamePage(Frame):
            self.selected_level=None
            for btn in self.level_btns:
                  btn.config(relief="raised")
-                         
-                  
+
+
      def make_bid(self, bid):
              """Adds and displays bid made by user"""
              #Mostly backend but added for testing purposes
@@ -449,7 +462,7 @@ class GamePage(Frame):
                  text=bid,
                  font=("Arial", 11, "bold"),
                  bg="#7B7D7E",
-                 fg="white").grid(row=row, column=player_idx, sticky="w", padx=10, pady=4)          
+                 fg="white").grid(row=row, column=player_idx, sticky="w", padx=10, pady=4)
 
      def show_bids(self):
            """Displays bidding history whenever user clicks 'view bids' button"""
@@ -500,7 +513,7 @@ class GamePage(Frame):
                   fg="#123f35",
                   relief="flat",
                   command=bid_window.destroy).pack(pady=10)
-                 
+
 
      def player_hands(self):
            """Displays player hands"""
@@ -511,46 +524,46 @@ class GamePage(Frame):
            step = (frame_height - card_height) / (n - 1)
            #south
            self.card_images=[]
-           
+
            for i in range(13):
                 img= self.resize_cards("png/C2.png")
                 self.card_images.append(img)
-           
-                btn= Button(self.south_frame, 
-                            image=img, 
+
+                btn= Button(self.south_frame,
+                            image=img,
                             borderwidth=0)
                 btn.config(command=lambda image=img, b=btn: self.play_card(image, "South", b))
                 btn.pack(side="left", padx=3)
-           
+
            #north
            for i in range(13):
                img= self.resize_cards("png/S2.png")
                self.card_images.append(img)
-           
-               btn= Button(self.north_frame, 
-                           image=img, 
+
+               btn= Button(self.north_frame,
+                           image=img,
                            borderwidth=0)
                btn.config(command=lambda image=img, b=btn: self.play_card(image, "North", b))
                btn.pack(side="left", padx=3)
-           
+
            #east
            for i in range(13):
                 img= self.resize_cards("png/D2.png")
                 self.card_images.append(img)
-           
-                btn= Button(self.east_frame, 
-                            image=img, 
+
+                btn= Button(self.east_frame,
+                            image=img,
                             borderwidth=0)
                 btn.config(command=lambda image=img, b=btn: self.play_card(image, "East", b))
                 btn.place(x=15,y=i * step)
-           
+
            #west
            for i in range(13):
                img= self.resize_cards("png/H2.png")
                self.card_images.append(img)
-           
-               btn= Button(self.west_frame, 
-                           image=img, 
+
+               btn= Button(self.west_frame,
+                           image=img,
                            borderwidth=0)
                btn.config(command=lambda image=img, b=btn: self.play_card(image,"West", b))
                btn.place(x=0,y=i * step)
@@ -584,11 +597,11 @@ class GamePage(Frame):
            """removes bidding panel once bidding has been completed"""
            self.bidding_phase=False
            self.bidding.grid_remove()
-    
+
      def resize_cards(self, card):
         """Ensures cards are shaped in a way that it can be displayed by player hands and on the board"""
         card_image=Image.open(card)
-        resized_card= card_image.resize((70,100))   
+        resized_card= card_image.resize((70,100))
         return ImageTk.PhotoImage(resized_card)
 
 class TutorialPage(Frame):
@@ -602,6 +615,6 @@ class ResultPage(Frame):
             Label(self, text="").pack()
 
 
-    
+
 
 GUI().mainloop()
