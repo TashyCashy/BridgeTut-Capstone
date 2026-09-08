@@ -1,8 +1,6 @@
 package BiddingSystem.BiddingData;
 
-import BiddingSystem.BiddingData.Actions.ContractBid;
-import BiddingSystem.BiddingData.Actions.PassAction;
-import BiddingSystem.BiddingData.Actions.PlayerAction;
+import BiddingSystem.BiddingData.Actions.*;
 import BiddingSystem.Player;
 import logic.Strain;
 
@@ -99,6 +97,24 @@ public class BiddingHistory {
             }
         }
         return null;
+    }
+
+    public DoublingState getCurrentDoublingState() {
+        for (int i = bidsMade.size() - 1; i >= 0; i--) {
+            //we go backwards
+            PlayerAction action = bidsMade.get(i).getAction();
+            if (action instanceof RedoubleAction) {
+                return DoublingState.REDOUBLED;
+            }
+            if (action instanceof DoubleAction) {
+                return DoublingState.DOUBLED;
+            }
+            if (action instanceof ContractBid) {
+                return DoublingState.UNDOUBLED; // a new bid cancels any prior double
+            }
+            // PassAction: keep scanning backward, passes don't cancel a double
+        }
+        return DoublingState.UNDOUBLED; // no double/redouble/bid found at all
     }
 }
 
