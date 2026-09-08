@@ -43,7 +43,8 @@ public class BiddingManager {
 
     //after a player does some action, it must be logged and the turn advanced.
     public boolean ActionPlayed(PlayerAction p) {
-        if (biddingValidator.validateBid(p, biddingHistory)) {
+        Player actingPlayer = getCurrentPlayer();
+        if (biddingValidator.validateBid(p, biddingHistory, actingPlayer )) {
             biddingHistory.addBid(new BidEntry(p, getCurrentPlayer()));
             advanceTurn();
             return true;
