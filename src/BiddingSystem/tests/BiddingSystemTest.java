@@ -1,8 +1,11 @@
 package BiddingSystem.tests;
 
 import BiddingSystem.BiddingData.Actions.ContractBid;
+import BiddingSystem.BiddingData.Actions.DoubleAction;
 import BiddingSystem.BiddingData.Actions.PassAction;
+import BiddingSystem.BiddingData.Actions.RedoubleAction;
 import BiddingSystem.BiddingLogic.BiddingManager;
+import BiddingSystem.BiddingLogic.GameReset;
 import BiddingSystem.Player;
 import logic.Deck;
 import logic.PlayerPosition;
@@ -119,6 +122,80 @@ class BiddingManagerTest {
         assertEquals(north.getUsername(), manager.getCurrentPlayer().getUsername(), "Turn should move West -> North");
     }
 
+    // ---------- Double / Redouble ----------
+
+    @Test
+    void opponentCanDoubleAContractBid() {
+        GameReset.resetGame(manager);
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // Sorth
+        boolean accepted = manager.ActionPlayed(new DoubleAction()); // West (opponent of Sout)
+        assertTrue(accepted, "West (opponent) should be able to double South's 1H");
+    }
+
+    @Test
+    void partnerCannotDoubleOwnSidesBid() {
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // South
+        manager.ActionPlayed(new PassAction());                  // West
+        boolean accepted = manager.ActionPlayed(new DoubleAction());                // North (teammate)
+        assertFalse(accepted, "North (teammate) should not be able to double South's 1H");
+    }
+
+    @Test
+    void northsPartnerCannotDoubleNorthsBid() {
+        BiddingManager m = new BiddingManager(PlayerPosition.NORTH, players);
+        m.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // North bids
+        m.ActionPlayed(new PassAction());                  // East passes
+        boolean accepted = m.ActionPlayed(new DoubleAction()); // South = North's partner
+        assertFalse(accepted, "South should NOT be able to double North's own partnership's bid");
+    }
+
+    @Test
+    void cannotDoubleWhenAlreadyDoubled() {
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // North
+        manager.ActionPlayed(new DoubleAction());                  // East doubles
+        manager.ActionPlayed(new PassAction());                // South passes
+        boolean accepted = manager.ActionPlayed(new DoubleAction()); // West tries to double again
+        assertFalse(accepted, "Cannot double an already-doubled contract");
+    }
+
+    @Test
+    void cannotDoubleWithNoBidMade() {
+        GameReset.resetGame(manager);
+        boolean accepted = manager.ActionPlayed(new DoubleAction()); // North, nothing bid yet
+        assertFalse(accepted, "Cannot double when no contract bid has been made");
+    }
+
+    @Test
+    void doubledSidePartnerCanRedouble() {
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // North bids
+        manager.ActionPlayed(new PassAction());                  // East passes
+        manager.ActionPlayed(new DoubleAction());                // South doubles (opponent)
+        boolean accepted = manager.ActionPlayed(new PassAction()); // West passes
+        // now back to North -- North's own side was doubled, North should be able to redouble
+        assertTrue(accepted); // sanity check the pass itself worked
+        boolean redoubleAccepted = manager.ActionPlayed(new RedoubleAction()); // North redoubles
+        assertTrue(redoubleAccepted, "North should be able to redouble after their side was doubled");
+    }
+
+    @Test
+    void opponentCannotRedouble() {
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // North
+        manager.ActionPlayed(new PassAction());                  // East
+        manager.ActionPlayed(new DoubleAction());                // South doubles
+        boolean accepted = manager.ActionPlayed(new RedoubleAction()); // West tries to redouble -- but West is opponent side
+        assertFalse(accepted, "Only the doubled partnership can redouble, not the doubling side");
+    }
+
+    @Test
+    void newBidCancelsExistingDouble() {
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // North
+        manager.ActionPlayed(new PassAction());                  // East
+        manager.ActionPlayed(new DoubleAction());                // South doubles
+        manager.ActionPlayed(new ContractBid(2, Strain.CLUBS));   // West overcalls -- cancels the double
+        boolean accepted = manager.ActionPlayed(new RedoubleAction()); // North tries to redouble the now-stale double
+        assertFalse(accepted, "A new bid should cancel the prior double; redoubling it should now be illegal");
+    }
+
     // ---------- Auction-end detection ----------
 
     @Test
@@ -164,6 +241,8 @@ class BiddingManagerTest {
         assertEquals(south.getUsername(), manager.getDeclarer().getUsername(),
             "Declarer should be North (first to bid Hearts), not South (final/highest bidder)");
     }
+
+
 
     // ---------- Fuzzing: randomized legal-only sequences shouldn't crash ----------
 
