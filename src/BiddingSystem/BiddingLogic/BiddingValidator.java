@@ -13,9 +13,14 @@ public class BiddingValidator {
     }
 
    public boolean validateBid (PlayerAction pA, BiddingHistory bH, Player actingPlayer){
+
+        //added actingPlayer for doubling and redoubling checking
         if (bH.checkNoContractBidMade()){
+            //can't attempt to double or redouble if there is no bid that was made
+            //in this case even if no bids made but double and redouble are attenpted it should reject.
+            return !(pA instanceof DoubleAction) && !(pA instanceof RedoubleAction);
             //any bid is valid, since only passes have been made, will add a check for passing out or 3 passes later.
-            return true;
+            //problematic because double returns legal if no contract bid has been made.
         }
 
             BidEntry highestBid = bH.getLargestBid();
