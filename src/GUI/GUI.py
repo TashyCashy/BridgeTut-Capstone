@@ -177,6 +177,7 @@ class GamePage(Frame):
              ##changed to reflect the java ordering.
              self.players=["South","West","North","East"]
              self.bid_history_data=[]
+             self.undo_hist=[]
              self.bidding_phase=True
 
              #grid layout for the board
@@ -369,11 +370,12 @@ class GamePage(Frame):
                    l_btn=Button(numbers,
                           text= str(num),
                           font=("Arial", 12, "bold"),
-                          width=3,
-                          padx=4,
-                          pady=4,
+                          width=5,
+                          height=2,
+                          padx=8,
+                          pady=8,
                           command=lambda n=num: self.select_level(n))
-                   l_btn.pack(side="left", padx=3)
+                   l_btn.pack(side="left", padx=6, pady=5)
                    self.level_btns.append(l_btn)
 
              suits= Frame(btn_frame, bg="#7B7D7E")
@@ -387,16 +389,21 @@ class GamePage(Frame):
                    width=7).pack(side="left", padx=5)
 
              #Creating different suit and game logic buttons
-             suit = ["♣","♦","♥","♠","NT", "Dbl"]
+             suit = ["♣","♦","♥","♠","NT"]
              self.suits_btn=[]
              for s in suit:
+                  if s in ["",""]:
+                        suit_colour="red"
+                  else:
+                        suit_colour= "black"
                   s_btn=Button(suits,
                         text= s,
-                        font=("Arial", 12, "bold"),
-                        width=3,
-                        padx=4,
-                        pady=4,
-                        fg= "#055341",
+                        font=("Arial", 18, "bold"),
+                        width=5,
+                        height=2,
+                        padx=8,
+                        pady=8,
+                        fg= suit_colour,
                         command=lambda st=s: self.select_suit(st))
                   s_btn.pack(side="left", padx=2)
                   self.suits_btn.append(s_btn)
@@ -404,9 +411,27 @@ class GamePage(Frame):
              #Pass button for when player does not want to make a contract
              Button(btn_frame,
                   text= "Pass",
-                  font=("Arial", 12, "bold"),
+                  font=("Arial", 18, "bold"),
                   width=5,
                   command=lambda: self.make_bid("Pass")).pack(pady=4)
+
+             Button(btn_frame,
+                  text= "Double",
+                  font=("Arial", 18, "bold"),
+                  width=5,
+                  command=lambda: self.make_bid("Double")).pack(pady=4)
+
+             Button(btn_frame,
+                  text= "Redouble",
+                  font=("Arial", 18, "bold"),
+                  width=5,
+                  command=lambda: self.make_bid("Redouble")).pack(pady=4)
+
+             Button(btn_frame,
+                  text= "Undo",
+                  font=("Arial", 16, "bold"),
+                  width=6,
+                  command=self.undo_bid).pack(side="right", anchor="se",padx=10,pady=10)
 
      def select_level(self, level):
            """Highligts the clicked level button"""
@@ -428,6 +453,12 @@ class GamePage(Frame):
 
      def make_bid(self, bid):
              """Adds and displays bid made by user"""
+             #adding current state of bids made to implement logic of undo button
+             self.undo_hist.append({
+                   "bid_hist_data": self.bid_history_data.copy(),
+                   "current_level": self.current_level,
+                   "current_player": self.current_player
+             })
              if bid == "Pass":
                  accepted = entry_point.submitPass()
              else:
@@ -483,8 +514,8 @@ class GamePage(Frame):
 
            Label(self.bid_history,
                  text=bid,
-                 font=("Arial", 11, "bold"),
-                 bg="#7B7D7E",
+                 font=("Arial", 18, "bold"),
+                 bg="#99C0D3",
                  fg="white").grid(row=row, column=player_idx, sticky="w", padx=10, pady=4)
 
      def show_bids(self):
@@ -502,7 +533,7 @@ class GamePage(Frame):
 
            hist= Frame(bid_window,
                        bd=2,
-                       bg="#7B7D7E",
+                       bg="#99C0D3",
                        relief="ridge")
            hist.pack(fill="both", expand=True, padx=30, pady=10)
 
@@ -510,7 +541,7 @@ class GamePage(Frame):
                  Label(hist,
                        text= player,
                        font=("Arial", 11, "bold"),
-                       bg="#7B7D7E",
+                       bg="#99C0D3",
                        fg="white",
                        width=7).grid(row=0, column=column, padx=20, pady=10)
 
@@ -519,13 +550,13 @@ class GamePage(Frame):
                  col= self.players.index(player)
                  Label(hist,
                        text= bid,
-                       font=("Arial", 11, "bold"),
-                       bg="#7B7D7E",
+                       font=("Arial", 18, "bold"),
+                       bg="#99C0D3",
                        fg="white").grid(row=row, column=col, padx=20, pady=5)
 
            Label(bid_window,
                   text= self.contract.cget("text"),
-                  font=("Arial", 14, "bold"),
+                  font=("Arial", 18, "bold"),
                   bg="#055341",
                   fg="white").pack(pady=5)
 
@@ -536,6 +567,32 @@ class GamePage(Frame):
                   fg="#123f35",
                   relief="flat",
                   command=bid_window.destroy).pack(pady=10)
+           
+     def undo_bid(self):
+           """Undo button which removes previous bids made"""
+           if not self.undo_hist:
+                 messagebox.showinfo("Undo", "There are no bids to undo")
+
+           prev_state= self.undo_hist.pop()
+           self.bid_history_data=prev_state["bid_history_data"].copy()
+           self.current_player = prev_state["current_player"]
+           self.current_level = prev_state["current_level"]
+
+           self.clear_bids()
+           for player, bid in self.bid_history_data:
+                 self.display_bid(player, bid)
+
+           last_bid = None
+           for player, bid in reversed(self.bid_history_data):
+                 if bid != "Pass":
+                       last_bid = (player, bid)
+                       break
+           if last_bid: 
+            player, bid = last_bid 
+            self.contract.config( text=f"Current contract: {bid} by {player}" )
+           else:
+            self.contract.config( text="Current contract: None" )
+
 
 
      def player_hands(self):
