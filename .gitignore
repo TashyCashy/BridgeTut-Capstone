@@ -31,3 +31,5 @@ bin/
 libs/
 test-reports/
 testbin/
+__pycache__/
+*.pyc
