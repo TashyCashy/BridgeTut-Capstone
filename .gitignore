@@ -27,4 +27,10 @@ bin/
 .vscode/
 
 ### Mac OS ###
-.DS_Store
+.DS_Storesource/
+libs/
+test-reports/
+testbin/
+__pycache__/
+*.pyc
+myenv/
