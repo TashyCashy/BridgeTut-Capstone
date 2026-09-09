@@ -33,3 +33,4 @@ test-reports/
 testbin/
 __pycache__/
 *.pyc
+myenv/
