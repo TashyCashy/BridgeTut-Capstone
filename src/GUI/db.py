@@ -65,4 +65,137 @@ def verify_user(username, password):
     else:
         return False
 
+def create_game(user_id, dealer):
+    conn = get_connection()
+
+    if conn is None:
+        return None
+
+    cursor= conn.cursor()
+
+    try:
+        cursor.execute("INSERT INTO games (user_id, dealer) VALUES (%s, %s)", (user_id, dealer))
+        conn.commit()
+        return cursor.lastrowid
+    except Exception as e:
+        conn.rollback()
+        print(f"Error creating game : {e}")
+        return None
+    finally: 
+        cursor.close()
+        conn.close()
+
+def save_bid(game_id, player_id, bid_value):
+    conn = get_connection()
+
+    if conn is None:
+        return None
+    
+    cursor= conn.cursor()
+
+    try:
+        cursor.execute("INSERT INTO bids (game_id, bid_value, player_id) VALUES (%s, %s, %s)",( game_id, bid_value, player_id))
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        print(f"Error saving bid : {e}")
+        return None
+    finally: 
+        cursor.close()
+        conn.close()
+
+def get_bidding_hist(game_id):
+    conn = get_connection()
+
+    if conn is None:
+        return []
+    
+    cursor= conn.cursor()
+
+    try:
+        cursor.execute("SELECT bid_value"
+        "FROM bids"
+         "WHERE game = (%s)"
+          "ORDER by bid_id", (game_id,))
+        conn.commit()
+        return cursor.fetchall()
+    except Exception as e:
+        conn.rollback()
+        print(f"Error getting bidding history : {e}")
+        return None
+    finally: 
+        cursor.close()
+        conn.close()
+
+def save_trick(game_id, trick_winner, winner):
+    conn = get_connection()
+    
+    if conn is None:
+        return None
+    
+    cursor= conn.cursor()
+    
+    try:
+        cursor.execute("INSERT INTO bids (game_id, trick_winner, winner)"
+                       "VALUES (%s, %s, %s)",
+                       ( game_id, trick_winner, winner))
+        conn.commit()
+        return cursor.lastrowid
+    except Exception as e:
+        conn.rollback()
+        print(f"Error saving trick : {e}")
+        return None
+    finally: 
+        cursor.close()
+        conn.close()
+
+def save_card_played(suit, card_rank, trick_id):
+    conn = get_connection()
+    
+    if conn is None:
+        return None
+    
+    cursor= conn.cursor()
+    
+    try:
+        cursor.execute("INSERT INTO bids (suit, card_rank, trick_id)"
+                       "VALUES (%s, %s, %s)",
+                       ( suit, card_rank, trick_id))
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        print(f"Error saving trick : {e}")
+        return None
+    finally: 
+        cursor.close()
+        conn.close()
+
+def update_results(game_id, declarer, ns_score, ew_score):
+    conn = get_connection()
+    
+    if conn is None:
+        return None
+    
+    cursor= conn.cursor()
+    
+    try:
+        cursor.execute("UPDATE games " 
+                       "SET declarer = %s, NS_score = %s, EW_score = %s"
+                       "WHERE game_id=%s",
+                       ( game_id, declarer, ns_score, ew_score))
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        print(f"Error updating game result : {e}")
+        return None
+    finally: 
+        cursor.close()
+        conn.close()
+
+
+
+
     
