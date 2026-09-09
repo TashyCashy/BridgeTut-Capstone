@@ -1,7 +1,9 @@
 package BiddingSystem;
 
 import BiddingSystem.BiddingData.Actions.ContractBid;
+import BiddingSystem.BiddingData.Actions.DoubleAction;
 import BiddingSystem.BiddingData.Actions.PassAction;
+import BiddingSystem.BiddingData.Actions.RedoubleAction;
 import BiddingSystem.BiddingLogic.BiddingManager;
 import BiddingSystem.BiddingLogic.GameReset;
 import logic.Deck;
@@ -62,6 +64,10 @@ public class BiddingGateway {
     public boolean submitPass() {
         return manager.ActionPlayed(new PassAction());
     }
+
+    public boolean submitDouble (){ return manager.ActionPlayed(new DoubleAction());}
+
+    public boolean submitReDouble (){ return manager.ActionPlayed(new RedoubleAction());}
 
     /** Index into PlayerPosition.values() order: SOUTH=0, WEST=1, NORTH=2, EAST=3 */
     public int getCurrentSeatIndex() {

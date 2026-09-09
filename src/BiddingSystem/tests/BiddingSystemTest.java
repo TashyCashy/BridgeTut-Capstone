@@ -193,7 +193,6 @@ class BiddingManagerTest {
     void newBidCancelsRedouble (){
         manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); //South bids 1H
         assertEquals(west, manager.getCurrentPlayer(), "West should be the one doubling here");
-        manager.ActionPlayed(new DoubleAction());
         manager.ActionPlayed(new DoubleAction()); //West doubles South
         manager.ActionPlayed(new ContractBid(2, Strain.CLUBS)); // North bids 2C (teammate of South)
         boolean accepted = manager.ActionPlayed(new RedoubleAction()); // East tries to redouble should e rejected
