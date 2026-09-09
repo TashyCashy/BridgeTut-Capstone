@@ -8,6 +8,10 @@ import logic.Card;
 import logic.Deck;
 import logic.PlayerPosition;
 import logic.Strain;
+import logic.Suit;
+import logic.Rank;
+import logic.GameState;
+
 
 import py4j.GatewayServer;
 
@@ -25,6 +29,7 @@ import java.util.List;
 public class BiddingGateway {
 
     private BiddingManager manager;
+    private GameState gameState;
 
     public BiddingGateway() {
         this.manager = freshGame();
@@ -120,6 +125,23 @@ public class BiddingGateway {
         //for checking the cards are the same as their actual hand
         System.out.println("Hand for " +p.getUsername()+ " " + cardCodes);
         return cardCodes;
+    }
+
+    /**
+     * Call once bidding has ended with a real contract (not passed out)
+     * Pulls the declarer and trump suit straight from the manager that 
+     * just finished bidding - no re-entering data, no duplicated logic
+     */
+    public PlayingGateway startPlayPhase() {
+        PlayerPosition declarer = manager.getDeclarer().getSeatPosition();
+        Strain winningStrain = manager.getWinningContract().getStrain();
+        Suit trumpSuit = winningStrain.toSuit();
+
+        gameState = new GameState(declarer, trumpSuit);
+        for (Player player: manager.getPlayers()) {
+            gameState.dealHand(player.getSeatPosition(), player.getPlayerHand().getHand());
+        }
+        return new PlayingGateway(gameState);
     }
 
     public static void main(String[] args) {
