@@ -4,10 +4,7 @@ import BiddingSystem.BiddingData.Actions.ContractBid;
 import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingLogic.BiddingManager;
 import BiddingSystem.BiddingLogic.GameReset;
-import logic.Card;
-import logic.Deck;
-import logic.PlayerPosition;
-import logic.Strain;
+import logic.*;
 
 import py4j.GatewayServer;
 
@@ -25,10 +22,12 @@ import java.util.List;
 public class BiddingGateway {
 
     private BiddingManager manager;
+    private GameState gameState;
 
     public BiddingGateway() {
         this.manager = freshGame();
     }
+
 
     private BiddingManager freshGame() {
         Player south = new Player("South", new logic.PlayerHand(PlayerPosition.SOUTH), PlayerPosition.SOUTH);
@@ -120,6 +119,89 @@ public class BiddingGateway {
         //for checking the cards are the same as their actual hand
         System.out.println("Hand for " +p.getUsername()+ " " + cardCodes);
         return cardCodes;
+    }
+
+    //TASHES CODE
+
+    /**
+     * Call once bidding has ended with a real contract (not passed out)
+     * Pulls the declarer and trump suit straight from the manager that
+     * just finished bidding - no re-entering data, no duplicated logic
+     */
+    public void startPlayPhase() {
+        PlayerPosition declarer = manager.getDeclarer().getSeatPosition();
+        Strain winningStrain = manager.getWinningContract().getStrain();
+        Suit trumpSuit = winningStrain.toSuit();
+
+        gameState = new GameState(declarer, trumpSuit);
+        for (Player player: manager.getPlayers()) {
+            gameState.dealHand(player.getSeatPosition(), player.getPlayerHand().getHand());
+        }
+    }
+
+    /**
+     *Attempts to play a card on behalf of the given seat.
+     * cardCode matches getHandForSeat()'s format: suit letter then rank letter
+     * @return true if the play was legal and applied, false if rejected
+     */
+    public boolean playCard(int seatIndex, String cardCode) {
+        PlayerPosition seat = PlayerPosition.values()[seatIndex];
+        Card card = parseCardCode(cardCode);
+        return gameState.playCard(seat, card);
+    }
+
+    public boolean isHandComplete() {
+        return gameState.isHandComplete();
+    }
+
+    public int getCompletedTricksCount() {
+        return gameState.getCompletedTricks().size();
+    }
+
+    // Cards a seat currently still holds, same code format as getHandForSeat()
+    public List<String> getRemainingHandForSeat(int seatIndex) {
+        PlayerPosition seat = PlayerPosition.values()[seatIndex];
+        List<String> cardCodes = new ArrayList<>();
+        for (Card card : gameState.getHand(seat).getHand()) {
+            cardCodes.add(card.getSuit().getSuitLetter() + card.getRank().getRankLetter());
+        }
+        return cardCodes;
+    }
+
+    // cards played so far in the current trick, in the order they were played
+    public List<String> getCurrentTrickCards() {
+        List<String> cardCodes = new ArrayList<>();
+        for (Card card: gameState.getCurrentTrick().getPlayedCards().values()) {
+            cardCodes.add(card.getSuit().getSuitLetter() + card.getRank().getRankLetter());
+        }
+        return cardCodes;
+    }
+
+    // converts a code like "D6" back into a real card (suit letter, then rank)
+    private Card parseCardCode(String code) {
+        char suitChar = code.charAt(0);
+        String rank = code.substring(1);
+        return new Card(charToSuit(suitChar), codeToRank(rank));
+    }
+
+    private Suit charToSuit(char c) {
+        switch (c) {
+            case 'C': return Suit.CLUBS;
+            case 'D': return Suit.DIAMONDS;
+            case 'H': return Suit.HEARTS;
+            case 'S': return Suit.SPADES;
+            default: throw new IllegalArgumentException("Unknown suit code: " + c);
+        }
+    }
+
+    private Rank codeToRank(String s) {
+        switch (s) {
+            case "J": return Rank.JACK;
+            case "Q": return Rank.QUEEN;
+            case "K": return Rank.KING;
+            case "A": return Rank.ACE;
+            default: return Rank.values()[Integer.parseInt(s)-2]; // "2"..."10"
+        }
     }
 
     public static void main(String[] args) {

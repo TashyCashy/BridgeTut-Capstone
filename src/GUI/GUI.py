@@ -30,7 +30,8 @@ class GUI(Tk):
         self.card_width=70
         self.card_height=100
 
-        #Creating container which holds frames so different app pages can be displayed
+        #Creating container whi
+        #ch holds frames so different app pages can be displayed
         container= Frame(self)
         container.pack(fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
