@@ -1,10 +1,10 @@
 package BiddingSystem.BiddingLogic;
 
 import BiddingSystem.BiddingData.Actions.ContractBid;
-import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.BiddingData.BidEntry;
 import BiddingSystem.BiddingData.BiddingHistory;
+import BiddingSystem.BiddingData.DoublingState;
 import BiddingSystem.Player;
 import logic.PlayerPosition;
 import logic.Strain;
@@ -20,6 +20,7 @@ public class BiddingManager {
     //adding this to hodl reference to the starting position in the case of passing out, we need what it was after modifying it
     private final PlayerPosition startingPosition;
     private boolean passedOut = false;
+    private DoublingState finalDoublingState = DoublingState.UNDOUBLED;
 
 
 
@@ -62,8 +63,10 @@ public class BiddingManager {
             Strain winningStrain = ((ContractBid) winningEntry.getAction()).getStrain();
             //as well as the action.
             winningContract = (ContractBid) winningEntry.getAction();
+            //also keep track of the doubling state when bidding is concluded
+            finalDoublingState = biddingHistory.getCurrentDoublingState();
             declarer = biddingHistory.determineDeclarer(winningStrain, winningEntry.getPlayer());
-            System.out.println("Bidding is over: The winning contract is " + winningStrain + ", at level " + winningContract.getLevel() + " and the declarer is seated at " + declarer.getSeatPosition());
+            System.out.println("Bidding is over: The winning contract is " + winningStrain + ", at level " + winningContract.getLevel() + ", and this bid was " + finalDoublingState + " and the declarer is seated at " + declarer.getSeatPosition());
             return true;
 
             //end the game
@@ -73,7 +76,7 @@ public class BiddingManager {
             passedOut = true;
             return true;
         }
-        System.out.println("Bidding is still in ongoing!");
+        //System.out.println("Bidding is still ongoing!");
         return false;
     }
 
@@ -96,4 +99,10 @@ public class BiddingManager {
     public ContractBid getWinningContract() {
         return winningContract;
     }
+
+    //Live doubling state
+    public DoublingState getCurrentDoublingState() { return biddingHistory.getCurrentDoublingState(); }
+
+   //Doubling state of final contract
+    public DoublingState getFinalDoublingState() { return finalDoublingState; }
 }

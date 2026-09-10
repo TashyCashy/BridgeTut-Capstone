@@ -4,6 +4,8 @@ import BiddingSystem.BiddingData.Actions.ContractBid;
 import BiddingSystem.BiddingData.Actions.DoubleAction;
 import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingData.Actions.RedoubleAction;
+import BiddingSystem.BiddingData.DoublingState;
+import BiddingSystem.BiddingGateway;
 import BiddingSystem.BiddingLogic.BiddingManager;
 import BiddingSystem.Player;
 import logic.PlayerPosition;
@@ -209,6 +211,63 @@ class BiddingManagerTest {
         manager.ActionPlayed(new PassAction()); //West passes after South
         boolean accepted =  manager.ActionPlayed(new RedoubleAction()); //North redoubles East's double should accept
         assertTrue(accepted, "Delayed double onto a delayed redouble should accept");
+    }
+
+    // ---------- Doubling state exposure (for the GUI / play phase) ----------
+
+    @Test
+    void currentDoublingStateTracksAuctionInProgress() {
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // South
+        assertEquals(DoublingState.UNDOUBLED, manager.getCurrentDoublingState());
+        manager.ActionPlayed(new DoubleAction());                // West doubles
+        assertEquals(DoublingState.DOUBLED, manager.getCurrentDoublingState());
+        manager.ActionPlayed(new RedoubleAction());              // North redoubles (South's side)
+        assertEquals(DoublingState.REDOUBLED, manager.getCurrentDoublingState());
+    }
+
+    @Test
+    void finalDoublingStateIsUndoubledForPlainContract() {
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // South
+        manager.ActionPlayed(new PassAction());                  // West
+        manager.ActionPlayed(new PassAction());                  // North
+        manager.ActionPlayed(new PassAction());                  // East
+        assertTrue(manager.checkBiddingOver());
+        assertEquals(DoublingState.UNDOUBLED, manager.getFinalDoublingState());
+    }
+
+    @Test
+    void finalDoublingStateIsFrozenToDoubledWhenAuctionEndsDoubled() {
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // South
+        manager.ActionPlayed(new DoubleAction());                // West doubles
+        manager.ActionPlayed(new PassAction());                  // North
+        manager.ActionPlayed(new PassAction());                  // East
+        manager.ActionPlayed(new PassAction());                  // South
+        assertTrue(manager.checkBiddingOver());
+        assertEquals(DoublingState.DOUBLED, manager.getFinalDoublingState());
+    }
+
+    @Test
+    void finalDoublingStateIsFrozenToRedoubledWhenAuctionEndsRedoubled() {
+        manager.ActionPlayed(new ContractBid(1, Strain.HEARTS)); // South
+        manager.ActionPlayed(new DoubleAction());                // West doubles
+        manager.ActionPlayed(new RedoubleAction());              // North redoubles (South's side)
+        manager.ActionPlayed(new PassAction());                  // East
+        manager.ActionPlayed(new PassAction());                  // South
+        manager.ActionPlayed(new PassAction());                  // West
+        assertTrue(manager.checkBiddingOver());
+        assertEquals(DoublingState.REDOUBLED, manager.getFinalDoublingState());
+    }
+
+    @Test
+    void gatewayWinningContractStringIncludesDoublingSuffix() {
+        BiddingGateway gateway = new BiddingGateway();
+        assertTrue(gateway.submitBid(1, "HEARTS"));
+        assertTrue(gateway.submitDouble());
+        assertTrue(gateway.submitPass());
+        assertTrue(gateway.submitPass());
+        assertTrue(gateway.submitPass());
+        assertTrue(gateway.checkBiddingOver());
+        assertEquals("1 HEARTS DOUBLED", gateway.getWinningContractString());
     }
 
     // ---------- Auction-end detection ----------
