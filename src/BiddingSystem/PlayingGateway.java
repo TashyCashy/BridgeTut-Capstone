@@ -1,7 +1,7 @@
 package BiddingSystem;
 
-import logic.*;
 import java.util.*;
+import logic.*;
 
 public class PlayingGateway {
     private final GameState gameState;
@@ -46,6 +46,11 @@ public class PlayingGateway {
             cardCodes.add(card.getSuit().getSuitLetter() + card.getRank().getRankLetter());
         }
         return cardCodes;
+    }
+
+    // GUI needs to know whose turn it is
+    public int getCurrentTurnSeatIndex() {
+        return gameState.getCurrentPlayerTurn().ordinal();
     }
 
     // converts a code like "D6" back into a real card (suit letter, then rank)
