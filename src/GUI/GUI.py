@@ -172,6 +172,7 @@ class GamePage(Frame):
              #Initialising game states
              self.card_images=[]
              self.current_player=0
+             self.current_level=0
              self.selected_level=None
              ##changed to reflect the java ordering.
              self.players=["South","West","North","East"]
@@ -304,7 +305,7 @@ class GamePage(Frame):
                    text="Bidding",
                    font=("Arial", 16, "bold"),
                    bg="#7B7D7E",
-                   fg="white").pack(pady=(8,5))
+                   fg="#055341").pack(pady=(8,5))
 
              self.players_frame=Frame(self.bidding, bg="#7B7D7E")
              self.players_frame.pack(fill="x", padx=20)
@@ -319,7 +320,7 @@ class GamePage(Frame):
                         text=p,
                         font=("Arial", 11, "bold"),
                         bg="#7B7D7E",
-                        fg="white").grid(row=0, column=col, sticky="w", padx=10)
+                        fg="#055341").grid(row=0, column=col, sticky="w", padx=10)
 
              #storing the bidding history
              self.bid_history= Frame(self.bidding, bg="#7B7D7E")
@@ -358,23 +359,23 @@ class GamePage(Frame):
 
              Label(numbers,
                    text= "Level: ",
-                   font=("Arial", 11, "bold"),
+                   font=("Arial", 10, "bold"),
                    bg="#7B7D7E",
-                   fg="white",
-                   width=7).pack(side="left", padx=5)
+                   fg="#055341",
+                   width=6).pack(side="left", padx=5)
 
              #Creating different contract level buttons
              self.level_btns=[]
              for num in range(1,8):
                    l_btn=Button(numbers,
                           text= str(num),
-                          font=("Arial", 12, "bold"),
-                          width=5,
-                          height=2,
-                          padx=8,
-                          pady=8,
+                          font=("Arial", 10, "bold"),
+                          width=2,
+                          height=1,
+                          padx=2,
+                          pady=2,
                           command=lambda n=num: self.select_level(n))
-                   l_btn.pack(side="left", padx=6, pady=5)
+                   l_btn.pack(side="left", padx=3, pady=3)
                    self.level_btns.append(l_btn)
 
              suits= Frame(btn_frame, bg="#7B7D7E")
@@ -382,26 +383,26 @@ class GamePage(Frame):
 
              Label(suits,
                    text="Suits: ",
-                   font=("Arial", 11, "bold"),
+                   font=("Arial", 10, "bold"),
                    bg="#7B7D7E",
-                   fg="white",
-                   width=7).pack(side="left", padx=5)
+                   fg="#055341",
+                   width=6).pack(side="left", padx=5)
 
              #Creating different suit and game logic buttons
              suit = ["♣","♦","♥","♠","NT"]
              self.suits_btn=[]
              for s in suit:
-                  if s in ["",""]:
+                  if s in ["♦", "♥"]:
                         suit_colour="red"
                   else:
                         suit_colour= "black"
                   s_btn=Button(suits,
                         text= s,
-                        font=("Arial", 18, "bold"),
-                        width=5,
-                        height=2,
-                        padx=8,
-                        pady=8,
+                        font=("Arial", 14, "bold"),
+                        width=2,
+                        height=1,
+                        padx=2,
+                        pady=2,
                         fg= suit_colour,
                         command=lambda st=s: self.select_suit(st))
                   s_btn.pack(side="left", padx=2)
@@ -410,27 +411,27 @@ class GamePage(Frame):
              #Pass button for when player does not want to make a contract
              Button(btn_frame,
                   text= "Pass",
-                  font=("Arial", 18, "bold"),
-                  width=5,
-                  command=lambda: self.make_bid("Pass")).pack(pady=4)
+                  font=("Arial", 12, "bold"),
+                  width=8,
+                  command=lambda: self.make_bid("Pass")).pack(pady=2)
 
              Button(btn_frame,
                   text= "Double",
-                  font=("Arial", 18, "bold"),
-                  width=5,
-                  command=lambda: self.make_bid("Double")).pack(pady=4)
+                  font=("Arial", 12, "bold"),
+                  width=8,
+                  command=lambda: self.make_bid("Double")).pack(pady=2)
 
              Button(btn_frame,
                   text= "Redouble",
-                  font=("Arial", 18, "bold"),
-                  width=5,
-                  command=lambda: self.make_bid("Redouble")).pack(pady=4)
+                  font=("Arial", 12, "bold"),
+                  width=8,
+                  command=lambda: self.make_bid("Redouble")).pack(pady=2)
 
              Button(btn_frame,
                   text= "Undo",
-                  font=("Arial", 16, "bold"),
+                  font=("Arial", 11, "bold"),
                   width=6,
-                  command=self.undo_bid).pack(side="right", anchor="se",padx=10,pady=10)
+                  command=self.undo_bid).pack(side="right", anchor="se",padx=8,pady=8)
 
      def select_level(self, level):
            """Highligts the clicked level button"""
@@ -454,7 +455,7 @@ class GamePage(Frame):
              """Adds and displays bid made by user"""
              #adding current state of bids made to implement logic of undo button
              self.undo_hist.append({
-                   "bid_hist_data": self.bid_history_data.copy(),
+                   "bid_history_data": self.bid_history_data.copy(),
                    "current_level": self.current_level,
                    "current_player": self.current_player
              })
