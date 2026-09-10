@@ -190,11 +190,12 @@ class GamePage(Frame):
              self.header_display()
              self.player_table()
              self.bidding_panel()
-             self.player_hands()
-
              # adding a field to hold the play gateway once bidding ends
              self.play_gateway = None
+             
+             self.player_hands()
 
+             
      def header_display(self):
              #Creating header which has the option to go back to menu and clues
              header= Frame(self, bg="#055341", height=60)
@@ -656,7 +657,8 @@ class GamePage(Frame):
      def play_card(self, image, player, seat_index, card_code, btn):
         """moves card to playing board and removes it from player hand"""
         if self.bidding_phase:
-              self.finish_bidding()
+              messagebox.showinfo("Bidding", "The bidding is not finished yet.")
+              return
 
         accepted = self.play_gateway.playCard(seat_index, card_code)
         if not accepted: 
@@ -666,7 +668,6 @@ class GamePage(Frame):
         lbl = self.trick_labels[player]
         lbl.config(image = image)
         lbl.image = image # keep a reference so Tkinter does not garbage collect it
-        lbl.lift()
 
         btn.destroy()
 
