@@ -408,24 +408,28 @@ class GamePage(Frame):
                   s_btn.pack(side="left", padx=2)
                   self.suits_btn.append(s_btn)
 
+             #creating a frame where pass, double and redouble button will be displayed
+             calls_frame = Frame(btn_frame, bg="#7B7D7E")
+             calls_frame.pack(pady=(20, 5))
+
              #Pass button for when player does not want to make a contract
-             Button(btn_frame,
+             Button(calls_frame,
                   text= "Pass",
                   font=("Arial", 12, "bold"),
                   width=8,
-                  command=lambda: self.make_bid("Pass")).pack(pady=2)
+                  command=lambda: self.make_bid("Pass")).pack(side="left", padx=4)
 
-             Button(btn_frame,
+             Button(calls_frame,
                   text= "Double",
                   font=("Arial", 12, "bold"),
                   width=8,
-                  command=lambda: self.make_bid("Double")).pack(pady=2)
+                  command=lambda: self.make_bid("Double")).pack(side="left", padx=4)
 
-             Button(btn_frame,
+             Button(calls_frame,
                   text= "Redouble",
                   font=("Arial", 12, "bold"),
                   width=8,
-                  command=lambda: self.make_bid("Redouble")).pack(pady=2)
+                  command=lambda: self.make_bid("Redouble")).pack(side="left", padx=4)
 
              Button(btn_frame,
                   text= "Undo",
@@ -572,6 +576,7 @@ class GamePage(Frame):
            """Undo button which removes previous bids made"""
            if not self.undo_hist:
                  messagebox.showinfo("Undo", "There are no bids to undo")
+                 return
 
            prev_state= self.undo_hist.pop()
            self.bid_history_data=prev_state["bid_history_data"].copy()
@@ -593,17 +598,29 @@ class GamePage(Frame):
            else:
             self.contract.config( text="Current contract: None" )
 
+     def clear_bids(self):
+          """Removes displayed bid labels"""
+          for widget in self.bid_history.winfo_children():
+               widget.destroy()
 
-
-     def player_hands(self):
+     def player_hands(self, visible_players=None):
            """Displays player hands"""
+           #Clear cards being displayed
+           for frame in [self.south_frame, self.west_frame, self.north_frame, self.east_frame]:
+                for widget in frame.winfo_children():
+                     widget.destroy()
+
+           if visible_players is None:
+                visible_players = ["South"]
+
            #calculation for west and east hands which ensures that all 13 cards are displayed
            frame_height = 520
            card_height = 100
            n = 13
            step = (frame_height - card_height) / (n - 1)
            self.card_images=[]
-            #seats
+
+           #seats
            seat_positions = [(0, self.south_frame, "South", "left"),
            (1, self.west_frame,  "West",  "place"),
            (2, self.north_frame, "North", "left"),
@@ -611,6 +628,9 @@ class GamePage(Frame):
            ]
            # seat indices: SOUTH=0, WEST=1, NORTH=2, EAST=3 pretty sure this is how it's ordered on playerposition
            for seat_index, frame, name, layout in seat_positions:
+                #only displaying player and dummys hands
+                if name not in visible_players:
+                     continue
                #runs the java gateway method
                 hand = entry_point.getHandForSeat(seat_index)
                 for i, card_code in enumerate(hand):
@@ -655,6 +675,12 @@ class GamePage(Frame):
            """removes bidding panel once bidding has been completed"""
            self.bidding_phase=False
            self.bidding.grid_remove()
+
+           #placeholder to add indication of declarer and dummy
+           #declarer=
+           #dummy=
+
+           #self.player_hands([declarer, dummy])
 
      def resize_cards(self, card):
         """Ensures cards are shaped in a way that it can be displayed by player hands and on the board"""
