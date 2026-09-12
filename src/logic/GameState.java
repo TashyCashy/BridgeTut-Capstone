@@ -1,4 +1,4 @@
-package logic; 
+package logic;
 
 import java.util.*;
 
@@ -45,19 +45,19 @@ public class GameState {
     }
 
     public boolean playCard(PlayerPosition player, Card card) {
-        // check if it is this player's turn 
-        if (player != currentPlayerTurn) 
+        // check if it is this player's turn
+        if (player != currentPlayerTurn)
             return false;
-        
+
         PlayerHand hand = hands.get(player);
         if (!PlayValidation.isLegitPlay(hand, card, currentTrick))
             return false; // player did not follow the suit
-        
+
         hand.removeCard(card);
         currentTrick.recordPlay(player, card);
         if (currentTrick.done())
             finishTrick();
-        else 
+        else
             currentPlayerTurn = currentPlayerTurn.next();
         return true;
     }
@@ -72,5 +72,21 @@ public class GameState {
     public boolean isHandComplete() {
         return completedTricks.size() == 13; // 13 tricks per hand, not 4 tash
     }
-}
 
+    public PlayerPosition getDeclarer() {
+        return declarer;
+    }
+
+    public GameState copy(){
+        GameState copy = new GameState(declarer, trumpSuit);
+        copy.hands = new HashMap<>(hands);
+        for (Map.Entry<PlayerPosition, PlayerHand> entry : hands.entrySet()) {
+            copy.hands.put(entry.getKey(), entry.getValue().copy()); //since playerhand changes and is mutable, we want a seperate copy that the dds can experiment with and not change the one that is in the current game state
+        }
+        //make a copy for everything that is mutable, for the sake of the DDS
+        copy.completedTricks = new ArrayList<>(this.completedTricks); //completedTricks are safe to have shared references
+        copy.currentTrick = this.currentTrick.copy(); //still mutable
+        copy.currentPlayerTurn = this.currentPlayerTurn; //enum safe share
+        return copy;
+    }
+}

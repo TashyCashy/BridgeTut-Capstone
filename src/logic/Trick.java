@@ -3,7 +3,7 @@ package logic;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class Trick {   
+public class Trick {
     private Suit ledSuit;
     private final Map<PlayerPosition, Card> playedCards = new LinkedHashMap<>();
     private final PlayerPosition lead;
@@ -48,10 +48,18 @@ public class Trick {
     }
 
     /**
-     * 
+     *
      * @return true when all players have played a card during this trick
      */
     public boolean done() {
         return playedCards.size() == 4;
+    }
+
+    public Trick copy(){
+        Trick copy = new Trick(lead);
+        //copy every entry already recorderd
+        copy.playedCards.putAll(this.playedCards);
+        copy.ledSuit = this.ledSuit;
+        return copy;
     }
 }

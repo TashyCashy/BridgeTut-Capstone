@@ -74,4 +74,13 @@ public class PlayerHand {
     public void clearHand(){
         hand.clear();
     }
+
+    public PlayerHand copy (){
+        //shallow copy this playerhand, will be used for the DDS
+        PlayerHand copy = new PlayerHand(this.position);
+        for (Card card: hand){
+            copy.addCard(card);
+        }
+        return copy;
+    }
 }
