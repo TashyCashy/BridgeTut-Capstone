@@ -190,8 +190,12 @@ class GamePage(Frame):
              self.header_display()
              self.player_table()
              self.bidding_panel()
+             # adding a field to hold the play gateway once bidding ends
+             self.play_gateway = None
+             
              self.player_hands()
 
+             
      def header_display(self):
              #Creating header which has the option to go back to menu and clues
              header= Frame(self, bg="#055341", height=60)
@@ -630,37 +634,52 @@ class GamePage(Frame):
                 if name not in visible_players:
                      continue
                #runs the java gateway method
-                hand = entry_point.getHandForSeat(seat_index)
+                if self.play_gateway is not None: 
+                  hand = self.play_gateway.getRemainingHandForSeat(seat_index)
+                else: 
+                     hand = entry_point.getHandForSeat(seat_index)
+
                 for i, card_code in enumerate(hand):
                     img = self.resize_cards(f"png/{card_code}.png")
                     #add the relevant card image for the card in cardcodes
                     self.card_images.append(img)
 
                     btn = Button(frame, image=img, borderwidth=0)
-                    btn.config(command=lambda image=img, b=btn, n=name: self.play_card(image, n, b))
+                    btn.config(command=lambda image=img, b=btn, n=name, s=seat_index, c=card_code: self.play_card(image, n, s, c, b))
 
                     if layout == "left":
                          btn.pack(side="left", padx=3)
                     else:
                          btn.place(x=15 if name == "East" else 0, y=i * step)
 
-     def play_card(self, image, player, btn):
+     def play_card(self, image, player, seat_index, card_code, btn):
         """moves card to playing board and removes it from player hand"""
         if self.bidding_phase:
-              self.finish_bidding()
-        if player is None:
-              player= self.players[self.current_player]
+              messagebox.showinfo("Bidding", "The bidding is not finished yet.")
+              return
 
-        lbl= self.trick_labels[player]
-        lbl.config(image=image)
-        lbl.lift()
+        accepted = self.play_gateway.playCard(seat_index, card_code)
+        if not accepted: 
+             messagebox.showinfo("Illegal play", "That card cannot be played right now")
+             return
+
+        lbl = self.trick_labels[player]
+        lbl.config(image = image)
+        lbl.image = image # keep a reference so Tkinter does not garbage collect it
 
         btn.destroy()
+
+        self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
 
         #board gets cleared once all 4 players have played
         self.trick_count= getattr(self, "trick_count",0)+1
         if self.trick_count==4:
               self.after(1200, self.clear_trick)
+              self.trick_count = 0
+
+        if self.play_gateway.isHandComplete():
+             messagebox.showinfo("Hand complete", "All 13 tricks played")
+        # game history goes here later
 
      def clear_trick(self):
            """board gets cleared once all 4 players have played """
@@ -674,6 +693,9 @@ class GamePage(Frame):
            self.bidding_phase=False
            self.bidding.grid_remove()
 
+           self.play_gateway = entry_point.startPlayPhase()
+           self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
+           self.player_hands(["South", "West", "North", "East"])
            #placeholder to add indication of declarer and dummy
            #declarer=
            #dummy=
