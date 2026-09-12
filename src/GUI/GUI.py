@@ -38,7 +38,7 @@ class GUI(Tk):
 
         #Creating the different pages
         self.frames={}
-        for F in (LoginPage, HomePage, GamePage, TutorialPage, ResultPage):
+        for F in (LoginPage, HomePage, GamePage, TutorialPage, TutorialGamePage, ResultPage):
             frame= F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -435,7 +435,7 @@ class GamePage(Frame):
                   text= "Undo",
                   font=("Arial", 11, "bold"),
                   width=6,
-                  command=self.undo_bid).pack(side="right", anchor="se",padx=8,pady=8)
+                  command=self.make_bid("Pass")).pack(side="right", anchor="se",padx=8,pady=8)
 
      def select_level(self, level):
            """Highligts the clicked level button"""
@@ -457,12 +457,6 @@ class GamePage(Frame):
 
      def make_bid(self, bid):
              """Adds and displays bid made by user"""
-             #adding current state of bids made to implement logic of undo button
-             self.undo_hist.append({
-                   "bid_history_data": self.bid_history_data.copy(),
-                   "current_level": self.current_level,
-                   "current_player": self.current_player
-             })
              if bid == "Pass":
                  accepted = entry_point.submitPass()
              else:
@@ -572,16 +566,14 @@ class GamePage(Frame):
                   relief="flat",
                   command=bid_window.destroy).pack(pady=10)
            
-     def undo_bid(self):
-           """Undo button which removes previous bids made"""
+     """def undo_bid(self):
+           #Undo button which removes previous bids made
            if not self.undo_hist:
                  messagebox.showinfo("Undo", "There are no bids to undo")
                  return
 
-           prev_state= self.undo_hist.pop()
-           self.bid_history_data=prev_state["bid_history_data"].copy()
-           self.current_player = prev_state["current_player"]
-           self.current_level = prev_state["current_level"]
+           self.bid_history_data.pop()
+           self.current_player = entry_point.getCurrentSeatIndex()
 
            self.clear_bids()
            for player, bid in self.bid_history_data:
@@ -595,8 +587,14 @@ class GamePage(Frame):
            if last_bid: 
             player, bid = last_bid 
             self.contract.config( text=f"Current contract: {bid} by {player}" )
+            self.current_level = int(bid[0])
            else:
             self.contract.config( text="Current contract: None" )
+            self.current_level = 0
+
+           self.update_lvl()
+           self.bidding_phase = True
+           self.bidding.grid() """
 
      def clear_bids(self):
           """Removes displayed bid labels"""
@@ -690,8 +688,67 @@ class GamePage(Frame):
 
 class TutorialPage(Frame):
      def __init__(self, parent, controller):
-             super().__init__(parent)
-             Label(self, text="").pack()
+      super().__init__(parent)
+      self.controller = controller
+
+      Label(self,
+            text="Bridge Tutorial",
+            font=("Georgia", 34, "bold"),
+            bg="#0f4d3f",
+            fg= "#C9A42C").pack(pady=(70,10))
+
+      Label(self,
+            text="Choose tutorial mode",
+            font=("Arial", 16, "bold"),
+            bg="#0f4d3f",
+            fg= "white").pack(pady=(0,40))
+
+      mode_frame = Frame(self, bg="#055341")
+      mode_frame.pack(padx=100, pady=20, ipadx=50, ipady=40)
+
+      Button(mode_frame,
+             text="Bidding and playing cards tutorial",
+             font=("Arial", 16, "bold"),
+             bg="#C9A42C",
+             fg="#055341",
+             relief= "flat",
+             width=30,
+             command= lambda: self.open_tut("Bidding")).pack(pady=12, ipady=10)
+
+      Button(mode_frame,
+             text="Playing cards tutorial",
+             font=("Arial", 16, "bold"),
+             bg="#C9A42C",
+             fg="#055341",
+             relief= "flat",
+             width=30,
+             command= lambda: self.open_tut("Playing Cards")).pack(pady=12, ipady=10)
+
+      Button(mode_frame,
+             text="Close",
+             font=("Arial", 11, "bold"),
+             bg="#C9A42C",
+             fg="#055341",
+             relief= "flat",
+             width=30,
+             command= lambda: controller.show_frame(HomePage).pack(pady=30, ipadx=20, ipady=8))
+
+     def open_tut(self, mode):
+          tut_page = self.controller.frames[TutorialGamePage]
+          tut_page.set_mode(mode)
+          self.controller.show_frame(TutorialGamePage)
+
+class TutorialGamePage(Frame):
+     def __init__(self, parent, controller):
+          self.controller = controller
+          self.mode= "Bidding"
+          #keeps track of where user is currently in the tutorial
+          self.current_step=0
+
+          #calling created board
+          self.player_table()
+
+
 
 class ResultPage(Frame):
     def __init__(self, parent, controller):
