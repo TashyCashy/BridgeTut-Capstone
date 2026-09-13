@@ -12,10 +12,9 @@ public class DoubleDummySolver {
         //given a gamestate do the double dummy analysis
         PlayerPosition currentPlayer = state.getCurrentPlayerTurn();
         boolean MAX = playerIsMax(currentPlayer, state);
-        PlayerPosition mover = currentPlayer;
 
         PlayerHand playerHand = state.getHand(currentPlayer);
-        List<Card> Cards = state.getHand(currentPlayer).getHand();
+        List<Card> Cards = playerHand.getHand();
         //generate the mover's legal hands
         List<Card> legalCards = new ArrayList<>();
         //added recusrively
@@ -26,6 +25,8 @@ public class DoubleDummySolver {
                 legalCards.add(card);
             }
         }
+        int bestValue = (MAX) ? 0 : 13;
+
         for (Card card : legalCards){
             GameState nextState = state.copy();
             int beforePlay = nextState.getCompletedTricks().size(); //track the trick size before playing
@@ -44,8 +45,9 @@ public class DoubleDummySolver {
             }
             //value of child node, kicks off recursion
             childValue = bonus + solve(nextState);
+            bestValue = (MAX) ? Math.max(bestValue,childValue) : Math.min(bestValue,childValue);
         }
-        return childValue;
+        return bestValue;
     }
     //check if player is on the max side or the min side, true if max, false if min
     //Max is the team of the declarer, and min is the opposing team
