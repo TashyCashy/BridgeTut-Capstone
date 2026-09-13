@@ -1,6 +1,7 @@
 import mysql.connector
 from mysql.connector import Error
 import bcrypt
+from datetime import date
 
 def get_connection():
     """Setting up connection to database"""
@@ -74,7 +75,23 @@ def create_game(user_id, dealer):
     cursor= conn.cursor()
 
     try:
-        cursor.execute("INSERT INTO games (user_id, dealer) VALUES (%s, %s)", (user_id, dealer))
+        date_played = date.today()
+        cursor.execute("SELECT COALESCE(MAX(seq_num), 0) "
+               "FROM games "
+               "WHERE user_id = %s AND date_played = %s",
+               (user_id, date_played))
+        max_seq = cursor.fetchone()[0]
+        seq_num = max_seq + 1
+        attempt_num = 1
+
+        NS_score=0
+        EW_score=0
+        
+        cursor.execute("INSERT INTO games "
+                       "(user_id, dealer, seq_num, attempt_num, vulnerability, NS_score, EW_score, date_played) "
+                       "VALUES (%s, %s, %s,%s, %s,%s, %s, %s)", 
+                       (user_id, dealer, seq_num, attempt_num, None, NS_score, EW_score, date_played))
+
         conn.commit()
         return cursor.lastrowid
     except Exception as e:
@@ -85,7 +102,29 @@ def create_game(user_id, dealer):
         cursor.close()
         conn.close()
 
-def save_bid(game_id, player_id, bid_value):
+def get_user_id(username):
+    conn = get_connection()
+    if conn is None:
+        return False
+    
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("SELECT user_id FROM users WHERE username = %s", (username,))
+        row = cursor.fetchone()
+        
+        if row:
+            return row[0]
+        return None
+    except Exception as e:
+        conn.rollback()
+        print(f"Error getting user ID: {e}")
+        return None
+    finally:
+        cursor.close()
+        conn.close()
+
+def save_bid(game_id, position, bid_value):
     conn = get_connection()
 
     if conn is None:
@@ -94,7 +133,7 @@ def save_bid(game_id, player_id, bid_value):
     cursor= conn.cursor()
 
     try:
-        cursor.execute("INSERT INTO bids (game_id, bid_value, player_id) VALUES (%s, %s, %s)",( game_id, bid_value, player_id))
+        cursor.execute("INSERT INTO bids (game_id, bid_value, position) VALUES (%s, %s, %s)",( game_id, bid_value, position))
         conn.commit()
         return True
     except Exception as e:
@@ -116,7 +155,7 @@ def get_bidding_hist(game_id):
     try:
         cursor.execute("SELECT bid_value"
         "FROM bids"
-         "WHERE game = (%s)"
+         "WHERE game_id = (%s)"
           "ORDER by bid_id", (game_id,))
         conn.commit()
         return cursor.fetchall()
@@ -184,7 +223,7 @@ def update_results(game_id, declarer, ns_score, ew_score):
         cursor.execute("UPDATE games " 
                        "SET declarer = %s, NS_score = %s, EW_score = %s"
                        "WHERE game_id=%s",
-                       ( game_id, declarer, ns_score, ew_score))
+                       ( declarer, ns_score, ew_score, game_id))
         conn.commit()
         return True
     except Exception as e:
