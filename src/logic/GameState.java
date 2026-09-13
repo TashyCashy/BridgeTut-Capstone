@@ -70,7 +70,13 @@ public class GameState {
     }
 
     public boolean isHandComplete() {
-        return completedTricks.size() == 13; // 13 tricks per hand, not 4 tash
+        // equivalent to completedTricks.size() == 13 for a real 52-card deal
+        // (all hands run empty exactly when 13 tricks are done), but this also
+        // works for short, hand-constructed test deals with fewer cards each.
+        for (PlayerHand hand : hands.values()) {
+            if (!hand.getHand().isEmpty()) return false;
+        }
+        return true;
     }
 
     public PlayerPosition getDeclarer() {
