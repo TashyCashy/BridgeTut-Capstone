@@ -966,10 +966,6 @@ class ResultPage(Frame):
 
         self.date_selected(first_date)
 
-    # =========================================================
-    # DATE SELECTED
-    # =========================================================
-
     def date_selected(self, selected_date):
 
         self.date_var.set(selected_date)
@@ -1043,10 +1039,6 @@ class ResultPage(Frame):
 
         self.show_summary()
 
-    # =========================================================
-    # GAME SELECTED
-    # =========================================================
-
     def game_selected(self, selected_game, game_id=None):
 
         self.game_var.set(selected_game)
@@ -1056,18 +1048,10 @@ class ResultPage(Frame):
 
         self.show_summary()
 
-    # =========================================================
-    # CLEAR RESULTS
-    # =========================================================
-
     def clear_results(self):
 
         for widget in self.results_frame.winfo_children():
             widget.destroy()
-
-    # =========================================================
-    # SUMMARY
-    # =========================================================
 
     def show_summary(self):
 
@@ -1158,10 +1142,6 @@ class ResultPage(Frame):
             font=("Arial", 14)
         ).grid(row=7, column=0, sticky="w", padx=20, pady=5)
 
-    # =========================================================
-    # BIDDING HISTORY
-    # =========================================================
-
     def show_bidding(self):
 
         self.clear_results()
@@ -1232,10 +1212,6 @@ class ResultPage(Frame):
                 width=20
             ).grid(row=0, column=1)
 
-    # =========================================================
-    # TRICKS
-    # =========================================================
-
     def show_tricks(self):
 
         self.clear_results()
@@ -1303,10 +1279,6 @@ class ResultPage(Frame):
                 font=("Arial", 12),
                 width=20
             ).grid(row=0, column=1)
-
-    # =========================================================
-    # CARDS PLAYED
-    # =========================================================
 
     def show_cards(self):
 
@@ -1403,10 +1375,5 @@ class ResultPage(Frame):
                 font=("Arial", 12),
                 width=15
             ).grid(row=0, column=3)
-
-
-
-
-
 
 GUI().mainloop()
