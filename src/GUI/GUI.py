@@ -3,7 +3,7 @@ from tkinter import messagebox
 import random
 from PIL import Image, ImageTk
 import os
-from db import create_user, verify_user
+from db import create_user, verify_user, create_game, get_user_id
 ##this is needed for the py4j gateway to be able to be used for translation
 from py4j.java_gateway import JavaGateway
 gateway = JavaGateway()
@@ -103,8 +103,9 @@ class LoginPage(Frame):
           username= self.username.get()
           password= self.password.get()
           if create_user(username, password):
+                self.controller.current_username = username
                 messagebox.showinfo("Success","Account added.")
-                self.controller.show_frame(GamePage)
+                self.controller.show_frame(HomePage)
           else:
                 messagebox.showinfo("Sign up failed", "Try again. Username may be already taken")
 
@@ -114,8 +115,9 @@ class LoginPage(Frame):
           username= self.username.get()
           password= self.password.get()
           if verify_user(username, password):
+                self.controller.current_username = username
                 messagebox.showinfo("Login Successful!", "Welcome!")
-                self.controller.show_frame(GamePage)
+                self.controller.show_frame(HomePage)
           else:
                 messagebox.showinfo("Login failed","Incorrect username or password")
 
@@ -143,7 +145,7 @@ class HomePage(Frame):
                  width=40,
                  fg="white",
                  relief="flat", #Creates no border effect on the frame
-                 command=lambda: controller.show_frame(GamePage)).pack(fill="x",pady=18, ipady=10)
+                 command=lambda: controller.frames[GamePage].start_game()).pack(fill="x",pady=18, ipady=10)
 
           Button(menu,
                  text="Tutorial",
@@ -174,11 +176,14 @@ class GamePage(Frame):
              self.current_player=0
              self.current_level=0
              self.selected_level=None
+             self.dummy = None
+
              ##changed to reflect the java ordering.
              self.players=["South","West","North","East"]
              self.bid_history_data=[]
              self.undo_hist=[]
              self.bidding_phase=True
+             self.game_id = None
 
              #grid layout for the board
              self.grid_rowconfigure(0, weight=0)
@@ -194,6 +199,47 @@ class GamePage(Frame):
              self.play_gateway = None
              
              self.player_hands()
+
+     def start_game(self):
+          if self.controller.current_username is None:
+               messagebox.showerror("Error", "Please log in first.")
+               return
+          user_id = get_user_id(self.controller.current_username)
+
+          if user_id is None:
+               messagebox("Error", "Could not find user.")
+               return
+
+          dealer = entry_point.getCurrentSeatIndex()
+          self.game_id = create_game(user_id, dealer)
+
+          if self.game_id is None:
+               messagebox("Error", "Could not create game.")
+               return
+
+          #resetting game states
+          self.bidding_phase = True
+          self.current_level = 0
+          self.selected_level = None
+          self.current_player = entry_point.getCurrentSeatIndex()
+
+          self.bid_history_data = []
+          self.undo_hist = []
+
+          self.clear_bids()
+
+          self.contract.config( text="Current contract: None" ) 
+          # Reset level buttons 
+          for btn in self.level_btns: 
+               btn.config( relief="raised", state="normal" ) 
+          # Show the GamePage 
+          self.controller.show_frame(GamePage) 
+          # Show bidding panel 
+          self.bidding.grid( row=0, column=0, sticky="nsew", padx=10, pady=10 )
+          self.bidding.lift()
+
+          print("Game created:", self.game_id) 
+          print("Bidding phase:", self.bidding_phase)
 
              
      def header_display(self):
@@ -439,7 +485,7 @@ class GamePage(Frame):
                   text= "Undo",
                   font=("Arial", 11, "bold"),
                   width=6,
-                  command=self.make_bid("Pass")).pack(side="right", anchor="se",padx=8,pady=8)
+                  command=self.undo_bid).pack(side="right", anchor="se",padx=8,pady=8)
 
      def select_level(self, level):
            """Highligts the clicked level button"""
@@ -570,14 +616,14 @@ class GamePage(Frame):
                   relief="flat",
                   command=bid_window.destroy).pack(pady=10)
            
-     """def undo_bid(self):
+     def undo_bid(self):
            #Undo button which removes previous bids made
            if not self.undo_hist:
                  messagebox.showinfo("Undo", "There are no bids to undo")
                  return
 
            self.bid_history_data.pop()
-           self.current_player = entry_point.getCurrentSeatIndex()
+           self.clear_bids()
 
            self.clear_bids()
            for player, bid in self.bid_history_data:
@@ -598,12 +644,19 @@ class GamePage(Frame):
 
            self.update_lvl()
            self.bidding_phase = True
-           self.bidding.grid() """
+           self.bidding.grid()
 
      def clear_bids(self):
           """Removes displayed bid labels"""
           for widget in self.bid_history.winfo_children():
                widget.destroy()
+
+     def update_visible_hands(self):
+          current_player_name = self.players[self.current_player]
+          visible_players = [self.dummy, current_player_name]
+
+          visible_players = list (dict.fromkeys(visible_players))
+          self.player_hands(visible_players)
 
      def player_hands(self, visible_players=None):
            """Displays player hands"""
@@ -670,6 +723,7 @@ class GamePage(Frame):
         btn.destroy()
 
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
+        self.update_visible_hands()
 
         #board gets cleared once all 4 players have played
         self.trick_count= getattr(self, "trick_count",0)+1
@@ -693,14 +747,15 @@ class GamePage(Frame):
            self.bidding_phase=False
            self.bidding.grid_remove()
 
-           self.play_gateway = entry_point.startPlayPhase()
-           self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
-           self.player_hands(["South", "West", "North", "East"])
-           #placeholder to add indication of declarer and dummy
-           #declarer=
-           #dummy=
+           declarer = entry_point.getDeclarerName()
+           declarer_idx = self.players.index(declarer)
 
-           #self.player_hands([declarer, dummy])
+           dummy_idx = (declarer_idx + 2) % 4
+           self.dummy = self.players[dummy_idx]
+
+           self.play_gateway = entry_point.startPlayPhase()
+           self.current_player = (self.play_gateway.getCurrentTurnSeatIndex())
+           self.update_visible_hands()
 
      def resize_cards(self, card):
         """Ensures cards are shaped in a way that it can be displayed by player hands and on the board"""
@@ -762,13 +817,11 @@ class TutorialPage(Frame):
 
 class TutorialGamePage(Frame):
      def __init__(self, parent, controller):
+          super().__init__(parent, bg="#0f4d3f")
           self.controller = controller
           self.mode= "Bidding"
           #keeps track of where user is currently in the tutorial
           self.current_step=0
-
-          #calling created board
-          self.player_table()
 
 
 
