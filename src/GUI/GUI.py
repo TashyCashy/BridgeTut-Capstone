@@ -716,6 +716,12 @@ class GamePage(Frame):
               messagebox.showinfo("Bidding", "The bidding is not finished yet.")
               return
 
+        # ensuring that it is this seat's turn in Java
+        current_turn = self.play_gateway.getCurrentTurnSeatIndex()
+        if seat_index != current_turn:
+             messagebox.showinfo("Out of turn", f"It is currently {self.players[current_turn]}'s turn to play")
+             return
+        
         accepted = self.play_gateway.playCard(seat_index, card_code)
         if not accepted: 
              messagebox.showinfo("Illegal play", "That card cannot be played right now")
@@ -727,14 +733,14 @@ class GamePage(Frame):
 
         btn.destroy()
 
+        # update current player index directly from Java backend
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
         self.update_visible_hands()
 
-        #board gets cleared once all 4 players have played
+        # board gets cleared once all 4 players have played
         self.trick_count= getattr(self, "trick_count",0)+1
         if self.trick_count==4:
               self.after(1200, self.clear_trick)
-              self.trick_count = 0
 
         if self.play_gateway.isHandComplete():
              messagebox.showinfo("Hand complete", "All 13 tricks played")
