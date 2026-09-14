@@ -14,25 +14,27 @@ class PlayingGatewayTest {
 
     private GameState gameState;
     private PlayingGateway playingGateway;
+    private PlayerPosition declarer;
+    private int expectedLeadIdx;
 
     @BeforeEach
     void setUp() {
-        // Create standard GameState led by SOUTH with SPADES as trump
-        gameState = new GameState(PlayerPosition.SOUTH, Suit.SPADES);
+        // Choose declarer seat dynamically (e.g. SOUTH)
+        declarer = PlayerPosition.SOUTH;
 
-        // Manually deal a predictable 52-card distribution for testing
-        Deck deck = new Deck();
-        PlayerPosition[] seats = PlayerPosition.values(); // SOUTH=0, WEST=1, NORTH=2, EAST=3
-        int seatIdx = 0;
-        deck.shuffle();
+        // Compute opening leader index (left of declarer -> SOUTH(0) + 1 = WEST(1))
+        expectedLeadIdx = (declarer.ordinal() + 1) % 4;
 
-        // Standard test setup with known hands
+        // GameState with chosen declarer and trump suit
+        gameState = new GameState(declarer, Suit.SPADES);
+
+        // Standard test setup with known hands:
+        // SOUTH = Spades, WEST = Hearts, NORTH = Diamonds, EAST = Clubs
         PlayerHand southHand = new PlayerHand(PlayerPosition.SOUTH);
         PlayerHand westHand  = new PlayerHand(PlayerPosition.WEST);
         PlayerHand northHand = new PlayerHand(PlayerPosition.NORTH);
         PlayerHand eastHand  = new PlayerHand(PlayerPosition.EAST);
 
-        // Deal 13 cards to each seat
         dealDeterministicCards(southHand, westHand, northHand, eastHand);
 
         gameState.dealHand(PlayerPosition.SOUTH, southHand.getHand());
@@ -44,10 +46,6 @@ class PlayingGatewayTest {
     }
 
     private void dealDeterministicCards(PlayerHand s, PlayerHand w, PlayerHand n, PlayerHand e) {
-        // Give SOUTH all Spades (S2-SA)
-        // Give WEST all Hearts (H2-HA)
-        // Give NORTH all Diamonds (D2-DA)
-        // Give EAST all Clubs (C2-CA)
         for (Rank r : Rank.values()) {
             s.addCard(new Card(Suit.SPADES, r));
             w.addCard(new Card(Suit.HEARTS, r));
@@ -59,50 +57,53 @@ class PlayingGatewayTest {
     @Test
     @DisplayName("Test seat index translation and turn order tracking")
     void testCurrentTurnSeatIndex() {
-        // SOUTH (index 0) leads first according to setup
-        assertEquals(0, playingGateway.getCurrentTurnSeatIndex(), "Declarer SOUTH should lead initial turn.");
+        // In Bridge, opening lead is left of declarer (WEST = index 1)
+        assertEquals(expectedLeadIdx, playingGateway.getCurrentTurnSeatIndex(), 
+            "Player to declarer's left should lead initial turn.");
     }
 
     @Test
     @DisplayName("Test Card Code translation and legal card play execution")
     void testPlayCardSuccessAndTurnAdvance() {
-        // SOUTH plays "S2" (2 of Spades)
-        boolean accepted = playingGateway.playCard(0, "S2");
-
+        // WEST (index 1) leads "H2" on turn 1
+        boolean accepted = playingGateway.playCard(expectedLeadIdx, "H2");
         assertTrue(accepted, "Playing a valid held card on current turn should return true.");
 
-        // Turn should advance clockwise to WEST (seat index 1)
-        assertEquals(1, playingGateway.getCurrentTurnSeatIndex(), "Turn should advance to WEST (index 1).");
+        // Turn advances clockwise to NORTH (index 2)
+        int nextTurn = (expectedLeadIdx + 1) % 4;
+        assertEquals(nextTurn, playingGateway.getCurrentTurnSeatIndex(), "Turn should advance to NORTH (index 2).");
 
-        // Current trick should contain "S2"
         List<String> trickCards = playingGateway.getCurrentTrickCards();
         assertEquals(1, trickCards.size());
-        assertEquals("S2", trickCards.get(0));
+        assertEquals("H2", trickCards.get(0));
     }
 
     @Test
     @DisplayName("Test illegal play rejection when playing out of turn")
     void testPlayCardOutOfTurnRejected() {
-        // WEST (index 1) tries to play before SOUTH (index 0)
-        boolean accepted = playingGateway.playCard(1, "H2");
+        // SOUTH (index 0) tries to play before WEST (index 1)
+        int wrongTurnSeat = declarer.ordinal(); // 0
+        boolean accepted = playingGateway.playCard(wrongTurnSeat, "S2");
 
         assertFalse(accepted, "Playing out of turn must be rejected.");
-        assertEquals(0, playingGateway.getCurrentTurnSeatIndex(), "Turn index must remain unchanged on rejected play.");
+        assertEquals(expectedLeadIdx, playingGateway.getCurrentTurnSeatIndex(), 
+            "Turn index must remain unchanged on rejected play.");
     }
 
     @Test
     @DisplayName("Test remaining hand representation after playing cards")
     void testGetRemainingHandForSeat() {
-        List<String> southHand = playingGateway.getRemainingHandForSeat(0);
-        assertEquals(13, southHand.size());
-        assertTrue(southHand.contains("S10"), "Hand code string should follow <suit><rank> e.g. S10");
+        // WEST (index 1) has 13 Hearts
+        List<String> westHand = playingGateway.getRemainingHandForSeat(expectedLeadIdx);
+        assertEquals(13, westHand.size());
+        assertTrue(westHand.contains("H10"));
 
-        // Play S10
-        playingGateway.playCard(0, "S10");
+        // WEST plays H10 on their turn
+        playingGateway.playCard(expectedLeadIdx, "H10");
 
-        List<String> updatedHand = playingGateway.getRemainingHandForSeat(0);
+        List<String> updatedHand = playingGateway.getRemainingHandForSeat(expectedLeadIdx);
         assertEquals(12, updatedHand.size());
-        assertFalse(updatedHand.contains("S10"), "Played card must be removed from remaining hand view.");
+        assertFalse(updatedHand.contains("H10"), "Played card must be removed from remaining hand.");
     }
 
     @Test
@@ -111,13 +112,12 @@ class PlayingGatewayTest {
         assertFalse(playingGateway.isHandComplete());
         assertEquals(0, playingGateway.getCompletedTricksCount());
 
-        // Play 1 full trick: S2 (SOUTH), H2 (WEST), D2 (NORTH), C2 (EAST)
-        assertTrue(playingGateway.playCard(0, "S2")); // Led suit Spades
-        assertTrue(playingGateway.playCard(1, "H2")); // Void in Spades -> plays Hearts
-        assertTrue(playingGateway.playCard(2, "D2")); // Void in Spades -> plays Diamonds
-        assertTrue(playingGateway.playCard(3, "C2")); // Void in Spades -> plays Clubs
+        // Play 1 full trick starting with leader WEST (1): WEST (H2), NORTH (D2), EAST (C2), SOUTH (S2)
+        assertTrue(playingGateway.playCard(1, "H2")); 
+        assertTrue(playingGateway.playCard(2, "D2")); 
+        assertTrue(playingGateway.playCard(3, "C2")); 
+        assertTrue(playingGateway.playCard(0, "S2")); 
 
-        // Trick completed
         assertEquals(1, playingGateway.getCompletedTricksCount());
         assertFalse(playingGateway.isHandComplete());
     }
@@ -126,7 +126,7 @@ class PlayingGatewayTest {
     @DisplayName("Test invalid card code string throws IllegalArgumentException")
     void testInvalidCardCodeFormat() {
         assertThrows(IllegalArgumentException.class, () -> {
-            playingGateway.playCard(0, "X10"); // Unknown suit letter
+            playingGateway.playCard(expectedLeadIdx, "X10");
         });
     }
 }
