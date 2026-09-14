@@ -1,6 +1,6 @@
 package BiddingSystem.Tutorial;
 
-import Tutorial.Lesson;
+import LessonTutorial.Lesson;
 import logic.*;
 import java.util.*;
 
@@ -82,7 +82,7 @@ public class TutorialEngine {
             currentPlayInTrick = 0;
             List<Card> cards = lesson.tricks.get(currentTrickIdx); // who won the trick
             leaderSeat = calculateTrickwinner(cards);
-            currentTrickIdx;
+            currentTrickIdx++;
         }
     }
 
@@ -92,7 +92,7 @@ public class TutorialEngine {
         }
         
         int leader = leaderSeat.ordinal();
-        int player (leader+currentPlayInTrick%4);
+        int player = (leader+currentPlayInTrick%4);
         return PlayerPosition.values()[player];
     }
 }

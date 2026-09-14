@@ -1,4 +1,4 @@
-package test.BiddingSystem;
+package BiddingSystem.tests;
 
 import BiddingSystem.PlayingGateway;
 import logic.*;
@@ -31,9 +31,9 @@ class PlayingGatewayTest {
         // Standard test setup with known hands:
         // SOUTH = Spades, WEST = Hearts, NORTH = Diamonds, EAST = Clubs
         PlayerHand southHand = new PlayerHand(PlayerPosition.SOUTH);
-        PlayerHand westHand  = new PlayerHand(PlayerPosition.WEST);
+        PlayerHand westHand = new PlayerHand(PlayerPosition.WEST);
         PlayerHand northHand = new PlayerHand(PlayerPosition.NORTH);
-        PlayerHand eastHand  = new PlayerHand(PlayerPosition.EAST);
+        PlayerHand eastHand = new PlayerHand(PlayerPosition.EAST);
 
         dealDeterministicCards(southHand, westHand, northHand, eastHand);
 
@@ -58,8 +58,8 @@ class PlayingGatewayTest {
     @DisplayName("Test seat index translation and turn order tracking")
     void testCurrentTurnSeatIndex() {
         // In Bridge, opening lead is left of declarer (WEST = index 1)
-        assertEquals(expectedLeadIdx, playingGateway.getCurrentTurnSeatIndex(), 
-            "Player to declarer's left should lead initial turn.");
+        assertEquals(expectedLeadIdx, playingGateway.getCurrentTurnSeatIndex(),
+                "Player to declarer's left should lead initial turn.");
     }
 
     @Test
@@ -86,8 +86,8 @@ class PlayingGatewayTest {
         boolean accepted = playingGateway.playCard(wrongTurnSeat, "S2");
 
         assertFalse(accepted, "Playing out of turn must be rejected.");
-        assertEquals(expectedLeadIdx, playingGateway.getCurrentTurnSeatIndex(), 
-            "Turn index must remain unchanged on rejected play.");
+        assertEquals(expectedLeadIdx, playingGateway.getCurrentTurnSeatIndex(),
+                "Turn index must remain unchanged on rejected play.");
     }
 
     @Test
@@ -113,10 +113,10 @@ class PlayingGatewayTest {
         assertEquals(0, playingGateway.getCompletedTricksCount());
 
         // Play 1 full trick starting with leader WEST (1): WEST (H2), NORTH (D2), EAST (C2), SOUTH (S2)
-        assertTrue(playingGateway.playCard(1, "H2")); 
-        assertTrue(playingGateway.playCard(2, "D2")); 
-        assertTrue(playingGateway.playCard(3, "C2")); 
-        assertTrue(playingGateway.playCard(0, "S2")); 
+        assertTrue(playingGateway.playCard(1, "H2"));
+        assertTrue(playingGateway.playCard(2, "D2"));
+        assertTrue(playingGateway.playCard(3, "C2"));
+        assertTrue(playingGateway.playCard(0, "S2"));
 
         assertEquals(1, playingGateway.getCompletedTricksCount());
         assertFalse(playingGateway.isHandComplete());
@@ -130,3 +130,4 @@ class PlayingGatewayTest {
         });
     }
 }
+

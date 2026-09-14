@@ -1,5 +1,7 @@
 package BiddingSystem.Tutorial;
 
+import LessonTutorial.Lesson;
+
 public class TutorialGateway {
     private final TutorialEngine engine;
 
