@@ -3,14 +3,9 @@ from tkinter import messagebox
 import random
 from PIL import Image, ImageTk
 import os
-<<<<<<< HEAD
-from db import (create_user, verify_user, create_game, get_user_id,
-get_game_dates, get_games_by_date, get_bidding_hist, get_game_tricks,get_game_cards)
-=======
 from Tutorial import TutorialPage, TutorialGamePage
 from ResultPage import ResultPage
 from db import (create_user, verify_user, create_game, get_user_id)
->>>>>>> 5513498 (Added concede and claim button, created separate programs for tutorial and results)
 ##this is needed for the py4j gateway to be able to be used for translation
 from py4j.java_gateway import JavaGateway
 gateway = JavaGateway()
@@ -854,18 +849,6 @@ class GamePage(Frame):
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
         self.update_visible_hands()
 
-<<<<<<< HEAD
-        # this file already had unresolved conflict markers
-        # committed on origin (from an earlier merge that was never actually
-        #finished) - not something from my merge. Kept the version that
-        # asks the Java backend for the real completed-trick count instead
-        # of a local counter incremented per card play; it's the only one of
-        # the two that also calls update_trick_score(), which the header's
-        # NS/EW trick display depends onthe local-counter version would
-        # have left that display stuck at 0. Same "Java is the single
-        # source of truth" principle already used elsewhere in this file.
-=======
->>>>>>> 5513498 (Added concede and claim button, created separate programs for tutorial and results)
         #checks if trick has been completed
         completed_tricks = self.play_gateway.getCompletedTricksCount()
 

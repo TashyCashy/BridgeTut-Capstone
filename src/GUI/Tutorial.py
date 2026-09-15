@@ -77,8 +77,7 @@ class TutorialGamePage(Frame):
 
     def __init__(self, parent, controller):
 
-        super().__init__(parent,
-                         bg="#0f4d3f")
+        super().__init__(parent,bg="#0f4d3f")
 
         self.controller = controller
 
@@ -105,6 +104,9 @@ class TutorialGamePage(Frame):
         self.tutorial_note = ""
 
         self.card_images = []
+        self.players = ["North", "West", "East", "South"]
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
         self.header_display()
         self.player_table()
@@ -218,113 +220,60 @@ class TutorialGamePage(Frame):
         menu_button.config(menu=drop_down)
 
     def player_table(self):
-
-        self.table = Frame(self,
-                           bg="#0f4d3f")
-
-        self.table.grid(row=1,
-                        column=0,
-                        sticky="nsew")
-
-        self.north_frame = Frame(self.table,
-                                 bg="#0f4d3f")
-
-        self.north_frame.grid(row=0,
-                              column=1,
-                              sticky="n")
-
-        self.west_frame = Frame(self.table,
-                                bg="#0f4d3f")
-
-        self.west_frame.grid(row=1,
-                             column=0,
-                             sticky="w")
-
-        self.centre_frame = Frame(self.table,
-                                  bg="#055341",
-                                  width=600,
-                                  height=400)
-
-        self.centre_frame.grid(row=1,
-                               column=1,
-                               sticky="nsew")
-
-        self.centre_frame.grid_propagate(False)
-
-        self.east_frame = Frame(self.table,
-                                bg="#0f4d3f")
-
-        self.east_frame.grid(row=1,
-                             column=2,
-                             sticky="e")
-
-        self.south_frame = Frame(self.table,
-                                 bg="#0f4d3f")
-
-        self.south_frame.grid(row=2,
-                              column=1,
-                              sticky="s")
-
-        self.trick_labels = {}
-
-        self.trick_labels["North"] = Label(
-            self.centre_frame,
-            text="",
-            bg="#055341"
-        )
-
-        self.trick_labels["North"].place(
-            relx=0.5,
-            rely=0.15,
-            anchor="center"
-        )
-
-        self.trick_labels["South"] = Label(
-            self.centre_frame,
-            text="",
-            bg="#055341"
-        )
-
-        self.trick_labels["South"].place(
-            relx=0.5,
-            rely=0.85,
-            anchor="center"
-        )
-
-        self.trick_labels["West"] = Label(
-            self.centre_frame,
-            text="",
-            bg="#055341"
-        )
-
-        self.trick_labels["West"].place(
-            relx=0.15,
-            rely=0.5,
-            anchor="center"
-        )
-
-        self.trick_labels["East"] = Label(
-            self.centre_frame,
-            text="",
-            bg="#055341"
-        )
-
-        self.trick_labels["East"].place(
-            relx=0.85,
-            rely=0.5,
-            anchor="center"
-        )
-
-        self.grid_rowconfigure(1,
-                               weight=1)
-
-        self.grid_columnconfigure(0,
-                                   weight=1)
+        """Creates player table where games take place"""
+        self.table= Frame(self,
+                     bg="#055341",
+                     bd=5,  #setting border width of the table frame
+                     relief="ridge")
+        self.table.grid(row=1, column=0, sticky="nsew")
+        self.table.grid_propagate(False)
+        
+        #Creating desired table grid
+        self.table.grid_rowconfigure(0, minsize=90)
+        self.table.grid_rowconfigure(1, minsize=520)
+        self.table.grid_rowconfigure(2, minsize=90)
+        
+        self.table.grid_columnconfigure(0, minsize=80, weight=0)
+        self.table.grid_columnconfigure(1, weight=1)
+        self.table.grid_columnconfigure(2, minsize=80, weight=0)
+        
+        #creating 4 frames for the 4 hand display and the centre where cards get played
+        self.north_frame= Frame(self.table, bg="#055341")
+        self.west_frame= Frame(self.table, bg="#055341", width=120)
+        self.centre_frame= Frame(self.table, bg="darkgreen", bd=3, relief="ridge")
+        self.east_frame= Frame(self.table, bg="#055341", width=120)
+        self.south_frame= Frame(self.table, bg="#055341")
+        
+        #Ensuring west and east frames stay fixed for card displays
+        self.west_frame.grid_propagate(False)
+        self.east_frame.grid_propagate(False)
+        
+        #Placing frames in desired spots
+        self.north_frame.grid(row=0, column=0, columnspan=3, sticky="n")
+        self.west_frame.grid(row=1, column=0, sticky="ns")
+        self.centre_frame.grid(row=1, column=1, sticky="nsew", padx=15, pady=10)
+        self.east_frame.grid(row=1, column=2, sticky="ns")
+        self.south_frame.grid(row=2, column=0, columnspan=3, sticky="s")
+        
+        self.centre_frame.grid_rowconfigure(0, weight=1)
+        self.centre_frame.grid_columnconfigure(0, weight=1)
+        
+        #Creating card area
+        self.trick_labels={}
+        offsets = { "North" : (0, -25),
+                   "East": (25,0),
+                   "South": (0,25),
+                   "West": (-25,0)}
+        self.trick_offsets= offsets
+        for player in self.players:
+              lbl=Label(self.centre_frame, bd=0, bg="darkgreen")
+              lbl.place(relx=0.5, rely=0.5, anchor="center",
+                        x=offsets[player][0], y= offsets[player][1])
+              self.trick_labels[player]=lbl
 
     def tutorial_feedback(self):
 
-        feedback_frame = Frame(self,
-                                bg="#0f4d3f")
+        feedback_frame = Frame(self, bg="#0f4d3f")
 
         feedback_frame.grid(row=2,
                             column=0,
@@ -358,93 +307,56 @@ class TutorialGamePage(Frame):
 
         self.note_label.config(text=note)
 
-    def display_cards(self, visible_players=None):
+    def player_hands(self, visible_players=None):
+          """Displays player hands"""
+          #Clear cards being displayed
+          for frame in [self.south_frame, self.west_frame, self.north_frame, self.east_frame]:
+               for widget in frame.winfo_children():
+                    widget.destroy()
+    
+          if visible_players is None:
+               visible_players = ["South", "North"]
+    
+          #calculation for west and east hands which ensures that all 13 cards are displayed
+          frame_height = 520
+          card_height = 100
+          n = 13
+          step = (frame_height - card_height) / (n - 1)
+          self.card_images=[]
+    
+          #seats
+          seat_positions = [(0, self.south_frame, "South", "left"),
+          (1, self.west_frame,  "West",  "place"),
+          (2, self.north_frame, "North", "left"),
+          (3, self.east_frame,  "East",  "place"),
+          ]
+          # seat indices: SOUTH=0, WEST=1, NORTH=2, EAST=3 pretty sure this is how it's ordered on playerposition
+          for seat_index, frame, name, layout in seat_positions:
+               #only displaying player and dummys hands
+               if name not in visible_players:
+                    continue
 
-        for frame in [self.south_frame,
-                      self.west_frame,
-                      self.north_frame,
-                      self.east_frame]:
+               hand=[]
+    
+               for i, card_code in enumerate(hand):
+                   img = self.resize_cards(f"png/{card_code}.png")
+                   #add the relevant card image for the card in cardcodes
+                   self.card_images.append(img)
+                   if name == "South":
+                       btn = Button(frame,image=img, borderwidth=0)
 
-            for widget in frame.winfo_children():
-                widget.destroy()
-
-        if visible_players is None:
-            visible_players = [
-                "South",
-                "West",
-                "North",
-                "East"
-            ]
-
-        frame_height = 520
-        card_height = 100
-        n = 13
-
-        if n > 1:
-            step = (frame_height - card_height) / (n - 1)
-        else:
-            step = 0
-
-        self.card_images = []
-
-        seat_positions = [
-            (self.south_frame, "South", "left"),
-            (self.west_frame, "West", "place"),
-            (self.north_frame, "North", "left"),
-            (self.east_frame, "East", "place")
-        ]
-
-        for frame, name, layout in seat_positions:
-
-            if name not in visible_players:
-                continue
-
-            hand = []
-
-            for i, card_code in enumerate(hand):
-
-                img = self.resize_cards(
-                    f"png/{card_code}.png"
-                )
-
-                self.card_images.append(img)
-
-                if name == "South":
-
-                    btn = Button(frame,
-                                 image=img,
-                                 borderwidth=0)
-
-                    btn.config(
-                        command=lambda image=img,
-                        b=btn,
-                        c=card_code:
-                        self.select_card(
-                            image,
-                            c,
-                            b
-                        )
-                    )
-
-                    btn.pack(side="left",
-                             padx=3)
-
-                else:
-
-                    label = Label(frame,
-                                  image=img,
-                                  borderwidth=0,
-                                  bg="#0f4d3f")
-
-                    if layout == "left":
-
-                        label.pack(side="left",
-                                   padx=3)
-
-                    else:
-
-                        label.place(x=15,
-                                    y=i * step)
+                       btn.config(command=lambda image=img,
+                                  b=btn,
+                                  n=name,
+                                  s=seat_index,
+                                  c=card_code:self.select_card(image,c,b))
+                       btn.pack(side="left",  padx=3)
+                   else:
+                       card = Label(frame,
+                             image=img,
+                             borderwidth=0,
+                             bg="#055341")
+                       card.pack(side="left",padx=3)
 
     def select_card(self, image, card_code, button):
 
