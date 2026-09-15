@@ -3,7 +3,10 @@ package DoubleDummySolverSystem;
 import logic.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DoubleDummySolver {
 
@@ -33,6 +36,7 @@ public class DoubleDummySolver {
                 legalCards.add(card);
             }
         }
+        legalCards = collapseEquivalentCards(legalCards, state); // skip cards that are provably interchangeable right now
         int bestValue = (MAX) ? 0 : 13;
 
         for (Card card : legalCards){
@@ -60,11 +64,66 @@ public class DoubleDummySolver {
             if (alpha >= beta) break;
         }
         return bestValue;
-
     }
     //check if player is on the max side or the min side, true if max, false if min
     //Max is the team of the declarer, and min is the opposing team
     private static boolean playerIsMax (PlayerPosition player, GameState state ) {
         return player == state.getDeclarer() || player == state.getDeclarer().partner();
+    }
+
+    private static List<Rank> aliveRanksInSuit (GameState state, Suit suit){
+        PlayerPosition [] positions = PlayerPosition.values();
+        List<Rank>  aliveRanks = new ArrayList<>();
+        for (PlayerPosition position : positions){
+            PlayerHand currentHand = state.getHand(position);
+            aliveRanks.addAll(currentHand.getRanksOfSuit(suit)) ;
+        }
+        Collections.sort(aliveRanks);
+        return aliveRanks;
+    }
+
+    // reduces legalCards down to one representative per "run" of equivalent
+    // cards, per suit, so solve() doesn't waste time trying cards that are
+    // provably interchangeable
+    private static List<Card> collapseEquivalentCards(List<Card> legalCards, GameState state) {
+        // which suits are actually present among the legal cards
+        Set<Suit> suitsPresent = new HashSet<>();
+        for (Card card : legalCards) {
+            suitsPresent.add(card.getSuit());
+        }
+        List<Card> collapsed = new ArrayList<>();
+        for (Suit suit : suitsPresent) {
+            List<Rank> alive = aliveRanksInSuit(state, suit);
+
+            // which ranks of this suit are ours, among the legal cards
+            Set<Rank> mine = new HashSet<>();
+            for (Card card : legalCards) {
+                if (card.getSuit() == suit) {
+                    mine.add(card.getRank());
+                }
+            }
+
+            for (int i = 0; i < alive.size(); i++) {
+                Rank rank = alive.get(i);
+                if (!mine.contains(rank)) continue; // not one of our cards, irrelevant here
+
+                // top of a run there i nothing higher and still ours immediately above it
+                boolean isTopOfRun = (i == alive.size() - 1) || !mine.contains(alive.get(i + 1));
+                if (isTopOfRun) {
+                    collapsed.add(findCard(legalCards, suit, rank));
+                }
+            }
+        }
+        return collapsed;
+    }
+
+    // finds the Card in legalCards matching this suit and rank - a hand never holds duplicates
+    private static Card findCard(List<Card> cards, Suit suit, Rank rank) {
+        for (Card card : cards) {
+            if (card.getSuit() == suit && card.getRank() == rank) {
+                return card;
+            }
+        }
+        return null; // shouldn't happen coz mine was built from these same legalCards
     }
 }

@@ -83,4 +83,16 @@ public class PlayerHand {
         }
         return copy;
     }
+    //get all card ranks of a certain suit of this playerhand used in dds
+    public List<Rank> getRanksOfSuit(Suit suit){
+        List<Rank> ranks = new ArrayList<>();
+        Rank rank;
+        for (Card card: hand){
+            if  (card.getSuit() == suit){
+                rank = card.getRank();
+                ranks.add(rank);
+            }
+        }
+        return ranks;
+    }
 }
