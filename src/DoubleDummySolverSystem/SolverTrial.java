@@ -16,7 +16,7 @@ import java.util.List;
 public class SolverTrial {
 
     public static void main(String[] args) {
-        System.out.println("=== Trial 1: one card each ===");
+       /* System.out.println("=== Trial 1: one card each ===");
         runTrial(oneCardEach());
 
         System.out.println();
@@ -25,15 +25,13 @@ public class SolverTrial {
 
         System.out.println();
         System.out.println("=== Trial 3: four cards each, two suits ===");
-        runTrial(fourCardsEach());
+        runTrial(fourCardsEach());*/
 
-        /*System.out.println();
+        //System.out.println();
         System.out.println("=== Trial 4: full 52-card shuffled deck ===");
-        GameState fullDeal = fullShuffledDeck();
-        printSetup(fullDeal);
-        System.out.println("solve() intentionally NOT called on this one - see the comment on");
-        System.out.println("fullShuffledDeck(): unpruned, this branches over the whole 52-card");
-        System.out.println("tree and isn't expected to finish before alpha-beta + pruning exist.");*/
+        GameState fullDeck = fullShuffledDeck();
+        printSetup(fullDeck);
+        runTrial(fullDeck);
     }
 
     private static void runTrial(GameState state) {
