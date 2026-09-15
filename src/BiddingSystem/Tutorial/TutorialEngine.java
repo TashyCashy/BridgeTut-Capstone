@@ -1,8 +1,9 @@
 package BiddingSystem.Tutorial;
 
 import LessonTutorial.Lesson;
-import logic.*;
+import LessonTutorial.LessonOutcome;
 import java.util.*;
+import logic.*;
 
 public class TutorialEngine {
     private Lesson lesson;
@@ -10,11 +11,20 @@ public class TutorialEngine {
     private int currentTrickIdx = 0;
     private int mistakeCount = 0;
     private int currentPlayInTrick = 0;
+    private LessonOutcome finalOutcome = null;
+    private boolean isAutoComplete = false;
 
     public TutorialEngine(Lesson lesson) {
         this.lesson = lesson;
         // get the player who starts the first trick
         leaderSeat = lesson.getOpeningLeader();
+    }
+
+    public LessonOutcome getFinalOutcome() {
+        if (finalOutcome() != null)
+            return finalOutcome;
+        else 
+            return lesson.outcome;
     }
 
     // get the number of mistakes
@@ -94,5 +104,37 @@ public class TutorialEngine {
         int leader = leaderSeat.ordinal();
         int player = (leader+currentPlayInTrick%4);
         return PlayerPosition.values()[player];
+    }
+
+    // user claims all the remaining tricks
+    public boolean claim() {
+        if (isTutorialComplete())
+            return false;
+
+        if (lesson.outcome == LessonOutcome.CLAIM) { // does the lesson text expect a Claim
+            isAutoComplete = true;
+            finalOutcome = LessonOutcome.CLAIM;
+            return true;
+        }
+        else { // player claimed when the lesson text expects otherwise
+            mistakeCount++;
+            return false;
+        }
+    }
+
+    // user concedes all the remaining tricks
+    public boolean concede() {
+        if (isTutorialComplete())
+            return false;
+
+        if (lesson.outcome == LessonOutcome.CONCEDE) { // does the lesson text expect a concede
+            isAutoComplete = true;
+            finalOutcome = LessonOutcome.CONCEDE;
+            return true;
+        }
+        else { // player conceded when the lesson text expects otherwise
+            mistakeCount++;
+            return false;
+        }
     }
 }

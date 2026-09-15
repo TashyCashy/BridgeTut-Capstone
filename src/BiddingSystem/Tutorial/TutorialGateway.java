@@ -1,7 +1,5 @@
 package BiddingSystem.Tutorial;
 
-import LessonTutorial.Lesson;
-
 public class TutorialGateway {
     private final TutorialEngine engine;
 
@@ -23,6 +21,21 @@ public class TutorialGateway {
 
     public boolean playCard(int seatIdx, String cardCode) {
         return engine.playCard(seatIdx, cardCode);
+    }
+
+    public boolean claimTricks() {
+        return engine.claim();
+    }
+
+    public boolean concedeTricks() {
+        return engine.concede();
+    }
+
+    public String getFinalOutcome() {
+        if (engine.getFinalOutcome() != null) 
+            return engine.getFinalOutcome().name();
+        else
+            return "IN_PROGRESS";
     }
 
     public String getLessonNote() {
