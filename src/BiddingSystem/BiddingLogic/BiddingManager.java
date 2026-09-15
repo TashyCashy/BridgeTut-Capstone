@@ -7,6 +7,7 @@ import BiddingSystem.BiddingData.BiddingHistory;
 import BiddingSystem.BiddingData.DoublingState;
 import BiddingSystem.Player;
 import logic.PlayerPosition;
+import logic.Rank;
 import logic.Strain;
 
 public class BiddingManager {
@@ -105,4 +106,17 @@ public class BiddingManager {
 
    //Doubling state of final contract
     public DoublingState getFinalDoublingState() { return finalDoublingState; }
+
+    public PlayerPosition getCurrentDeclarer(){
+        BidEntry currentLargest = biddingHistory.getLargestBid();
+        if (currentLargest == null){
+            return null;
+        }
+        Strain largestStrain = currentLargest.getAction().getStrain();
+        Player playerWhoMadeLargestBid = currentLargest.getPlayer();
+        return (biddingHistory.determineDeclarer(largestStrain,playerWhoMadeLargestBid).getSeatPosition());
+
+
+
+    }
 }
