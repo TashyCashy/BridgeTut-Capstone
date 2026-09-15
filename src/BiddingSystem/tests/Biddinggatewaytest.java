@@ -192,6 +192,7 @@ class BiddingGatewayTest {
         gateway.submitPass();
         gateway.submitPass();
         gateway.submitPass();
+        gateway.checkBiddingOver();
         assertTrue(gateway.isPassedOut());
 
         int newSeat = gateway.resetAfterPassedOut();
