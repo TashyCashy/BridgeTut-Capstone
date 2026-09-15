@@ -29,6 +29,30 @@ public class PlayingGateway {
         return gameState.getCompletedTricks().size();
     }
 
+    public int getNorthSouthTricks(){
+        //method calculates north and south's tricks
+        int count = 0;
+
+        for(PlayerPosition winner : gameState.getTrickWinners()){
+            if(winner == PlayerPosition.NORTH || winner == PlayerPosition.SOUTH){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int getEastWestTricks(){
+    //method calculates east and west's tricks
+        int count = 0;
+
+        for(PlayerPosition winner : gameState.getTrickWinners()){
+            if(winner == PlayerPosition.EAST|| winner == PlayerPosition.WEST){
+                count++;
+            }
+        }
+        return count;
+    }
+
     // Cards a seat currently still holds, same code format as getHandForSeat()
     public List<String> getRemainingHandForSeat(int seatIndex) {
         PlayerPosition seat = PlayerPosition.values()[seatIndex];
