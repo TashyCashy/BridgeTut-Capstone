@@ -53,6 +53,9 @@ public class BiddingGateway {
      * Python should treat any false as "show a rejection, don't update UI".
      */
     public boolean submitBid(int level, String strainName) {
+        if (strainName == null){
+            return false;
+        }
         Strain strain;
         try {
             strain = Strain.valueOf(strainName);
