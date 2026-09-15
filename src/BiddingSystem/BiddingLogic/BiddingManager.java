@@ -115,8 +115,14 @@ public class BiddingManager {
         Strain largestStrain = currentLargest.getAction().getStrain();
         Player playerWhoMadeLargestBid = currentLargest.getPlayer();
         return (biddingHistory.determineDeclarer(largestStrain,playerWhoMadeLargestBid).getSeatPosition());
-
-
-
+    }
+    //assures that when the bid is undone the seat is shifted backwards as well
+    public boolean undoLastBid(){
+        if (biddingHistory.getSize() == 0) {
+            return false;
+        }
+        biddingHistory.undoRecentBid();
+        currentSeat = currentSeat.previous();
+        return true;
     }
 }

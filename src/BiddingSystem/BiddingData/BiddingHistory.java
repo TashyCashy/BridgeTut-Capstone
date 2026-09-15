@@ -116,6 +116,13 @@ public class BiddingHistory {
         }
         return DoublingState.UNDOUBLED; // no double/redouble/bid found at all
     }
+
+    //removes the most recently made bid from the biddinghistory
+    public void undoRecentBid(){
+        if (!bidsMade.isEmpty()) {
+            bidsMade.removeLast();
+        }
+    }
 }
 
 

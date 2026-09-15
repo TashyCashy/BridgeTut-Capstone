@@ -13,6 +13,7 @@ import py4j.GatewayServer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Entry point exposed to the Python GUI via Py4J. Wraps BiddingManager so
@@ -44,7 +45,7 @@ public class BiddingGateway {
         deck.shuffle();
         DealCards.dealHands(deck, players);
 
-        return new BiddingManager(PlayerPosition.SOUTH, players);
+        return new BiddingManager(players[new Random().nextInt(4)].getSeatPosition(), players);
     }
 
     /**
@@ -174,6 +175,10 @@ public class BiddingGateway {
             gameState.dealHand(player.getSeatPosition(), player.getPlayerHand().getHand());
         }
         return new PlayingGateway(gameState);
+    }
+
+    public boolean undoLastBid(){
+        return manager.undoLastBid();
     }
 
     public static void main(String[] args) {
