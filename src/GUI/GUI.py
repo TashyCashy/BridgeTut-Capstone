@@ -461,6 +461,10 @@ class GamePage(Frame):
              })
              if bid == "Pass":
                  accepted = entry_point.submitPass()
+             elif bid == "Double":
+                 accepted = entry_point.submitDouble()
+             elif bid == "Redouble":
+                 accepted = entry_point.submitRedouble()
              else:
                  level = int(bid[0])
                  suit_symbol = bid[1:]
@@ -478,8 +482,13 @@ class GamePage(Frame):
              self.bid_history_data.append((player, bid))
              self.display_bid(player, bid)
              if bid != "Pass":
-                   self.contract.config(text= f"Current contract: {bid} by {player}")
+                   declarer = entry_point.getCurrentDeclarerSeatIndex()
+                   if declarer:
+                       self.contract.config(text=f"Current contract: {bid} - Declarer: {declarer}")
+                   else:
+                       self.contract.config(text=f"Current contract: {bid}")
                 #removed joyes's logic to have java be the single source of truth
+             if bid not in ("Pass", "Double", "Redouble"):
                    self.current_level= int(bid[0])
                    self.update_lvl()
 

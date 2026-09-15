@@ -232,6 +232,14 @@ public class BiddingGateway {
         }
     }
 
+    public String getCurrentDeclarerSeatIndex() {
+        PlayerPosition currentDeclarer = manager.getCurrentDeclarer() ;
+       if  (currentDeclarer == null) return "";
+       else {
+           return currentDeclarer.name();
+       }
+    }
+
     public static void main(String[] args) {
         GatewayServer server = new GatewayServer(new BiddingGateway());
         server.start();
