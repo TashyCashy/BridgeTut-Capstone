@@ -663,16 +663,21 @@ class GamePage(Frame):
 
      def undo_bid(self):
            #Undo button which removes previous bids made
-           if not self.undo_hist:
+           if not self.bid_history_data:  # undo_hist is no longer maintained, bid_history_data is the real list now
                  messagebox.showinfo("Undo", "There are no bids to undo")
+                 return
+
+           if not entry_point.undoLastBid():  # keep Java's bidding history/turn in sync with the display
+                 messagebox.showinfo("Undo", "Nothing to undo on the backend")
                  return
 
            self.bid_history_data.pop()
            self.clear_bids()
 
-           self.clear_bids()
            for player, bid in self.bid_history_data:
                  self.display_bid(player, bid)
+
+           self.current_player = entry_point.getCurrentSeatIndex()  # turn moved back a seat too
 
            last_bid = None
            for player, bid in reversed(self.bid_history_data):
@@ -681,8 +686,13 @@ class GamePage(Frame):
                        break
            if last_bid:
             player, bid = last_bid
-            self.contract.config( text=f"Current contract: {bid} by {player}" )
-            self.current_level = int(bid[0])
+            declarer = entry_point.getCurrentDeclarerSeatIndex()  # match the declarer display used elsewhere
+            if declarer:
+                self.contract.config(text=f"Current contract: {bid} - Declarer: {declarer}")
+            else:
+                self.contract.config(text=f"Current contract: {bid}")
+            if bid not in ("Pass", "Double", "Redouble"):  # same guard as make_bid - no level digit on these
+                self.current_level = int(bid[0])
            else:
             self.contract.config( text="Current contract: None" )
             self.current_level = 0
