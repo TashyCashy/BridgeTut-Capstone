@@ -173,6 +173,7 @@ class GamePage(Frame):
              #Initialising game states
              self.card_images=[]
              self.current_player=0
+             self.current_level=0
              self.selected_level=None
              ##changed to reflect the java ordering.
              self.players=["South","West","North","East"]
