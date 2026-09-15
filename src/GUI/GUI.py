@@ -190,6 +190,12 @@ class GamePage(Frame):
              self.bidding_phase=True
              self.game_id = None
 
+             #variables to display in the header
+             self.ns_tricks = 0
+             self.ew_tricks = 0
+             self.declarer = None
+             self.trick_count = 0
+
              #grid layout for the board
              self.grid_rowconfigure(0, weight=0)
              self.grid_rowconfigure(1, weight=1)
@@ -212,7 +218,7 @@ class GamePage(Frame):
           user_id = get_user_id(self.controller.current_username)
 
           if user_id is None:
-               messagebox("Error", "Could not find user.")
+               messagebox.showerror("Error", "Could not find user.")
                return
 
           dealer = entry_point.getCurrentSeatIndex()
@@ -227,6 +233,9 @@ class GamePage(Frame):
           self.current_level = 0
           self.selected_level = None
           self.current_player = entry_point.getCurrentSeatIndex()
+          self.trick_count = 0
+          self.ns_tricks = 0
+          self.ew_tricks = 0
 
           self.bid_history_data = []
           self.undo_hist = []
@@ -253,11 +262,26 @@ class GamePage(Frame):
              header.grid(row=0, column=0, sticky="ew")
              header.grid_propagate(False) #Ensuring fixed size of the header
 
-             Label(header,
+             self.trick_label =Label(header,
                    text="North/South tricks: 0   East/West tricks:0",
                    font=("Arial",12,"bold"),
                    bg="darkgreen",
-                   fg="white").pack(side="left", padx=30)
+                   fg="white")
+             self.trick_label.pack(side="left", padx=30)
+
+             self.declarer_label=Label(header,
+                   text="Declarer: -",
+                   font=("Arial",12,"bold"),
+                   bg="darkgreen",
+                   fg="white")
+             self.declarer_label.pack(side="left", padx=20)
+
+             self.bid_label = Label(header,
+                                    text="Bid: -",
+                                    font=("Arial", 12, "bold"),
+                                    bg="darkgreen",
+                                    fg="white")
+             self.bid_label.pack(side="left", padx=20)
 
              Button(header,
                     text="View Bids",
@@ -294,6 +318,12 @@ class GamePage(Frame):
                                    command= lambda: self.controller.show_frame(LoginPage))
 
              menu_button.config(menu=drop_down)
+
+     def update_trick_score(self):
+          self.ns_tricks = self.play_gateway.getNorthSouthTricks()
+          self.ew_tricks = self.play_gateway.getEastWestTricks()
+          self.trick_label.config(text= f"North/South tricks: {self.ns_tricks}  "
+                                         f"East/West tricks: {self.ew_tricks}")
 
      def player_table(self):
              """Creates player table where games take place"""
@@ -737,10 +767,21 @@ class GamePage(Frame):
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
         self.update_visible_hands()
 
+<<<<<<< HEAD
         # board gets cleared once all 4 players have played
         self.trick_count= getattr(self, "trick_count",0)+1
         if self.trick_count==4:
               self.after(1200, self.clear_trick)
+=======
+        #checks if trick has been completed
+        completed_tricks = self.play_gateway.getCompletedTricksCount()
+
+        if completed_tricks > self.trick_count:
+             self.trick_count = completed_tricks
+             self.update_trick_score()
+             #board gets cleared once all 4 players have played
+             self.after(1200, self.clear_trick)
+>>>>>>> e6f4abb (tricks, declarer and bid made displays on the header of game)
 
         if self.play_gateway.isHandComplete():
              messagebox.showinfo("Hand complete", "All 13 tricks played")
@@ -751,7 +792,6 @@ class GamePage(Frame):
            for lbl in self.trick_labels.values():
                  lbl.config(image="")
                  lbl.image=None
-           self.trick_count=0
 
      def finish_bidding(self):
            """removes bidding panel once bidding has been completed"""
@@ -759,13 +799,18 @@ class GamePage(Frame):
            self.bidding.grid_remove()
 
            declarer = entry_point.getDeclarerName()
+           winningBid = entry_point.getWinningContractString()
            declarer_idx = self.players.index(declarer)
 
            dummy_idx = (declarer_idx + 2) % 4
            self.dummy = self.players[dummy_idx]
 
+           self.declarer_label.config(text=f"Declarer: {declarer}")
+           self.bid_label.config( text=f"Bid: {winningBid}" )
+
            self.play_gateway = entry_point.startPlayPhase()
            self.current_player = (self.play_gateway.getCurrentTurnSeatIndex())
+           
            self.update_visible_hands()
 
      def resize_cards(self, card):
