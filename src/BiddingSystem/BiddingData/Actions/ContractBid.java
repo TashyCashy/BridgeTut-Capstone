@@ -1,5 +1,6 @@
 package BiddingSystem.BiddingData.Actions;
 
+import BiddingSystem.BiddingData.DoublingState;
 import logic.Strain;
 import logic.Suit;
 
@@ -20,6 +21,7 @@ public class ContractBid extends PlayerAction {
     public void setLevel(int level) { this.level = level; }
 
     public void setStrain(Strain s) { this.strain = s; }
+
 
 
     public boolean isBigger(PlayerAction otherBid) {

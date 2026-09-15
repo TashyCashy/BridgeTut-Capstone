@@ -1,7 +1,10 @@
 package BiddingSystem;
 
 import BiddingSystem.BiddingData.Actions.ContractBid;
+import BiddingSystem.BiddingData.Actions.DoubleAction;
 import BiddingSystem.BiddingData.Actions.PassAction;
+import BiddingSystem.BiddingData.Actions.RedoubleAction;
+import BiddingSystem.BiddingData.DoublingState;
 import BiddingSystem.BiddingLogic.BiddingManager;
 import BiddingSystem.BiddingLogic.GameReset;
 import logic.*;
@@ -66,6 +69,10 @@ public class BiddingGateway {
         return manager.ActionPlayed(new PassAction());
     }
 
+    public boolean submitDouble (){ return manager.ActionPlayed(new DoubleAction());}
+
+    public boolean submitRedouble (){ return manager.ActionPlayed(new RedoubleAction());}
+
     /** Index into PlayerPosition.values() order: SOUTH=0, WEST=1, NORTH=2, EAST=3 */
     public int getCurrentSeatIndex() {
         return manager.getCurrentPlayer().getSeatPosition().ordinal();
@@ -92,10 +99,17 @@ public class BiddingGateway {
         return manager.getDeclarer().getSeatPosition().ordinal();
     }
 
-    /** e.g. "2 HEARTS" -- Python can format this however it wants for display. */
+    /**
+     * e.g. "2 HEARTS", or "2 HEARTS DOUBLED" / "2 HEARTS REDOUBLED" once the
+     * auction has ended doubled. Python can format this however it wants.
+     */
     public String getWinningContractString() {
         ContractBid c = manager.getWinningContract();
-        return c.getLevel() + " " + c.getStrain().name();
+        String contract = c.getLevel() + " " + c.getStrain().name();
+        if (manager.getFinalDoublingState() != DoublingState.UNDOUBLED) {
+            contract += " " + manager.getFinalDoublingState().name();
+        }
+        return contract;
     }
 
     /**
@@ -106,6 +120,17 @@ public class BiddingGateway {
     public int resetAfterPassedOut() {
         this.manager = GameReset.resetGame(this.manager);
         return getCurrentSeatIndex();
+    }
+
+    //Live doubling state
+    public String getCurrentDoublingState(){
+        //py4j can only pass primitive types (String/int/boolean), so convert the enum to its name
+        return manager.getCurrentDoublingState().name();
+    }
+
+    //Doubling state of final auction
+    public String getFinalDoublingState(){
+        return manager.getFinalDoublingState().name();
     }
 
     //for getting the rigth cards shown on the gui
