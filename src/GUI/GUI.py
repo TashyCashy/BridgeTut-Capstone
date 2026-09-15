@@ -61,6 +61,12 @@ class GUI(Tk):
         if page_class == ResultPage:
              frame.load_dates()
 
+    def show_home(self):
+         self.show_frame(HomePage)
+
+    def show_tutorials(self):
+         self.show_frame(TutorialPage)
+         
 class LoginPage(Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, background="#055341")
