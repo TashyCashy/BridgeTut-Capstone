@@ -3,7 +3,8 @@ from tkinter import messagebox
 import random
 from PIL import Image, ImageTk
 import os
-from db import create_user, verify_user
+from db import (create_user, verify_user, create_game, get_user_id,
+get_game_dates, get_games_by_date, get_bidding_hist, get_game_tricks,get_game_cards)
 ##this is needed for the py4j gateway to be able to be used for translation
 from py4j.java_gateway import JavaGateway
 gateway = JavaGateway()
@@ -29,6 +30,7 @@ class GUI(Tk):
         self.card_images={}
         self.card_width=70
         self.card_height=100
+        self. current_username = None
 
         #Creating container whi
         #ch holds frames so different app pages can be displayed
@@ -39,7 +41,7 @@ class GUI(Tk):
 
         #Creating the different pages
         self.frames={}
-        for F in (LoginPage, HomePage, GamePage, TutorialPage, ResultPage):
+        for F in (LoginPage, HomePage, GamePage, TutorialPage, TutorialGamePage, ResultPage):
             frame= F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -49,6 +51,9 @@ class GUI(Tk):
         """Allows different pages to be displayed"""
         frame= self.frames[page_class]
         frame.tkraise()
+
+        if page_class == ResultPage:
+             frame.load_dates()
 
 class LoginPage(Frame):
     def __init__(self, parent, controller):
@@ -104,8 +109,9 @@ class LoginPage(Frame):
           username= self.username.get()
           password= self.password.get()
           if create_user(username, password):
+                self.controller.current_username = username
                 messagebox.showinfo("Success","Account added.")
-                self.controller.show_frame(GamePage)
+                self.controller.show_frame(HomePage)
           else:
                 messagebox.showinfo("Sign up failed", "Try again. Username may be already taken")
 
@@ -115,8 +121,9 @@ class LoginPage(Frame):
           username= self.username.get()
           password= self.password.get()
           if verify_user(username, password):
+                self.controller.current_username = username
                 messagebox.showinfo("Login Successful!", "Welcome!")
-                self.controller.show_frame(GamePage)
+                self.controller.show_frame(HomePage)
           else:
                 messagebox.showinfo("Login failed","Incorrect username or password")
 
@@ -144,7 +151,7 @@ class HomePage(Frame):
                  width=40,
                  fg="white",
                  relief="flat", #Creates no border effect on the frame
-                 command=lambda: controller.show_frame(GamePage)).pack(fill="x",pady=18, ipady=10)
+                 command=lambda: controller.frames[GamePage].start_game()).pack(fill="x",pady=18, ipady=10)
 
           Button(menu,
                  text="Tutorial",
@@ -175,11 +182,20 @@ class GamePage(Frame):
              self.current_player=0
              self.current_level=0
              self.selected_level=None
+             self.dummy = None
+
              ##changed to reflect the java ordering.
              self.players=["South","West","North","East"]
              self.bid_history_data=[]
              self.undo_hist=[]
              self.bidding_phase=True
+             self.game_id = None
+
+             #variables to display in the header
+             self.ns_tricks = 0
+             self.ew_tricks = 0
+             self.declarer = None
+             self.trick_count = 0
 
              #grid layout for the board
              self.grid_rowconfigure(0, weight=0)
@@ -191,7 +207,55 @@ class GamePage(Frame):
              self.header_display()
              self.player_table()
              self.bidding_panel()
+             # adding a field to hold the play gateway once bidding ends
+             self.play_gateway = None
+
              self.player_hands()
+
+     def start_game(self):
+          if self.controller.current_username is None:
+               messagebox.showerror("Error", "Please log in first.")
+               return
+          user_id = get_user_id(self.controller.current_username)
+
+          if user_id is None:
+               messagebox.showerror("Error", "Could not find user.")
+               return
+
+          dealer = entry_point.getCurrentSeatIndex()
+          self.game_id = create_game(user_id, dealer)
+
+          if self.game_id is None:
+               messagebox("Error", "Could not create game.")
+               return
+
+          #resetting game states
+          self.bidding_phase = True
+          self.current_level = 0
+          self.selected_level = None
+          self.current_player = entry_point.getCurrentSeatIndex()
+          self.trick_count = 0
+          self.ns_tricks = 0
+          self.ew_tricks = 0
+
+          self.bid_history_data = []
+          self.undo_hist = []
+
+          self.clear_bids()
+
+          self.contract.config( text="Current contract: None" )
+          # Reset level buttons
+          for btn in self.level_btns:
+               btn.config( relief="raised", state="normal" )
+          # Show the GamePage
+          self.controller.show_frame(GamePage)
+          # Show bidding panel
+          self.bidding.grid( row=0, column=0, sticky="nsew", padx=10, pady=10 )
+          self.bidding.lift()
+
+          print("Game created:", self.game_id)
+          print("Bidding phase:", self.bidding_phase)
+
 
      def header_display(self):
              #Creating header which has the option to go back to menu and clues
@@ -199,11 +263,26 @@ class GamePage(Frame):
              header.grid(row=0, column=0, sticky="ew")
              header.grid_propagate(False) #Ensuring fixed size of the header
 
-             Label(header,
+             self.trick_label =Label(header,
                    text="North/South tricks: 0   East/West tricks:0",
                    font=("Arial",12,"bold"),
                    bg="darkgreen",
-                   fg="white").pack(side="left", padx=30)
+                   fg="white")
+             self.trick_label.pack(side="left", padx=30)
+
+             self.declarer_label=Label(header,
+                   text="Declarer: -",
+                   font=("Arial",12,"bold"),
+                   bg="darkgreen",
+                   fg="white")
+             self.declarer_label.pack(side="left", padx=20)
+
+             self.bid_label = Label(header,
+                                    text="Bid: -",
+                                    font=("Arial", 12, "bold"),
+                                    bg="darkgreen",
+                                    fg="white")
+             self.bid_label.pack(side="left", padx=20)
 
              Button(header,
                     text="View Bids",
@@ -240,6 +319,12 @@ class GamePage(Frame):
                                    command= lambda: self.controller.show_frame(LoginPage))
 
              menu_button.config(menu=drop_down)
+
+     def update_trick_score(self):
+          self.ns_tricks = self.play_gateway.getNorthSouthTricks()
+          self.ew_tricks = self.play_gateway.getEastWestTricks()
+          self.trick_label.config(text= f"North/South tricks: {self.ns_tricks}  "
+                                         f"East/West tricks: {self.ew_tricks}")
 
      def player_table(self):
              """Creates player table where games take place"""
@@ -306,7 +391,7 @@ class GamePage(Frame):
                    text="Bidding",
                    font=("Arial", 16, "bold"),
                    bg="#7B7D7E",
-                   fg="white").pack(pady=(8,5))
+                   fg="#055341").pack(pady=(8,5))
 
              self.players_frame=Frame(self.bidding, bg="#7B7D7E")
              self.players_frame.pack(fill="x", padx=20)
@@ -321,7 +406,7 @@ class GamePage(Frame):
                         text=p,
                         font=("Arial", 11, "bold"),
                         bg="#7B7D7E",
-                        fg="white").grid(row=0, column=col, sticky="w", padx=10)
+                        fg="#055341").grid(row=0, column=col, sticky="w", padx=10)
 
              #storing the bidding history
              self.bid_history= Frame(self.bidding, bg="#7B7D7E")
@@ -360,23 +445,23 @@ class GamePage(Frame):
 
              Label(numbers,
                    text= "Level: ",
-                   font=("Arial", 11, "bold"),
+                   font=("Arial", 10, "bold"),
                    bg="#7B7D7E",
-                   fg="white",
-                   width=7).pack(side="left", padx=5)
+                   fg="#055341",
+                   width=6).pack(side="left", padx=5)
 
              #Creating different contract level buttons
              self.level_btns=[]
              for num in range(1,8):
                    l_btn=Button(numbers,
                           text= str(num),
-                          font=("Arial", 12, "bold"),
-                          width=5,
-                          height=2,
-                          padx=8,
-                          pady=8,
+                          font=("Arial", 10, "bold"),
+                          width=2,
+                          height=1,
+                          padx=2,
+                          pady=2,
                           command=lambda n=num: self.select_level(n))
-                   l_btn.pack(side="left", padx=6, pady=5)
+                   l_btn.pack(side="left", padx=3, pady=3)
                    self.level_btns.append(l_btn)
 
              suits= Frame(btn_frame, bg="#7B7D7E")
@@ -384,55 +469,59 @@ class GamePage(Frame):
 
              Label(suits,
                    text="Suits: ",
-                   font=("Arial", 11, "bold"),
+                   font=("Arial", 10, "bold"),
                    bg="#7B7D7E",
-                   fg="white",
-                   width=7).pack(side="left", padx=5)
+                   fg="#055341",
+                   width=6).pack(side="left", padx=5)
 
              #Creating different suit and game logic buttons
              suit = ["♣","♦","♥","♠","NT"]
              self.suits_btn=[]
              for s in suit:
-                  if s in ["",""]:
+                  if s in ["♦", "♥"]:
                         suit_colour="red"
                   else:
                         suit_colour= "black"
                   s_btn=Button(suits,
                         text= s,
-                        font=("Arial", 18, "bold"),
-                        width=5,
-                        height=2,
-                        padx=8,
-                        pady=8,
+                        font=("Arial", 14, "bold"),
+                        width=2,
+                        height=1,
+                        padx=2,
+                        pady=2,
                         fg= suit_colour,
                         command=lambda st=s: self.select_suit(st))
                   s_btn.pack(side="left", padx=2)
                   self.suits_btn.append(s_btn)
 
+             #creating a frame where pass, double and redouble button will be displayed
+             calls_frame = Frame(btn_frame, bg="#7B7D7E")
+             calls_frame.pack(pady=(20, 5))
+
              #Pass button for when player does not want to make a contract
-             Button(btn_frame,
+             Button(calls_frame,
                   text= "Pass",
-                  font=("Arial", 18, "bold"),
-                  width=5,
-                  command=lambda: self.make_bid("Pass")).pack(pady=4)
+                  font=("Arial", 12, "bold"),
+                  width=8,
+                  command=lambda: self.make_bid("Pass")).pack(side="left", padx=4)
 
-             Button(btn_frame,
+             Button(calls_frame,
                   text= "Double",
-                  font=("Arial", 18, "bold"),
-                  width=5,
-                  command=lambda: self.make_bid("Double")).pack(pady=4)
+                  font=("Arial", 12, "bold"),
+                  width=8,
+                  command=lambda: self.make_bid("Double")).pack(side="left", padx=4)
 
-             Button(btn_frame,
+             Button(calls_frame,
                   text= "Redouble",
-                  font=("Arial", 18, "bold"),
-                  width=5,
-                  command=lambda: self.make_bid("Redouble")).pack(pady=4)
+                  font=("Arial", 12, "bold"),
+                  width=8,
+                  command=lambda: self.make_bid("Redouble")).pack(side="left", padx=4)
 
              Button(btn_frame,
                   text= "Undo",
-                  font=("Arial", 16, "bold"),
+                  font=("Arial", 11, "bold"),
                   width=6,
-                  command=self.undo_bid).pack(side="right", anchor="se",padx=10,pady=10)
+                  command=self.undo_bid).pack(side="right", anchor="se",padx=8,pady=8)
 
      def select_level(self, level):
            """Highligts the clicked level button"""
@@ -454,12 +543,6 @@ class GamePage(Frame):
 
      def make_bid(self, bid):
              """Adds and displays bid made by user"""
-             #adding current state of bids made to implement logic of undo button
-             self.undo_hist.append({
-                   "bid_hist_data": self.bid_history_data.copy(),
-                   "current_level": self.current_level,
-                   "current_player": self.current_player
-             })
              if bid == "Pass":
                  accepted = entry_point.submitPass()
              elif bid == "Double":
@@ -577,16 +660,15 @@ class GamePage(Frame):
                   fg="#123f35",
                   relief="flat",
                   command=bid_window.destroy).pack(pady=10)
-           
+
      def undo_bid(self):
-           """Undo button which removes previous bids made"""
+           #Undo button which removes previous bids made
            if not self.undo_hist:
                  messagebox.showinfo("Undo", "There are no bids to undo")
+                 return
 
-           prev_state= self.undo_hist.pop()
-           self.bid_history_data=prev_state["bid_history_data"].copy()
-           self.current_player = prev_state["current_player"]
-           self.current_level = prev_state["current_level"]
+           self.bid_history_data.pop()
+           self.clear_bids()
 
            self.clear_bids()
            for player, bid in self.bid_history_data:
@@ -597,23 +679,48 @@ class GamePage(Frame):
                  if bid != "Pass":
                        last_bid = (player, bid)
                        break
-           if last_bid: 
-            player, bid = last_bid 
+           if last_bid:
+            player, bid = last_bid
             self.contract.config( text=f"Current contract: {bid} by {player}" )
+            self.current_level = int(bid[0])
            else:
             self.contract.config( text="Current contract: None" )
+            self.current_level = 0
 
+           self.update_lvl()
+           self.bidding_phase = True
+           self.bidding.grid()
 
+     def clear_bids(self):
+          """Removes displayed bid labels"""
+          for widget in self.bid_history.winfo_children():
+               widget.destroy()
 
-     def player_hands(self):
+     def update_visible_hands(self):
+          current_player_name = self.players[self.current_player]
+          visible_players = [self.dummy, current_player_name]
+
+          visible_players = list (dict.fromkeys(visible_players))
+          self.player_hands(visible_players)
+
+     def player_hands(self, visible_players=None):
            """Displays player hands"""
+           #Clear cards being displayed
+           for frame in [self.south_frame, self.west_frame, self.north_frame, self.east_frame]:
+                for widget in frame.winfo_children():
+                     widget.destroy()
+
+           if visible_players is None:
+                visible_players = ["South"]
+
            #calculation for west and east hands which ensures that all 13 cards are displayed
            frame_height = 520
            card_height = 100
            n = 13
            step = (frame_height - card_height) / (n - 1)
            self.card_images=[]
-            #seats
+
+           #seats
            seat_positions = [(0, self.south_frame, "South", "left"),
            (1, self.west_frame,  "West",  "place"),
            (2, self.north_frame, "North", "left"),
@@ -621,50 +728,102 @@ class GamePage(Frame):
            ]
            # seat indices: SOUTH=0, WEST=1, NORTH=2, EAST=3 pretty sure this is how it's ordered on playerposition
            for seat_index, frame, name, layout in seat_positions:
+                #only displaying player and dummys hands
+                if name not in visible_players:
+                     continue
                #runs the java gateway method
-                hand = entry_point.getHandForSeat(seat_index)
+                if self.play_gateway is not None:
+                  hand = self.play_gateway.getRemainingHandForSeat(seat_index)
+                else:
+                     hand = entry_point.getHandForSeat(seat_index)
+
                 for i, card_code in enumerate(hand):
                     img = self.resize_cards(f"png/{card_code}.png")
                     #add the relevant card image for the card in cardcodes
                     self.card_images.append(img)
 
                     btn = Button(frame, image=img, borderwidth=0)
-                    btn.config(command=lambda image=img, b=btn, n=name: self.play_card(image, n, b))
+                    btn.config(command=lambda image=img, b=btn, n=name, s=seat_index, c=card_code: self.play_card(image, n, s, c, b))
 
                     if layout == "left":
                          btn.pack(side="left", padx=3)
                     else:
                          btn.place(x=15 if name == "East" else 0, y=i * step)
 
-     def play_card(self, image, player, btn):
+     def play_card(self, image, player, seat_index, card_code, btn):
         """moves card to playing board and removes it from player hand"""
         if self.bidding_phase:
-              self.finish_bidding()
-        if player is None:
-              player= self.players[self.current_player]
+              messagebox.showinfo("Bidding", "The bidding is not finished yet.")
+              return
 
-        lbl= self.trick_labels[player]
-        lbl.config(image=image)
-        lbl.lift()
+        # ensuring that it is this seat's turn in Java
+        current_turn = self.play_gateway.getCurrentTurnSeatIndex()
+        if seat_index != current_turn:
+             messagebox.showinfo("Out of turn", f"It is currently {self.players[current_turn]}'s turn to play")
+             return
+
+        accepted = self.play_gateway.playCard(seat_index, card_code)
+        if not accepted:
+             messagebox.showinfo("Illegal play", "That card cannot be played right now")
+             return
+
+        lbl = self.trick_labels[player]
+        lbl.config(image = image)
+        lbl.image = image # keep a reference so Tkinter does not garbage collect it
 
         btn.destroy()
 
-        #board gets cleared once all 4 players have played
-        self.trick_count= getattr(self, "trick_count",0)+1
-        if self.trick_count==4:
-              self.after(1200, self.clear_trick)
+        # update current player index directly from Java backend
+        self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
+        self.update_visible_hands()
+
+        # this file already had unresolved conflict markers
+        # committed on origin (from an earlier merge that was never actually
+        #finished) - not something from my merge. Kept the version that
+        # asks the Java backend for the real completed-trick count instead
+        # of a local counter incremented per card play; it's the only one of
+        # the two that also calls update_trick_score(), which the header's
+        # NS/EW trick display depends onthe local-counter version would
+        # have left that display stuck at 0. Same "Java is the single
+        # source of truth" principle already used elsewhere in this file.
+        #checks if trick has been completed
+        completed_tricks = self.play_gateway.getCompletedTricksCount()
+
+        if completed_tricks > self.trick_count:
+             self.trick_count = completed_tricks
+             self.update_trick_score()
+             #board gets cleared once all 4 players have played
+             self.after(1200, self.clear_trick)
+
+        if self.play_gateway.isHandComplete():
+             messagebox.showinfo("Hand complete", "All 13 tricks played")
+        # game history goes here later
 
      def clear_trick(self):
            """board gets cleared once all 4 players have played """
            for lbl in self.trick_labels.values():
                  lbl.config(image="")
                  lbl.image=None
-           self.trick_count=0
 
      def finish_bidding(self):
            """removes bidding panel once bidding has been completed"""
            self.bidding_phase=False
            self.bidding.grid_remove()
+
+           declarer = entry_point.getDeclarerName()
+           winningBid = entry_point.getWinningContractString()
+           declarer_idx = self.players.index(declarer)
+
+           dummy_idx = (declarer_idx + 2) % 4
+           self.dummy = self.players[dummy_idx]
+
+           self.declarer_label.config(text=f"Declarer: {declarer}")
+           self.bid_label.config( text=f"Bid: {winningBid}" )
+
+           self.play_gateway = entry_point.startPlayPhase()
+           self.current_player = (self.play_gateway.getCurrentTurnSeatIndex())
+
+           self.update_visible_hands()
 
      def resize_cards(self, card):
         """Ensures cards are shaped in a way that it can be displayed by player hands and on the board"""
@@ -674,15 +833,610 @@ class GamePage(Frame):
 
 class TutorialPage(Frame):
      def __init__(self, parent, controller):
-             super().__init__(parent)
-             Label(self, text="").pack()
+      super().__init__(parent)
+      self.controller = controller
+
+      Label(self,
+            text="Bridge Tutorial",
+            font=("Georgia", 34, "bold"),
+            bg="#0f4d3f",
+            fg= "#C9A42C").pack(pady=(70,10))
+
+      Label(self,
+            text="Choose tutorial mode",
+            font=("Arial", 16, "bold"),
+            bg="#0f4d3f",
+            fg= "white").pack(pady=(0,40))
+
+      mode_frame = Frame(self, bg="#055341")
+      mode_frame.pack(padx=100, pady=20, ipadx=50, ipady=40)
+
+      Button(mode_frame,
+             text="Bidding and playing cards tutorial",
+             font=("Arial", 16, "bold"),
+             bg="#C9A42C",
+             fg="#055341",
+             relief= "flat",
+             width=30,
+             command= lambda: self.open_tut("Bidding")).pack(pady=12, ipady=10)
+
+      Button(mode_frame,
+             text="Playing cards tutorial",
+             font=("Arial", 16, "bold"),
+             bg="#C9A42C",
+             fg="#055341",
+             relief= "flat",
+             width=30,
+             command= lambda: self.open_tut("Playing Cards")).pack(pady=12, ipady=10)
+
+      Button(mode_frame,
+             text="Close",
+             font=("Arial", 11, "bold"),
+             bg="#C9A42C",
+             fg="#055341",
+             relief= "flat",
+             width=30,
+             command= lambda: controller.show_frame(HomePage).pack(pady=30, ipadx=20, ipady=8))
+
+     def open_tut(self, mode):
+          tut_page = self.controller.frames[TutorialGamePage]
+          tut_page.set_mode(mode)
+          self.controller.show_frame(TutorialGamePage)
+
+class TutorialGamePage(Frame):
+     def __init__(self, parent, controller):
+          super().__init__(parent, bg="#0f4d3f")
+          self.controller = controller
+          self.mode= "Bidding"
+          #keeps track of where user is currently in the tutorial
+          self.current_step=0
+
+
 
 class ResultPage(Frame):
     def __init__(self, parent, controller):
-            super().__init__(parent)
-            Label(self, text="").pack()
+        super().__init__(parent)
+        self.controller = controller
+        self.selected_game_id = None
+        self.games = []
 
+        Label(
+            self,
+            text="Game History",
+            font=("Arial", 28, "bold")
+        ).pack(pady=20)
 
+        Label(
+            self,
+            text="Select a date:",
+            font=("Arial", 14)
+        ).pack(pady=(10, 5))
 
+        self.date_var = StringVar()
+        self.date_menu = OptionMenu(self, self.date_var,"No dates available",command=self.date_selected)
+        self.date_menu.config( width=25, font=("Arial", 12))
+        self.date_menu.pack(pady=5)
+
+        Label(self,
+            text="Select a game:",
+            font=("Arial", 14)).pack(pady=(15, 5))
+
+        self.game_var = StringVar()
+        self.game_menu = OptionMenu(self,
+            self.game_var,
+            "Select a date first",
+            command=self.game_selected)
+        self.game_menu.config(width=35,font=("Arial", 12))
+        self.game_menu.pack(pady=5)
+
+        button_frame = Frame(self)
+        button_frame.pack(pady=20)
+
+        Button(
+            button_frame,
+            text="Summary",
+            font=("Arial", 12),
+            width=18,
+            command=self.show_summary
+        ).grid(row=0, column=0, padx=5)
+
+        Button(
+            button_frame,
+            text="Bidding History",
+            font=("Arial", 12),
+            width=18,
+            command=self.show_bidding
+        ).grid(row=0, column=1, padx=5)
+
+        Button(
+            button_frame,
+            text="Tricks",
+            font=("Arial", 12),
+            width=18,
+            command=self.show_tricks
+        ).grid(row=0, column=2, padx=5)
+
+        Button(
+            button_frame,
+            text="Cards Played",
+            font=("Arial", 12),
+            width=18,
+            command=self.show_cards
+        ).grid(row=0, column=3, padx=5)
+
+        self.results_frame = Frame(self)
+        self.results_frame.pack(
+            fill="both",
+            expand=True,
+            padx=40,
+            pady=10
+        )
+
+        Button(
+            self,
+            text="Back to Home",
+            font=("Arial", 12),
+            command=lambda: controller.show_frame(HomePage)
+        ).pack(pady=15)
+
+    def load_dates(self):
+        """
+        Gets all dates on which the current user played games.
+        """
+
+        # Clear old results
+        self.clear_results()
+
+        username = self.controller.current_username
+
+        if username is None:
+            self.date_var.set("No user logged in")
+            return
+
+        user_id = get_user_id(username)
+
+        if user_id is None:
+            self.date_var.set("No user found")
+            return
+
+        dates = get_game_dates(user_id)
+
+        # Clear the existing date menu
+        menu = self.date_menu["menu"]
+        menu.delete(0, "end")
+
+        if not dates:
+            self.date_var.set("No games available")
+            menu.add_command(
+                label="No games available",
+                command=lambda: self.date_var.set("No games available")
+            )
+            return
+
+        # Add dates to menu
+        for game_date in dates:
+            date_string = str(game_date)
+
+            menu.add_command(
+                label=date_string,
+                command=lambda value=date_string:
+                    self.date_selected(value)
+            )
+
+        # Select first date automatically
+        first_date = str(dates[0])
+        self.date_var.set(first_date)
+
+        self.date_selected(first_date)
+
+    def date_selected(self, selected_date):
+
+        self.date_var.set(selected_date)
+
+        username = self.controller.current_username
+
+        if username is None:
+            return
+
+        user_id = get_user_id(username)
+
+        if user_id is None:
+            return
+
+        # Get games for selected date
+        self.games = get_games_by_date(
+            user_id,
+            selected_date
+        )
+
+        # Clear game menu
+        menu = self.game_menu["menu"]
+        menu.delete(0, "end")
+
+        if not self.games:
+            self.game_var.set("No games available")
+
+            menu.add_command(
+                label="No games available",
+                command=lambda:
+                    self.game_var.set("No games available")
+            )
+
+            self.selected_game_id = None
+            self.clear_results()
+
+            return
+
+        # Add each game to menu
+        for game in self.games:
+
+            game_id = game[0]
+            dealer = game[1]
+            declarer = game[2]
+            ns_score = game[4]
+            ew_score = game[5]
+            seq_num = game[6]
+
+            game_text = (
+                f"Game {seq_num} "
+                f"(Dealer: {dealer})"
+            )
+
+            menu.add_command(
+                label=game_text,
+                command=lambda value=game_text, gid=game_id:
+                    self.game_selected(value, gid)
+            )
+
+        # Select first game automatically
+        first_game = self.games[0]
+
+        first_game_id = first_game[0]
+        first_game_text = (
+            f"Game {first_game[6]} "
+            f"(Dealer: {first_game[1]})"
+        )
+
+        self.game_var.set(first_game_text)
+        self.selected_game_id = first_game_id
+
+        self.show_summary()
+
+    def game_selected(self, selected_game, game_id=None):
+
+        self.game_var.set(selected_game)
+
+        if game_id is not None:
+            self.selected_game_id = game_id
+
+        self.show_summary()
+
+    def clear_results(self):
+
+        for widget in self.results_frame.winfo_children():
+            widget.destroy()
+
+    def show_summary(self):
+
+        self.clear_results()
+
+        if self.selected_game_id is None:
+            Label(
+                self.results_frame,
+                text="Please select a game.",
+                font=("Arial", 16)
+            ).pack(pady=30)
+
+            return
+
+        selected_game = None
+
+        for game in self.games:
+            if game[0] == self.selected_game_id:
+                selected_game = game
+                break
+
+        if selected_game is None:
+            return
+
+        game_id = selected_game[0]
+        dealer = selected_game[1]
+        declarer = selected_game[2]
+        vulnerability = selected_game[3]
+        ns_score = selected_game[4]
+        ew_score = selected_game[5]
+        seq_num = selected_game[6]
+        attempt_num = selected_game[7]
+
+        Label(
+            self.results_frame,
+            text="Game Summary",
+            font=("Arial", 22, "bold")
+        ).pack(pady=15)
+
+        info_frame = Frame(self.results_frame)
+        info_frame.pack(pady=10)
+
+        Label(
+            info_frame,
+            text=f"Game ID: {game_id}",
+            font=("Arial", 14)
+        ).grid(row=0, column=0, sticky="w", padx=20, pady=5)
+
+        Label(
+            info_frame,
+            text=f"Game Number: {seq_num}",
+            font=("Arial", 14)
+        ).grid(row=1, column=0, sticky="w", padx=20, pady=5)
+
+        Label(
+            info_frame,
+            text=f"Attempt: {attempt_num}",
+            font=("Arial", 14)
+        ).grid(row=2, column=0, sticky="w", padx=20, pady=5)
+
+        Label(
+            info_frame,
+            text=f"Dealer: {dealer}",
+            font=("Arial", 14)
+        ).grid(row=3, column=0, sticky="w", padx=20, pady=5)
+
+        Label(
+            info_frame,
+            text=f"Declarer: {declarer}",
+            font=("Arial", 14)
+        ).grid(row=4, column=0, sticky="w", padx=20, pady=5)
+
+        Label(
+            info_frame,
+            text=f"Vulnerability: {vulnerability}",
+            font=("Arial", 14)
+        ).grid(row=5, column=0, sticky="w", padx=20, pady=5)
+
+        Label(
+            info_frame,
+            text=f"North/South Score: {ns_score}",
+            font=("Arial", 14)
+        ).grid(row=6, column=0, sticky="w", padx=20, pady=5)
+
+        Label(
+            info_frame,
+            text=f"East/West Score: {ew_score}",
+            font=("Arial", 14)
+        ).grid(row=7, column=0, sticky="w", padx=20, pady=5)
+
+    def show_bidding(self):
+
+        self.clear_results()
+
+        if self.selected_game_id is None:
+            Label(
+                self.results_frame,
+                text="Please select a game.",
+                font=("Arial", 16)
+            ).pack(pady=30)
+
+            return
+
+        Label(
+            self.results_frame,
+            text="Bidding History",
+            font=("Arial", 22, "bold")
+        ).pack(pady=15)
+
+        bids = get_bidding_hist(
+            self.selected_game_id
+        )
+
+        if not bids:
+            Label(
+                self.results_frame,
+                text="No bids recorded for this game.",
+                font=("Arial", 14)
+            ).pack(pady=20)
+
+            return
+
+        # Heading
+        heading = Frame(self.results_frame)
+        heading.pack(fill="x", padx=50)
+
+        Label(
+            heading,
+            text="Position",
+            font=("Arial", 13, "bold"),
+            width=20
+        ).grid(row=0, column=0)
+
+        Label(
+            heading,
+            text="Bid",
+            font=("Arial", 13, "bold"),
+            width=20
+        ).grid(row=0, column=1)
+
+        # Bids
+        for bid_value, position in bids:
+
+            row = Frame(self.results_frame)
+            row.pack(fill="x", padx=50)
+
+            Label(
+                row,
+                text=position,
+                font=("Arial", 12),
+                width=20
+            ).grid(row=0, column=0)
+
+            Label(
+                row,
+                text=bid_value,
+                font=("Arial", 12),
+                width=20
+            ).grid(row=0, column=1)
+
+    def show_tricks(self):
+
+        self.clear_results()
+
+        if self.selected_game_id is None:
+            Label(
+                self.results_frame,
+                text="Please select a game.",
+                font=("Arial", 16)
+            ).pack(pady=30)
+
+            return
+
+        Label(
+            self.results_frame,
+            text="Tricks",
+            font=("Arial", 22, "bold")
+        ).pack(pady=15)
+
+        tricks = get_game_tricks(
+            self.selected_game_id
+        )
+
+        if not tricks:
+            Label(
+                self.results_frame,
+                text="No tricks recorded for this game.",
+                font=("Arial", 14)
+            ).pack(pady=20)
+
+            return
+
+        heading = Frame(self.results_frame)
+        heading.pack(fill="x", padx=50)
+
+        Label(
+            heading,
+            text="Trick",
+            font=("Arial", 13, "bold"),
+            width=20
+        ).grid(row=0, column=0)
+
+        Label(
+            heading,
+            text="Winner",
+            font=("Arial", 13, "bold"),
+            width=20
+        ).grid(row=0, column=1)
+
+        for trick_id, trick_number, winner in tricks:
+
+            row = Frame(self.results_frame)
+            row.pack(fill="x", padx=50)
+
+            Label(
+                row,
+                text=trick_number,
+                font=("Arial", 12),
+                width=20
+            ).grid(row=0, column=0)
+
+            Label(
+                row,
+                text=winner,
+                font=("Arial", 12),
+                width=20
+            ).grid(row=0, column=1)
+
+    def show_cards(self):
+
+        self.clear_results()
+
+        if self.selected_game_id is None:
+            Label(
+                self.results_frame,
+                text="Please select a game.",
+                font=("Arial", 16)
+            ).pack(pady=30)
+
+            return
+
+        Label(
+            self.results_frame,
+            text="Cards Played",
+            font=("Arial", 22, "bold")
+        ).pack(pady=15)
+
+        cards = get_game_cards(
+            self.selected_game_id
+        )
+
+        if not cards:
+            Label(
+                self.results_frame,
+                text="No cards recorded for this game.",
+                font=("Arial", 14)
+            ).pack(pady=20)
+
+            return
+
+        heading = Frame(self.results_frame)
+        heading.pack(fill="x", padx=30)
+
+        Label(
+            heading,
+            text="Trick",
+            font=("Arial", 13, "bold"),
+            width=15
+        ).grid(row=0, column=0)
+
+        Label(
+            heading,
+            text="Suit",
+            font=("Arial", 13, "bold"),
+            width=15
+        ).grid(row=0, column=1)
+
+        Label(
+            heading,
+            text="Card",
+            font=("Arial", 13, "bold"),
+            width=15
+        ).grid(row=0, column=2)
+
+        Label(
+            heading,
+            text="Play Order",
+            font=("Arial", 13, "bold"),
+            width=15
+        ).grid(row=0, column=3)
+
+        for cards_id, suit, card_rank, trick_id, play_order in cards:
+
+            row = Frame(self.results_frame)
+            row.pack(fill="x", padx=30)
+
+            Label(
+                row,
+                text=trick_id,
+                font=("Arial", 12),
+                width=15
+            ).grid(row=0, column=0)
+
+            Label(
+                row,
+                text=suit,
+                font=("Arial", 12),
+                width=15
+            ).grid(row=0, column=1)
+
+            Label(
+                row,
+                text=card_rank,
+                font=("Arial", 12),
+                width=15
+            ).grid(row=0, column=2)
+
+            Label(
+                row,
+                text=play_order,
+                font=("Arial", 12),
+                width=15
+            ).grid(row=0, column=3)
 
 GUI().mainloop()

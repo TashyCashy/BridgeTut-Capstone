@@ -5,6 +5,8 @@ import java.util.*;
 public class GameState {
     private Map<PlayerPosition, PlayerHand> hands;
     private List<Trick> completedTricks;
+    //added trickWinners so GUI can display which team won the trick
+    private List<PlayerPosition> trickWinners;
     private Suit trumpSuit;
     private Trick currentTrick;
     private PlayerPosition currentPlayerTurn;
@@ -15,7 +17,8 @@ public class GameState {
         this.trumpSuit = trumpSuit;
         this.hands = new HashMap<>();
         this.completedTricks = new ArrayList<>();
-        // do I need something for currentTrick and currentPlayerTurn
+        //added trickWinners so GUI can display which team won the trick
+        this.trickWinners = new ArrayList<>();
         this.currentTrick = Trick.startTrick(declarer);
         this.currentPlayerTurn = currentTrick.getLead(); // this is the player sitting to the left of the declarer
     }
@@ -26,6 +29,10 @@ public class GameState {
 
     public List<Trick> getCompletedTricks() {
         return this.completedTricks;
+    }
+
+    public List<PlayerPosition> getTrickWinners(){
+        return this.trickWinners;
     }
 
     public Trick getCurrentTrick() {
@@ -65,6 +72,8 @@ public class GameState {
     private void finishTrick() {
         PlayerPosition winner = PlayValidation.pickWinner(currentTrick, trumpSuit);
         completedTricks.add(currentTrick);
+        //shows who won the trick
+        trickWinners.add(winner);
         currentTrick = new Trick(winner);
         currentPlayerTurn = winner;
     }

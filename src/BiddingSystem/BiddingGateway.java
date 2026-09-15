@@ -136,6 +136,15 @@ public class BiddingGateway {
         return manager.getFinalDoublingState().name();
     }
 
+    //Kept my implementation when merging, still works the same way
+    public String getCurrentDeclarerSeatIndex() {
+        PlayerPosition currentDeclarer = manager.getCurrentDeclarer();
+        if (currentDeclarer == null) return "";
+        else {
+            return currentDeclarer.name();
+        }
+    }
+
     //for getting the rigth cards shown on the gui
     public List<String> getHandForSeat(int seatIndex) {
         Player p = manager.getPlayers()[seatIndex];
@@ -149,14 +158,13 @@ public class BiddingGateway {
         return cardCodes;
     }
 
-    //TASHES CODE
-
+    //overwrote my startPlayPhase()
     /**
      * Call once bidding has ended with a real contract (not passed out)
      * Pulls the declarer and trump suit straight from the manager that
      * just finished bidding - no re-entering data, no duplicated logic
      */
-    public void startPlayPhase() {
+    public PlayingGateway startPlayPhase() {
         PlayerPosition declarer = manager.getDeclarer().getSeatPosition();
         Strain winningStrain = manager.getWinningContract().getStrain();
         Suit trumpSuit = winningStrain.toSuit();
@@ -165,79 +173,7 @@ public class BiddingGateway {
         for (Player player: manager.getPlayers()) {
             gameState.dealHand(player.getSeatPosition(), player.getPlayerHand().getHand());
         }
-    }
-
-    /**
-     *Attempts to play a card on behalf of the given seat.
-     * cardCode matches getHandForSeat()'s format: suit letter then rank letter
-     * @return true if the play was legal and applied, false if rejected
-     */
-    public boolean playCard(int seatIndex, String cardCode) {
-        PlayerPosition seat = PlayerPosition.values()[seatIndex];
-        Card card = parseCardCode(cardCode);
-        return gameState.playCard(seat, card);
-    }
-
-    public boolean isHandComplete() {
-        return gameState.isHandComplete();
-    }
-
-    public int getCompletedTricksCount() {
-        return gameState.getCompletedTricks().size();
-    }
-
-    // Cards a seat currently still holds, same code format as getHandForSeat()
-    public List<String> getRemainingHandForSeat(int seatIndex) {
-        PlayerPosition seat = PlayerPosition.values()[seatIndex];
-        List<String> cardCodes = new ArrayList<>();
-        for (Card card : gameState.getHand(seat).getHand()) {
-            cardCodes.add(card.getSuit().getSuitLetter() + card.getRank().getRankLetter());
-        }
-        return cardCodes;
-    }
-
-    // cards played so far in the current trick, in the order they were played
-    public List<String> getCurrentTrickCards() {
-        List<String> cardCodes = new ArrayList<>();
-        for (Card card: gameState.getCurrentTrick().getPlayedCards().values()) {
-            cardCodes.add(card.getSuit().getSuitLetter() + card.getRank().getRankLetter());
-        }
-        return cardCodes;
-    }
-
-    // converts a code like "D6" back into a real card (suit letter, then rank)
-    private Card parseCardCode(String code) {
-        char suitChar = code.charAt(0);
-        String rank = code.substring(1);
-        return new Card(charToSuit(suitChar), codeToRank(rank));
-    }
-
-    private Suit charToSuit(char c) {
-        switch (c) {
-            case 'C': return Suit.CLUBS;
-            case 'D': return Suit.DIAMONDS;
-            case 'H': return Suit.HEARTS;
-            case 'S': return Suit.SPADES;
-            default: throw new IllegalArgumentException("Unknown suit code: " + c);
-        }
-    }
-
-    private Rank codeToRank(String s) {
-        switch (s) {
-            case "J": return Rank.JACK;
-            case "Q": return Rank.QUEEN;
-            case "K": return Rank.KING;
-            case "A": return Rank.ACE;
-            default: return Rank.values()[Integer.parseInt(s)-2]; // "2"..."10"
-        }
-    }
-
-    public String getCurrentDeclarerSeatIndex() {
-        PlayerPosition currentDeclarer = manager.getCurrentDeclarer() ;
-       if  (currentDeclarer == null) return "";
-       else {
-           return currentDeclarer.name();
-       }
+        return new PlayingGateway(gameState);
     }
 
     public static void main(String[] args) {
