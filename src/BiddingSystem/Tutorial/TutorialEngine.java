@@ -43,11 +43,6 @@ public class TutorialEngine {
         return lesson.note;
     }
 
-    // find the trick winner
-    private PlayerPosition calculateTrickwinner(List<Card> trickCards) {
-        return leaderSeat;
-    }
-
     // checks if all tricks have been played
     public boolean isTutorialComplete() {
         return (isAutoComplete || currentTrickIdx >= lesson.tricks.size());
@@ -127,7 +122,7 @@ public class TutorialEngine {
         }
 
         int leader = leaderSeat.ordinal();
-        int player = (leader+currentPlayInTrick%4);
+        int player = ((leader+currentPlayInTrick)%4);
         return PlayerPosition.values()[player];
     }
 
