@@ -28,10 +28,12 @@ public class SolverTrial {
         runTrial(fourCardsEach());*/
 
         //System.out.println();
-        System.out.println("=== Trial 4: full 52-card shuffled deck ===");
-        GameState fullDeck = fullShuffledDeck();
-        printSetup(fullDeck);
-        runTrial(fullDeck);
+        //System.out.println("=== Trial 4: full 52-card shuffled deck ===");
+        //GameState fullDeck = fullShuffledDeck();
+        //runTrial(fullDeck);
+
+        System.out.println("=== Trial 5: 7 cards each, real shuffled deal ===");
+        runTrial(sevenCardsEachShuffled());
     }
 
     private static void runTrial(GameState state) {
@@ -123,6 +125,24 @@ public class SolverTrial {
         GameState state = new GameState(PlayerPosition.SOUTH, Suit.SPADES); // a real trump this time, not NT
         for (Player p : players) {
             state.dealHand(p.getSeatPosition(), p.getPlayerHand().getHand());
+        }
+        return state;
+    }
+
+    // A real shuffled deck, but only 7 cards dealt to each seat (28 of the 52
+    // cards used) - a genuine, messy distribution rather than a constructed
+    // best case, but small enough to actually measure safely in this sandbox.
+    private static GameState sevenCardsEachShuffled() {
+        Deck deck = new Deck();
+        deck.shuffle();
+        PlayerPosition[] seats = { PlayerPosition.SOUTH, PlayerPosition.WEST, PlayerPosition.NORTH, PlayerPosition.EAST };
+        GameState state = new GameState(PlayerPosition.SOUTH, Suit.SPADES);
+        for (PlayerPosition seat : seats) {
+            List<Card> hand = new java.util.ArrayList<>();
+            for (int i = 0; i < 7; i++) {
+                hand.add(deck.drawCard());
+            }
+            state.dealHand(seat, hand);
         }
         return state;
     }
