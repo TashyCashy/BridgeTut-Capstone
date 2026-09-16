@@ -401,8 +401,14 @@ class GamePage(Frame):
 
 
      def update_trick_score(self):
-          self.ns_tricks = self.play_gateway.getNorthSouthTricks()
-          self.ew_tricks = self.play_gateway.getEastWestTricks()
+          """Displays the updated trick count for the trick winner"""
+          winner = self.play_gateway.getLatestTrickwinner()
+
+          if winner == "North" or winner=="South":
+               self.ns_tricks+=1
+          elif winner=="East" or winner == "West":
+               self.ew_tricks+=1
+      
           self.trick_label.config(text= f"North/South tricks: {self.ns_tricks}  "
                                          f"East/West tricks: {self.ew_tricks}")
 
@@ -848,11 +854,7 @@ class GamePage(Frame):
         # update current player index directly from Java backend
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
         self.update_visible_hands()
-
-        # board gets cleared once all 4 players have played
-        self.trick_count= getattr(self, "trick_count",0)+1
-        if self.trick_count==4:
-              self.after(1200, self.clear_trick)
+        
         #checks if trick has been completed
         completed_tricks = self.play_gateway.getCompletedTricksCount()
 
