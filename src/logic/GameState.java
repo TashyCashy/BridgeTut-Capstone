@@ -9,6 +9,7 @@ public class GameState {
     private Trick currentTrick;
     private PlayerPosition currentPlayerTurn;
     private PlayerPosition declarer;
+    private List<PlayerPosition> trickWinner; // which team won each trick
 
     public GameState(PlayerPosition declarer, Suit trumpSuit) {
         this.declarer = declarer;
@@ -17,6 +18,7 @@ public class GameState {
         this.completedTricks = new ArrayList<>();
         this.currentTrick = Trick.startTrick(declarer);
         this.currentPlayerTurn = currentTrick.getLead(); // this is the player sitting to the left of the declarer
+        this.trickWinner = new ArrayList<>();
     }
 
     public PlayerHand getHand(PlayerPosition position) {
@@ -70,6 +72,16 @@ public class GameState {
 
     public boolean isHandComplete() {
         return completedTricks.size() == 13; // 13 tricks per hand, not 4 tash
+    }
+
+    public String getLatestTrickWinner() {
+        if (trickWinner.isEmpty())
+            return "NONE";
+        PlayerPosition lastWinner = trickWinner.get(trickWinner.size()-1);
+        if (lastWinner == PlayerPosition.NORTH || lastWinner == PlayerPosition.SOUTH)
+            return "NORTH_SOUTH";
+        else 
+            return "EAST_WEST"; 
     }
 }
 
