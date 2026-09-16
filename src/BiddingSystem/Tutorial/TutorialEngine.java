@@ -80,6 +80,7 @@ public class TutorialEngine {
     // number of the leader's seat for winner checks
     public int getLeaderSeatIndex() {
         if (leaderSeat != null)
+        
             return leaderSeat.ordinal();
         return -1;
     }

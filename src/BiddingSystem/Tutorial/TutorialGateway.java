@@ -45,7 +45,7 @@ public class TutorialGateway {
     }
 
     public String getFinalOutcome() {
-        if (engine.getFinalOutcome() != null) 
+        if (engine != null && engine.getFinalOutcome() != null) 
             return engine.getFinalOutcome().name();
         else
             return "IN_PROGRESS";
