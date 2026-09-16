@@ -1,14 +1,25 @@
 package BiddingSystem.Tutorial;
 
+import LessonTutorial.Lesson;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public class TutorialGateway {
-    private final TutorialEngine engine;
+    private TutorialEngine engine;
+
+    // default constructor for py4j entry point creation
+    public TutorialGateway () {}
 
     public TutorialGateway(TutorialEngine engine) {
         this.engine = engine;
     }
 
     public int getCurrentTurnSeatIndex() {
-        return engine.getCurrentTurnSeatIndex();
+        if (engine != null)
+            return engine.getCurrentTurnSeatIndex();
+        else 
+            return -1;
     }
 
     public int getMistakeCount() {
@@ -40,5 +51,18 @@ public class TutorialGateway {
 
     public String getLessonNote() {
         return engine.getLessonNote();
+    }
+
+    public boolean loadLessonText(String filePath) {
+        try {
+            String rawText = Files.readString(Path.of(filePath));
+            Lesson lesson = LessonParser.parseLessonText(rawText);
+            engine = new TutorialEngine(lesson);
+            return true;
+        } catch (IOException | IllegalArgumentException e) {
+            System.err.println("Failed to load lesson file: " + e.getMessage());
+            engine = null; // ensure engine is null on failure
+            return false;
+        }
     }
 }

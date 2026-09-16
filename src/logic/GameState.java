@@ -5,22 +5,20 @@ import java.util.*;
 public class GameState {
     private Map<PlayerPosition, PlayerHand> hands;
     private List<Trick> completedTricks;
-    //added trickWinners so GUI can display which team won the trick
-    private List<PlayerPosition> trickWinners;
     private Suit trumpSuit;
     private Trick currentTrick;
     private PlayerPosition currentPlayerTurn;
     private PlayerPosition declarer;
+    private List<PlayerPosition> trickWinner; // which team won each trick
 
     public GameState(PlayerPosition declarer, Suit trumpSuit) {
         this.declarer = declarer;
         this.trumpSuit = trumpSuit;
         this.hands = new HashMap<>();
         this.completedTricks = new ArrayList<>();
-        //added trickWinners so GUI can display which team won the trick
-        this.trickWinners = new ArrayList<>();
         this.currentTrick = Trick.startTrick(declarer);
         this.currentPlayerTurn = currentTrick.getLead(); // this is the player sitting to the left of the declarer
+        this.trickWinner = new ArrayList<>();
     }
 
     public PlayerHand getHand(PlayerPosition position) {
@@ -31,16 +29,16 @@ public class GameState {
         return this.completedTricks;
     }
 
-    public List<PlayerPosition> getTrickWinners(){
-        return this.trickWinners;
-    }
-
     public Trick getCurrentTrick() {
         return this.currentTrick;
     }
 
     public PlayerPosition getCurrentPlayerTurn() {
         return this.currentPlayerTurn;
+    }
+
+    public List<PlayerPosition> getTrickWinner() {
+        return this.trickWinner;
     }
 
     public void dealHand(PlayerPosition position, List<Card> cards) {
@@ -72,14 +70,23 @@ public class GameState {
     private void finishTrick() {
         PlayerPosition winner = PlayValidation.pickWinner(currentTrick, trumpSuit);
         completedTricks.add(currentTrick);
-        //shows who won the trick
-        trickWinners.add(winner);
+        trickWinner.add(winner); // forgot to populate trickwinner list
         currentTrick = new Trick(winner);
         currentPlayerTurn = winner;
     }
 
     public boolean isHandComplete() {
         return completedTricks.size() == 13; // 13 tricks per hand, not 4 tash
+    }
+
+    public String getLatestTrickWinner() {
+        if (trickWinner.isEmpty())
+            return "NONE";
+        PlayerPosition lastWinner = trickWinner.get(trickWinner.size()-1);
+        if (lastWinner == PlayerPosition.NORTH || lastWinner == PlayerPosition.SOUTH)
+            return "NORTH_SOUTH";
+        else 
+            return "EAST_WEST"; 
     }
 }
 

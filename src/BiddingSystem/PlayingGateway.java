@@ -10,11 +10,7 @@ public class PlayingGateway {
         this.gameState = gameState;
     }
 
-    /**
-     *Attempts to play a card on behalf of the given seat. 
-     * cardCode matches getHandForSeat()'s format: suit letter then rank letter
-     * @return true if the play was legal and applied, false if rejected
-     */
+    // tries to play a card on behalf of the given seat
     public boolean playCard(int seatIndex, String cardCode) {
         PlayerPosition seat = PlayerPosition.values()[seatIndex];
         Card card = parseCardCode(cardCode);
@@ -27,30 +23,6 @@ public class PlayingGateway {
 
     public int getCompletedTricksCount() {
         return gameState.getCompletedTricks().size();
-    }
-
-    public int getNorthSouthTricks(){
-        //method calculates north and south's tricks
-        int count = 0;
-
-        for(PlayerPosition winner : gameState.getTrickWinners()){
-            if(winner == PlayerPosition.NORTH || winner == PlayerPosition.SOUTH){
-                count++;
-            }
-        }
-        return count;
-    }
-
-    public int getEastWestTricks(){
-    //method calculates east and west's tricks
-        int count = 0;
-
-        for(PlayerPosition winner : gameState.getTrickWinners()){
-            if(winner == PlayerPosition.EAST|| winner == PlayerPosition.WEST){
-                count++;
-            }
-        }
-        return count;
     }
 
     // Cards a seat currently still holds, same code format as getHandForSeat()
@@ -102,5 +74,38 @@ public class PlayingGateway {
             case "A": return Rank.ACE;
             default: return Rank.values()[Integer.parseInt(s)-2]; // "2"..."10"
         }
+    }
+
+    // returns the seat index of the latest trick winner or -1 if no tricks have been completed yet
+    public int getLatestTrickWinnerIdx() {
+        List<PlayerPosition> winners = gameState.getTrickWinner();
+        if (winners == null || winners.isEmpty())
+            return -1;
+        return winners.get(winners.size()-1).ordinal();
+    }
+
+    // returns which team won the latest trick
+    public String getLatestTrickwinner() {
+        return gameState.getLatestTrickWinner();
+    }
+
+    // returns number of tricks NORTH_SOUTH team has won
+    public int getNorthSouthTricks() {
+        int count = 0;
+        for (PlayerPosition winner: gameState.getTrickWinner()) {
+            if (winner == PlayerPosition.NORTH || winner == PlayerPosition.SOUTH)
+                count++;
+        }
+        return count;
+    }
+
+    // returns number of tricks EAST_WEST team has won
+    public int getEastWestTricks() {
+        int count = 0;
+        for (PlayerPosition winner: gameState.getTrickWinner()) {
+            if (winner == PlayerPosition.EAST || winner == PlayerPosition.WEST)
+                count++;
+        }
+        return count;
     }
 }
