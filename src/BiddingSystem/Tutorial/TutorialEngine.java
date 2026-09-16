@@ -17,7 +17,11 @@ public class TutorialEngine {
     public TutorialEngine(Lesson lesson) {
         this.lesson = lesson;
         // get the player who starts the first trick
-        leaderSeat = lesson.getOpeningLeader();
+        PlayerPosition openingLeader = lesson.getOpeningLeader();
+        if (openingLeader != null)
+            this.leaderSeat = openingLeader;
+        else // sets West as default if openingLeader is null
+            this.leaderSeat = PlayerPosition.WEST;
     }
 
     public LessonOutcome getFinalOutcome() {
@@ -46,7 +50,7 @@ public class TutorialEngine {
 
     // checks if all tricks have been played
     public boolean isTutorialComplete() {
-        return (currentTrickIdx >= lesson.tricks.size());
+        return (isAutoComplete || currentTrickIdx >= lesson.tricks.size());
     }
 
     // get card to be played next
@@ -93,7 +97,7 @@ public class TutorialEngine {
         if (currentPlayInTrick == 4) {
             currentPlayInTrick = 0;
             List<Card> cards = lesson.tricks.get(currentTrickIdx); // who won the trick
-            leaderSeat = calculateTrickwinner(cards);
+            leaderSeat = calculateTrickWinner(cards);
             currentTrickIdx++;
         }
 

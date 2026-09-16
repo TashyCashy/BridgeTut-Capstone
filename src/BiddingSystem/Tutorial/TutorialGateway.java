@@ -16,7 +16,10 @@ public class TutorialGateway {
     }
 
     public int getCurrentTurnSeatIndex() {
-        return engine.getCurrentTurnSeatIndex();
+        if (engine != null)
+            return engine.getCurrentTurnSeatIndex();
+        else 
+            return -1;
     }
 
     public int getMistakeCount() {
@@ -58,6 +61,7 @@ public class TutorialGateway {
             return true;
         } catch (IOException | IllegalArgumentException e) {
             System.err.println("Failed to load lesson file: " + e.getMessage());
+            engine = null; // ensure engine is null on failure
             return false;
         }
     }
