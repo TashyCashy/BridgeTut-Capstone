@@ -559,13 +559,13 @@ class ResultPage(Frame):
         #Added so that trick winner can get displayed
         tricks = {}
 
-        for _, suit, card_rank, trick_id, play_order in cards:
+        for _, suit, card_rank, trick_id, play_order, winner in cards:
             if trick_id not in tricks:
                 tricks[trick_id] = {"South": "",
                                     "West": "",
                                     "North": "",
                                     "East": "",
-                                    "Winner": ""}
+                                    "Winner": winner}
             card = f"{suit}{card_rank}"
 
             if play_order == 1:

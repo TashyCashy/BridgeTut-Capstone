@@ -411,7 +411,7 @@ def get_game_cards(game_id):
     try:
         cursor.execute(
             "SELECT cp.cards_id, cp.suit, cp.card_rank, "
-            "cp.trick_id, cp.play_order "
+            "cp.trick_id, cp.play_order, t.winner "
             "FROM cards_played cp "
             "JOIN tricks t ON cp.trick_id = t.trick_id "
             "WHERE t.game_id = %s "
