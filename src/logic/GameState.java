@@ -37,6 +37,10 @@ public class GameState {
         return this.currentPlayerTurn;
     }
 
+    public List<PlayerPosition> getTrickWinner() {
+        return this.trickWinner;
+    }
+
     public void dealHand(PlayerPosition position, List<Card> cards) {
         PlayerHand hand = new PlayerHand(position);
         for (Card card: cards) {

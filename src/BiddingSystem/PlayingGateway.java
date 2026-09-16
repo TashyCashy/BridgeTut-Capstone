@@ -79,4 +79,17 @@ public class PlayingGateway {
             default: return Rank.values()[Integer.parseInt(s)-2]; // "2"..."10"
         }
     }
+
+    // returns the seat index of the latest trick winner or -1 if no tricks have been completed yet
+    public int getLatestTrickWinnerIdx() {
+        List<PlayerPosition> winners = gameState.getTrickWinner();
+        if (winners == null || winners.isEmpty())
+            return -1;
+        return winners.get(winners.size()-1).ordinal();
+    }
+
+    // returns which team won the latest trick
+    public String getLatestTrickwinner() {
+        return gameState.getLatestTrickWinner();
+    }
 }
