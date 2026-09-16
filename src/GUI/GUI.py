@@ -849,6 +849,10 @@ class GamePage(Frame):
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
         self.update_visible_hands()
 
+        # board gets cleared once all 4 players have played
+        self.trick_count= getattr(self, "trick_count",0)+1
+        if self.trick_count==4:
+              self.after(1200, self.clear_trick)
         #checks if trick has been completed
         completed_tricks = self.play_gateway.getCompletedTricksCount()
 
