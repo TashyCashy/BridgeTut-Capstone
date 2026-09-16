@@ -70,6 +70,7 @@ public class GameState {
     private void finishTrick() {
         PlayerPosition winner = PlayValidation.pickWinner(currentTrick, trumpSuit);
         completedTricks.add(currentTrick);
+        trickWinner.add(winner); // forgot to populate trickwinner list
         currentTrick = new Trick(winner);
         currentPlayerTurn = winner;
     }
