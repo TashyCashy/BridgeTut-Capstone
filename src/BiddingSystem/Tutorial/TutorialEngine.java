@@ -17,7 +17,11 @@ public class TutorialEngine {
     public TutorialEngine(Lesson lesson) {
         this.lesson = lesson;
         // get the player who starts the first trick
-        leaderSeat = lesson.getOpeningLeader();
+        PlayerPosition openingLeader = lesson.getOpeningLeader();
+        if (openingLeader != null)
+            this.leaderSeat = openingLeader;
+        else // sets West as default if openingLeader is null
+            this.leaderSeat = PlayerPosition.WEST;
     }
 
     public LessonOutcome getFinalOutcome() {
@@ -39,14 +43,9 @@ public class TutorialEngine {
         return lesson.note;
     }
 
-    // find the trick winner
-    private PlayerPosition calculateTrickwinner(List<Card> trickCards) {
-        return leaderSeat;
-    }
-
     // checks if all tricks have been played
     public boolean isTutorialComplete() {
-        return (currentTrickIdx >= lesson.tricks.size());
+        return (isAutoComplete || currentTrickIdx >= lesson.tricks.size());
     }
 
     // get card to be played next
@@ -59,12 +58,31 @@ public class TutorialEngine {
         return suit+rank;
     }
 
+    // name of the current player
+    public PlayerPosition getCurrentTurnSeat() {
+        if (isTutorialComplete()) {
+            return null;
+        }
+
+        int leader = leaderSeat.ordinal();
+        int player = ((leader+currentPlayInTrick)%4);
+        return PlayerPosition.values()[player];
+    }
+
     // number of the current player's seat
     public int getCurrentTurnSeatIndex() {
         PlayerPosition seat = getCurrentTurnSeat();
         if (seat == null)
             return -1;
         return seat.ordinal();
+    }
+
+    // number of the leader's seat for winner checks
+    public int getLeaderSeatIndex() {
+        if (leaderSeat != null)
+        
+            return leaderSeat.ordinal();
+        return -1;
     }
 
     // checks if the card is played correctly
@@ -93,19 +111,28 @@ public class TutorialEngine {
         if (currentPlayInTrick == 4) {
             currentPlayInTrick = 0;
             List<Card> cards = lesson.tricks.get(currentTrickIdx); // who won the trick
-            leaderSeat = calculateTrickwinner(cards);
+            leaderSeat = calculateTrickWinner(cards);
             currentTrickIdx++;
+        }
+
+        if (currentTrickIdx >= lesson.tricks.size() && lesson.outcome != null) {
+            this.isAutoComplete = true;
+            this.finalOutcome = lesson.outcome;
         }
     }
 
-    public PlayerPosition getCurrentTurnSeat() {
-        if (isTutorialComplete()) {
-            return null;
+    // using PlayValidation.pickWinner with lesson.trumpSuit
+    private PlayerPosition calculateTrickWinner(List<Card> cards) {
+        if (cards == null || cards.isEmpty())
+            return leaderSeat;
+        
+        Trick trick = new Trick(leaderSeat);
+        PlayerPosition seat = leaderSeat;
+        for (Card card: cards) {
+            trick.recordPlay(seat, card);
+            seat = seat.next();
         }
-
-        int leader = leaderSeat.ordinal();
-        int player = (leader+currentPlayInTrick%4);
-        return PlayerPosition.values()[player];
+        return PlayValidation.pickWinner(trick, lesson.trumpSuit);
     }
 
     // user claims all the remaining tricks

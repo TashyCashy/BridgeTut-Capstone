@@ -16,38 +16,51 @@ public class TutorialGateway {
     }
 
     public int getCurrentTurnSeatIndex() {
-        return engine.getCurrentTurnSeatIndex();
+        if (engine != null)
+            return engine.getCurrentTurnSeatIndex();
+        else 
+            return -1;
     }
 
     public int getMistakeCount() {
-        return engine.getMistakeCount();
+        if (engine != null)
+            return engine.getMistakeCount();
+        return 0;
     }
 
     public boolean isTutorialComplete() {
-        return engine.isTutorialComplete();
+        return (engine != null) && engine.isTutorialComplete();
     }
 
     public boolean playCard(int seatIdx, String cardCode) {
-        return engine.playCard(seatIdx, cardCode);
+        return (engine != null) && engine.playCard(seatIdx, cardCode);
     }
 
     public boolean claimTricks() {
-        return engine.claim();
+        return (engine != null) && engine.claim();
     }
 
     public boolean concedeTricks() {
-        return engine.concede();
+        return (engine != null) && engine.concede();
     }
 
     public String getFinalOutcome() {
-        if (engine.getFinalOutcome() != null) 
+        if (engine != null && engine.getFinalOutcome() != null) 
             return engine.getFinalOutcome().name();
         else
             return "IN_PROGRESS";
     }
 
     public String getLessonNote() {
-        return engine.getLessonNote();
+        if (engine != null) 
+            return engine.getLessonNote();
+        return "";
+    }
+
+    public int getLeaderSeatIndex() {
+        if (engine != null) 
+            return engine.getLeaderSeatIndex();
+        return -1;
     }
 
     public boolean loadLessonText(String filePath) {
@@ -58,6 +71,7 @@ public class TutorialGateway {
             return true;
         } catch (IOException | IllegalArgumentException e) {
             System.err.println("Failed to load lesson file: " + e.getMessage());
+            engine = null; // ensure engine is null on failure
             return false;
         }
     }
