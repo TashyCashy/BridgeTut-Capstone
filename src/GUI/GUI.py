@@ -404,9 +404,9 @@ class GamePage(Frame):
           """Displays the updated trick count for the trick winner"""
           winner = self.play_gateway.getLatestTrickwinner()
 
-          if winner == "North" or winner=="South":
+          if winner == "North_South":
                self.ns_tricks+=1
-          elif winner=="East" or winner == "West":
+          elif winner=="East_West":
                self.ew_tricks+=1
       
           self.trick_label.config(text= f"North/South tricks: {self.ns_tricks}  "
@@ -854,7 +854,7 @@ class GamePage(Frame):
         # update current player index directly from Java backend
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
         self.update_visible_hands()
-        
+
         #checks if trick has been completed
         completed_tricks = self.play_gateway.getCompletedTricksCount()
 
