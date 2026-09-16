@@ -96,6 +96,25 @@ public class TutorialEngine {
             leaderSeat = calculateTrickwinner(cards);
             currentTrickIdx++;
         }
+
+        if (currentTrickIdx >= lesson.tricks.size() && lesson.outcome != null) {
+            this.isAutoComplete = true;
+            this.finalOutcome = lesson.outcome;
+        }
+    }
+
+    // using PlayValidation.pickWinner with lesson.trumpSuit
+    private PlayerPosition calculateTrickWinner(List<Card> cards) {
+        if (cards == null || cards.isEmpty())
+            return leaderSeat;
+        
+        Trick trick = new Trick(leaderSeat);
+        PlayerPosition seat = leaderSeat;
+        for (Card card: cards) {
+            trick.recordPlay(seat, card);
+            seat = seat.next();
+        }
+        return PlayValidation.pickWinner(trick, lesson.trumpSuit);
     }
 
     public PlayerPosition getCurrentTurnSeat() {

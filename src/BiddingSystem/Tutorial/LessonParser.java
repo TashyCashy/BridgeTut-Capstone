@@ -1,8 +1,8 @@
 package BiddingSystem.Tutorial;
 
 import LessonTutorial.*;
-import logic.*;
 import java.util.*;
+import logic.*;
 
 public class LessonParser {
 
@@ -211,4 +211,19 @@ public class LessonParser {
                 return null;
         }
     }
+
+    private static void parseContractAndTrump(String contractStr, Lesson lesson) {
+    // Standard Mode 2 contracts look like "4S", "3NT", "2H"
+    if (contractStr.endsWith("NT") || contractStr.endsWith("N")) {
+        lesson.trumpSuit = null; // No Trump
+    } else if (contractStr.length() >= 2) {
+        char suitChar = contractStr.charAt(contractStr.length() - 1);
+        lesson.trumpSuit = parseSuitChar(suitChar);
+    }
+    
+    // For Mode 2 play-only lessons, Declarer is SOUTH by standard convention
+    if (lesson.declarer == null) {
+        lesson.declarer = PlayerPosition.SOUTH;
+    }
+}
 }
