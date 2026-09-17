@@ -5,7 +5,7 @@ from PIL import Image, ImageTk
 import os
 from Tutorial import TutorialPage, TutorialGamePage
 from ResultPage import ResultPage
-from db import (create_user, verify_user, create_game, get_user_id)
+from db import (create_user, verify_user, create_game, get_user_id, update_results, save_trick, save_card_played, save_bid)
 ##this is needed for the py4j gateway to be able to be used for translation
 from py4j.java_gateway import JavaGateway
 gateway = JavaGateway()
@@ -203,6 +203,7 @@ class GamePage(Frame):
              self.ew_tricks = 0
              self.declarer = None
              self.trick_count = 0
+             self.current_trick_cards = []
 
              #grid layout for the board
              self.grid_rowconfigure(0, weight=0)
@@ -251,6 +252,7 @@ class GamePage(Frame):
 
           self.bid_history_data = []
           self.undo_hist = []
+          self.current_trick_cards = []
 
           # Reset header
           self.trick_label.config(text="North/South tricks: 0   East/West tricks: 0")
@@ -401,8 +403,10 @@ class GamePage(Frame):
 
 
      def update_trick_score(self):
+          """Displays the updated trick count for the trick winner"""
           self.ns_tricks = self.play_gateway.getNorthSouthTricks()
           self.ew_tricks = self.play_gateway.getEastWestTricks()
+      
           self.trick_label.config(text= f"North/South tricks: {self.ns_tricks}  "
                                          f"East/West tricks: {self.ew_tricks}")
 
@@ -636,6 +640,7 @@ class GamePage(Frame):
              #Mostly backend but added for testing purposes
              player= self.players[self.current_player]
              self.bid_history_data.append((player, bid))
+             save_bid(self.game_id, player, bid)
              self.display_bid(player, bid)
              if bid != "Pass":
                    declarer = entry_point.getCurrentDeclarerSeatIndex()
@@ -849,32 +854,58 @@ class GamePage(Frame):
              messagebox.showinfo("Illegal play", "That card cannot be played right now")
              return
 
+        # If this is the first card of a new trick,
+        # clear the previous trick from the board.
+        if self.trick_count > 0 and not self.current_trick_cards:
+             self.clear_trick()
+
+        # Show the newly played card
         lbl = self.trick_labels[player]
-        lbl.config(image = image)
+        lbl.config(image=image)
         lbl.image = image # keep a reference so Tkinter does not garbage collect it
 
         btn.destroy()
+
+        # Store card for the current trick
+        self.current_trick_cards.append(card_code)
 
         # update current player index directly from Java backend
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
         self.update_visible_hands()
 
-        # board gets cleared once all 4 players have played
-        self.trick_count= getattr(self, "trick_count",0)+1
-        if self.trick_count==4:
-              self.after(1200, self.clear_trick)
-        #checks if trick has been completed
+        # checks if trick has been completed
         completed_tricks = self.play_gateway.getCompletedTricksCount()
 
         if completed_tricks > self.trick_count:
              self.trick_count = completed_tricks
+
+             winner = self.play_gateway.getLatestTrickwinner()
+
+             if winner:
+                  # Save the completed trick
+                  trick_id = save_trick(
+                       self.game_id,
+                       self.trick_count,
+                       winner
+                  )
+                  # Save all four cards belonging to this trick
+                  if trick_id is not None:
+                       for play_order, played_card in enumerate(
+                            self.current_trick_cards,
+                            start=1
+                       ):
+                            suit = played_card[0]
+                            card_rank = played_card[1:]
+
+                            save_card_played(suit,card_rank,trick_id,play_order)
+
+             # Update the header score
              self.update_trick_score()
-             #board gets cleared once all 4 players have played
-             self.after(1200, self.clear_trick)
+             #clears cards for next trick
+             self.current_trick_cards = []
 
         if self.play_gateway.isHandComplete():
              messagebox.showinfo("Hand complete", "All 13 tricks played")
-        # game history goes here later
 
      def clear_trick(self):
            """board gets cleared once all 4 players have played """
@@ -888,10 +919,13 @@ class GamePage(Frame):
            self.bidding.grid_remove()
 
            declarer = entry_point.getDeclarerName()
-           winningBid = entry_point.getWinningContractString()
-           declarer_idx = self.players.index(declarer)
+           declarer_index = self.players.index(declarer.capitalize())
 
-           dummy_idx = (declarer_idx + 2) % 4
+           update_results(self.game_id, declarer_index)
+
+           winningBid = entry_point.getWinningContractString()
+
+           dummy_idx = (declarer_index + 2) % 4
            self.dummy = self.players[dummy_idx]
 
            self.declarer_label.config(text=f"Declarer: {declarer}")
@@ -901,6 +935,7 @@ class GamePage(Frame):
            self.trick_count = 0
            self.ns_tricks = 0
            self.ew_tricks = 0
+           self.current_trick_cards = []
 
            self.trick_label.config(text="North/South tricks: 0   East/West tricks: 0")
 
