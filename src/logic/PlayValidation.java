@@ -42,8 +42,9 @@ public class PlayValidation {
             if (newCard.getSuit() != trumpSuit && winningCard.getSuit() == trumpSuit) 
                 return false;
             // if they are both trump cards, compare their ranks
-            if (newCard.getSuit() == trumpSuit && winningCard.getSuit() == trumpSuit) 
-            return newCard.compareRank(winningCard) > 0;
+            if (newCard.getSuit() == trumpSuit && winningCard.getSuit() == trumpSuit) {
+                return newCard.compareRank(winningCard) > 0;
+            }
         }
 
         // what if none of the cards are trump cards?
