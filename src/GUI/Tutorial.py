@@ -99,51 +99,7 @@ class TutorialGamePage(Frame):
         self.tutorial_plays = []
         self.tut_bid_idx = 0
         self.tut_play_idx = 0
-
-        #lesson states stored
-        self.dealer = None
-        self.vulnerability = None
-        self.tutorial_note = ""
-
-        self.card_images =[]
-        self.players = ["North", "West", "East", "South"]
-
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
-        self.header_display()
-        self.player_table()
-        self.tutorial_feedback()
-        self.bidding_panel()
-
-class TutorialGamePage(Frame):
-    """Class which displays actual tutorial lessons"""
-    def __init__(self, parent, controller):
-        super().__init__(parent,bg="#0f4d3f")
-        self.controller = controller
-
-        #Tutorial gateway added to integrate lesson backend code to frontend
-        self.gateway = JavaGateway()
-        self.entry_point = self.gateway.entry_point
-        self.tutorial_gateway = self.entry_point.getTutorialGateway()
-
-        #sets tutorial states
-        self.mode = None
-        self.tutorial_phase = None
-        self.lesson_loaded = False
-
-        #sets card states
-        self.current_card = None
-        self.north_cards = []
-        self.south_cards = []
-        self.east_cards = []
-        self.west_cards = []
-
-        #stores tutorial progress
-        self.tutorial_bids = []
-        self.tutorial_plays = []
-        self.tut_bid_idx = 0
-        self.tut_play_idx = 0
+        self.bid_history_data = []
 
         #lesson states stored
         self.dealer = None
@@ -409,9 +365,11 @@ class TutorialGamePage(Frame):
         if self.selected_level is None:
               print("Select a level first.")
               return
+
         bid= f"{self.selected_level}{suit}"
         self.make_bid(bid)
         self.selected_level=None
+
         for btn in self.level_btns:
               btn.config(relief="raised")
 
@@ -664,6 +622,17 @@ class TutorialGamePage(Frame):
         for widget in self.bid_history.winfo_children():
              widget.destroy()
 
+    def load_tutorial(self):
+        """Loads the tutorial lesson for the selected mode."""
+
+        # Replace these with the actual paths to your lesson files
+        if self.mode == "Bidding":
+            lesson_file = "lesson.txt"
+        else:
+            lesson_file = "lesson.txt"
+
+        self.start_tut(lesson_file)
+
     def start_tut(self, lesson_file):
         """Loads tutorial lesson."""
         success = self.tutorial_gateway.loadLessonText(lesson_file)
@@ -712,7 +681,7 @@ class TutorialGamePage(Frame):
           seat_positions = [(0, self.south_frame, "South", "left"),
           (1, self.west_frame,  "West",  "place"),
           (2, self.north_frame, "North", "left"),
-          (3, self.east_frame,  "East",  "place"),
+          (3, self.east_frame,  "East", "place"),
           ]
 
           for seat_index, frame, name, layout in seat_positions:
