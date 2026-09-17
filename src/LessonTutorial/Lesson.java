@@ -1,7 +1,7 @@
 package LessonTutorial;
 
-import logic.*;
 import java.util.*;
+import logic.*;
 
 public class Lesson {
 
@@ -36,5 +36,11 @@ public class Lesson {
     public PlayerPosition getOpeningLeader() {
         if (declarer == null) return null;
         return PlayerPosition.values()[(declarer.ordinal() + 1) % 4];
+    }
+
+    public List<Card> getHandForSeat(PlayerPosition position) {
+        if (position == null || hands == null)
+            return new ArrayList<>();
+        return hands.getOrDefault(position, new ArrayList<>());
     }
 }

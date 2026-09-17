@@ -75,4 +75,11 @@ public class TutorialGateway {
             return false;
         }
     }
+
+    // expose hand card codes for a seat to python through py4j
+    public java.util.List<String> getHandForSeat(int seatIdx) {
+        if (engine != null)
+            return engine.getHandForSeat(seatIdx);
+        return new java.util.ArrayList<>();
+    }
 }
