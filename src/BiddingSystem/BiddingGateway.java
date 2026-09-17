@@ -44,7 +44,7 @@ public class BiddingGateway {
         Deck deck = new Deck();
         deck.shuffle();
         DealCards.dealHands(deck, players);
-
+        //ranomizes the starting position of dealer
         return new BiddingManager(players[new Random().nextInt(4)].getSeatPosition(), players);
     }
 
