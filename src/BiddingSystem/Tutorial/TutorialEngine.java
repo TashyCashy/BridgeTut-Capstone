@@ -134,6 +134,23 @@ public class TutorialEngine {
         return PlayValidation.pickWinner(trick, lesson.trumpSuit);
     }
 
+    // gets a list of card codes for the specified seat based on the current lesson
+    public List<String> getHandForSeat(int seatIdx) {
+        List<String> cardCodes = new ArrayList<>();
+        if (lesson == null || seatIdx < 0 || seatIdx >= 4) 
+            return cardCodes;
+        
+        PlayerPosition seat = PlayerPosition.values()[seatIdx];
+        List<Card> hand = lesson.getHandForSeat(seat);
+
+        if (hand != null) {
+            for (Card card: hand) {
+                cardCodes.add(card.getSuit().getSuitLetter() + card.getRank().getRankLetter());
+            }
+        }
+        return cardCodes;
+    }
+
     // user claims all the remaining tricks
     public boolean claim() {
         if (isTutorialComplete())
