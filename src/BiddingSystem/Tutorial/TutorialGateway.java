@@ -22,6 +22,12 @@ public class TutorialGateway {
             return -1;
     }
 
+    public int getLeaderSeatIndex() {
+        if (engine != null)
+            return engine.getLeaderSeatIndex();
+        return -1;
+    }
+
     public int getMistakeCount() {
         if (engine != null)
             return engine.getMistakeCount();
@@ -55,12 +61,6 @@ public class TutorialGateway {
         if (engine != null) 
             return engine.getLessonNote();
         return "";
-    }
-
-    public int getLeaderSeatIndex() {
-        if (engine != null) 
-            return engine.getLeaderSeatIndex();
-        return -1;
     }
 
     public boolean loadLessonText(String filePath) {

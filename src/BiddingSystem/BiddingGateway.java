@@ -7,6 +7,7 @@ import BiddingSystem.BiddingData.Actions.RedoubleAction;
 import BiddingSystem.BiddingData.DoublingState;
 import BiddingSystem.BiddingLogic.BiddingManager;
 import BiddingSystem.BiddingLogic.GameReset;
+import BiddingSystem.Tutorial.TutorialGateway;
 import logic.*;
 
 import py4j.GatewayServer;
@@ -27,9 +28,11 @@ public class BiddingGateway {
 
     private BiddingManager manager;
     private GameState gameState;
+    private TutorialGateway tutorialGateway;
 
     public BiddingGateway() {
         this.manager = freshGame();
+        this.tutorialGateway = new TutorialGateway(); 
     }
 
 
@@ -48,6 +51,13 @@ public class BiddingGateway {
         return new BiddingManager(players[new Random().nextInt(4)].getSeatPosition(), players);
     }
 
+    // expose TutorialGateway to python through py4j
+    public TutorialGateway getTutorialGateway() {
+        if (tutorialGateway == null)
+            tutorialGateway = new TutorialGateway();
+        return tutorialGateway;
+    }
+ 
     /**
      * Attempts a contract bid. Returns false on illegal bids OR bad input
      * (unknown strain name, out-of-range level) rather than throwing —
@@ -176,6 +186,8 @@ public class BiddingGateway {
         }
         return new PlayingGateway(gameState);
     }
+
+
 
     public boolean undoLastBid(){
         return manager.undoLastBid();
