@@ -1,11 +1,13 @@
 package BiddingSystem.Tutorial;
 
+import BiddingSystem.BiddingData.Actions.*;
 import BiddingSystem.BiddingLogic.BiddingManager;
 import BiddingSystem.Player;
 import LessonTutorial.Lesson;
 import LessonTutorial.LessonOutcome;
 import java.util.*;
 import logic.*;
+import BiddingSystem.*;
 
 public class TutorialEngine {
     private Lesson lesson;
@@ -17,6 +19,7 @@ public class TutorialEngine {
     private boolean isAutoComplete = false;
     private boolean biddingPhase;
     private BiddingManager biddingManager;
+    private int bidIdx = 0;
 
     public TutorialEngine(Lesson lesson) {
         this.lesson = lesson;
@@ -53,6 +56,11 @@ public class TutorialEngine {
     // checks if all tricks have been played
     public boolean isTutorialComplete() {
         return (isAutoComplete || currentTrickIdx >= lesson.tricks.size());
+    }
+
+    // checks if the lesson is still in its bidding phase (mode 1 only)
+    public boolean isBiddingPhase() {
+        return biddingPhase;
     }
 
     // get card to be played next
@@ -197,6 +205,13 @@ public class TutorialEngine {
     }
 
     private void startPlayPhase (){
+        if (biddingManager != null){
+            lesson.declarer = biddingManager.getCurrentDeclarer();
+            ContractBid winningBid = biddingManager.getCurrentContractBid();
+            if(winningBid != null){
+                lesson.trumpSuit = winningBid.getStrain().toSuit();
+            }
+        }
         // get the player who starts the first trick
         PlayerPosition openingLeader = lesson.getOpeningLeader();
         if (openingLeader != null)
@@ -213,4 +228,57 @@ public class TutorialEngine {
         // order MUST match PlayerPosition.values(): SOUTH, WEST, NORTH, EAST
         return new Player[]{south, west, north, east};
     }
+
+    public int getCurrentBidTurnSeatIndex(){
+        if (!biddingPhase) return -1;
+        return biddingManager.getCurrentPlayer().getSeatPosition().ordinal();
+    }
+
+    public PlayerAction getExpectedBidAction(){
+      if (!biddingPhase || bidIdx >= lesson.rawAuction.size()) return null;
+      return lesson.rawAuction.get(bidIdx);
+}
+
+public boolean submitBidAction (int seatIdx, PlayerAction submitted){
+        if (!biddingPhase || seatIdx != getCurrentBidTurnSeatIndex()) return false;
+        PlayerAction expected = getExpectedBidAction();
+        if (expected != null && bidsMatch(expected, submitted)){
+            biddingManager.ActionPlayed(submitted);
+            advanceBid();
+            return true;
+        }
+        mistakeCount++;
+        return false;
+}
+
+public boolean bidsMatch (PlayerAction expected, PlayerAction submitted){
+        if (expected.getClass() ==  submitted.getClass()){
+            if (expected instanceof ContractBid){
+                if ((expected.getStrain() == submitted.getStrain()) && (expected.getLevel() == submitted.getLevel())){
+                    return true;
+                }
+                else{
+                    return false; //not equal contract bids
+                }
+            }
+            else if (expected instanceof PassAction || expected instanceof DoubleAction || expected instanceof RedoubleAction){
+                return true;
+            }
+
+
+            //No need for pass action check, handled with class check
+            //no need for double check as well
+            //no need for redouble check
+        }
+        return false; //if not of the same class cant be equal e.g Pass and redouble should return false
+}
+
+public void advanceBid (){
+        bidIdx++;
+        if (bidIdx >= lesson.rawAuction.size()){
+            biddingPhase = false;
+            startPlayPhase();
+        }
+}
+
 }
