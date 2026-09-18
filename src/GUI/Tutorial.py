@@ -86,8 +86,7 @@ class TutorialGamePage(Frame):
         self.east_cards = []
         self.west_cards = []
 
-        # progress tracking (for the on-screen history/labels only -
-        # the actual lesson progress lives in TutorialEngine on the Java side)
+        self.trick_play_count = 0
         self.bid_history_data = []
 
         # bidding-panel UI state
@@ -139,6 +138,8 @@ class TutorialGamePage(Frame):
             self.bidding.grid_remove()
 
         self.load_tutorial()
+        self.trick_play_count = 0
+        self.clear_trick()
 
     def load_tutorial(self):
         """Loads the tutorial lesson file for the selected mode."""
@@ -160,10 +161,26 @@ class TutorialGamePage(Frame):
 
         self.lesson_loaded = True
 
-        self.south_cards = list(self.tutorial_gateway.getHandForSeat(0))
-        self.west_cards = list(self.tutorial_gateway.getHandForSeat(1))
-        self.north_cards = list(self.tutorial_gateway.getHandForSeat(2))
-        self.east_cards = list(self.tutorial_gateway.getHandForSeat(3))
+        self.south_cards = self.sort_cards(
+            list(self.tutorial_gateway.getHandForSeat(0))
+        )
+
+        self.west_cards = self.sort_cards(
+            list(self.tutorial_gateway.getHandForSeat(1))
+        )
+
+        self.north_cards = self.sort_cards(
+            list(self.tutorial_gateway.getHandForSeat(2))
+        )
+
+        self.east_cards = self.sort_cards(
+            list(self.tutorial_gateway.getHandForSeat(3))
+        )
+
+        print("South cards:", self.south_cards)
+        print("West cards:", self.west_cards)
+        print("North cards:", self.north_cards)
+        print("East cards:", self.east_cards)
 
         self.show_note(self.tutorial_gateway.getLessonNote())
 
@@ -182,6 +199,39 @@ class TutorialGamePage(Frame):
             self.claim_button.config(state="normal")
             self.concede_button.config(state="normal")
             self.play_computer_card()
+
+    def sort_cards(self, hand):
+        """Sorts cards by suit and then by rank."""
+        suit_order = {
+            "S": 0,
+            "H": 1,
+            "D": 2,
+            "C": 3
+        }
+
+        rank_order = {
+            "A": 0,
+            "K": 1,
+            "Q": 2,
+            "J": 3,
+            "10": 4,
+            "9": 5,
+            "8": 6,
+            "7": 7,
+            "6": 8,
+            "5": 9,
+            "4": 10,
+            "3": 11,
+            "2": 12
+        }
+
+        return sorted(
+            hand,
+            key=lambda card: (
+                suit_order.get(card[0], 99),
+                rank_order.get(card[1:], 99)
+            )
+        )
 
     def header_display(self):
         header = Frame(self, bg="#055341", height=60)
@@ -248,7 +298,7 @@ class TutorialGamePage(Frame):
         self.centre_frame.grid_columnconfigure(0, weight=1)
 
         self.trick_labels = {}
-        offsets = {"North": (0, -25), "East": (25, 0), "South": (0, 25), "West": (-25, 0)}
+        offsets = {"North": (0, -110),"East": (90, 0),"South": (0, 110),"West": (-90, 0)}
         self.trick_offsets = offsets
         for player in self.players:
             lbl = Label(self.centre_frame, bd=0, bg="darkgreen")
@@ -461,8 +511,32 @@ class TutorialGamePage(Frame):
         for widget in self.bid_history.winfo_children():
             widget.destroy()
 
+    def display_played_card(self, player, card_code):
+        """Shows the card a player just played in the centre of the table."""
+        card_path = os.path.join(LESSON_DIR, "png", f"{card_code}.png")
+        img = self.resize_cards(card_path)
+        self.card_images.append(img)
+
+        lbl = self.trick_labels[player]
+        lbl.config(image=img)
+        lbl.image = img
+
+    def clear_trick(self):
+        """board gets cleared once all 4 players have played"""
+        for lbl in self.trick_labels.values():
+            lbl.config(image="")
+            lbl.image = None
+
+    def _advance_trick_display(self):
+        """Displays tricks on the board and clears the trick when done"""
+        self.trick_play_count += 1
+        if self.trick_play_count >= 4:
+            self.trick_play_count = 0
+            self.after(1200, self.clear_trick)
+
     def player_hands(self, visible_players=None):
         """Displays player hands. South's cards are clickable; others aren't."""
+
         for frame in (self.south_frame, self.west_frame, self.north_frame, self.east_frame):
             for widget in frame.winfo_children():
                 widget.destroy()
@@ -494,8 +568,16 @@ class TutorialGamePage(Frame):
             if not hand:
                 continue
 
+            # Sort again before displaying the hand
+            hand = self.sort_cards(hand)
+
             for card_code in hand:
-                img = self.resize_cards(f"png/{card_code}.png")
+                card_path = os.path.join(LESSON_DIR, "png", f"{card_code}.png")
+                img = self.resize_cards(card_path)
+
+                if img is None:
+                    continue
+
                 self.card_images.append(img)
 
                 if name == "South":
@@ -504,6 +586,8 @@ class TutorialGamePage(Frame):
                     btn.pack(side="left", padx=3)
                 else:
                     Label(frame, image=img, borderwidth=0, bg="#055341").pack(side="left", padx=3)
+
+            print(name, "hand:", hand)
 
     def select_card(self, card_code, button):
         """Plays South's (the learner's) chosen card in the tutorial."""
@@ -517,9 +601,12 @@ class TutorialGamePage(Frame):
             return
 
         correct = self.tutorial_gateway.playCard(seat, card_code)
+
         if correct:
             self.show_feedback(f"Correct play: {card_code}")
             button.destroy()
+            self.display_played_card("South", card_code)
+            self._advance_trick_display()
             self.update_tutorial()
         else:
             self.show_feedback("That is not the expected play. Try again.")
@@ -545,14 +632,20 @@ class TutorialGamePage(Frame):
             return
 
         correct = self.tutorial_gateway.playCard(seat, expected_card)
+
         if correct:
             tutorial_players = ["South", "West", "North", "East"]
             player = tutorial_players[seat]
+
             self.show_feedback(f"{player} plays {expected_card}")
-            self.after(500, self.play_computer_card)
+            self.display_played_card(player, expected_card)
+            self._advance_trick_display()
+
+            self.after(1200, self.play_computer_card)
 
     def update_tutorial(self):
         """Advances tutorial state after a card is played, or ends the lesson."""
+
         if self.tutorial_gateway.isTutorialComplete():
             outcome = self.tutorial_gateway.getFinalOutcome()
             self.show_feedback(f"Tutorial complete: {outcome}")
@@ -560,15 +653,19 @@ class TutorialGamePage(Frame):
             self.concede_button.config(state="disabled")
             return
 
-        self.show_note(self.tutorial_gateway.getLessonNote())
+        self.show_note(
+            self.tutorial_gateway.getLessonNote()
+        )
 
         seat = self.tutorial_gateway.getCurrentTurnSeatIndex()
+
         if seat != 0:
             self.play_computer_card()
 
     def claim_hand(self):
         """Handles the learner claiming the remaining tricks."""
         success = self.tutorial_gateway.claimTricks()
+
         if success:
             self.show_feedback("Claim selected.")
             self.update_tutorial()
@@ -578,6 +675,7 @@ class TutorialGamePage(Frame):
     def concede_hand(self):
         """Handles the learner conceding the remaining tricks."""
         success = self.tutorial_gateway.concedeTricks()
+
         if success:
             self.show_feedback("Concede selected.")
             self.update_tutorial()
@@ -586,6 +684,12 @@ class TutorialGamePage(Frame):
 
     def resize_cards(self, card_path):
         """Resizes a card image for display in hands and on the board."""
+
+        if not os.path.exists(card_path):
+            print("Card image not found:", card_path)
+            return None
+
         card_image = Image.open(card_path)
         resized_card = card_image.resize((70, 100))
+
         return ImageTk.PhotoImage(resized_card)
