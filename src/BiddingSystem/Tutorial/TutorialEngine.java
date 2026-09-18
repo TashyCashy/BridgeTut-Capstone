@@ -1,5 +1,7 @@
 package BiddingSystem.Tutorial;
 
+import BiddingSystem.BiddingLogic.BiddingManager;
+import BiddingSystem.Player;
 import LessonTutorial.Lesson;
 import LessonTutorial.LessonOutcome;
 import java.util.*;
@@ -13,15 +15,20 @@ public class TutorialEngine {
     private int currentPlayInTrick = 0;
     private LessonOutcome finalOutcome = null;
     private boolean isAutoComplete = false;
+    private boolean biddingPhase;
+    private BiddingManager biddingManager;
 
     public TutorialEngine(Lesson lesson) {
         this.lesson = lesson;
-        // get the player who starts the first trick
-        PlayerPosition openingLeader = lesson.getOpeningLeader();
-        if (openingLeader != null)
-            this.leaderSeat = openingLeader;
-        else // sets West as default if openingLeader is null
-            this.leaderSeat = PlayerPosition.WEST;
+        if (lesson.isBidAndPlayMode()){
+            //for mode 1
+            this.biddingPhase = true;
+            this.biddingManager = new BiddingManager(lesson.dealer, buildPlayers(lesson));
+        }
+        else {
+            this.biddingPhase = false;
+            startPlayPhase();
+        }
     }
 
     public LessonOutcome getFinalOutcome() {
@@ -124,7 +131,7 @@ public class TutorialEngine {
     private PlayerPosition calculateTrickWinner(List<Card> cards) {
         if (cards == null || cards.isEmpty())
             return leaderSeat;
-        
+
         Trick trick = new Trick(leaderSeat);
         PlayerPosition seat = leaderSeat;
         for (Card card: cards) {
@@ -137,9 +144,9 @@ public class TutorialEngine {
     // gets a list of card codes for the specified seat based on the current lesson
     public List<String> getHandForSeat(int seatIdx) {
         List<String> cardCodes = new ArrayList<>();
-        if (lesson == null || seatIdx < 0 || seatIdx >= 4) 
+        if (lesson == null || seatIdx < 0 || seatIdx >= 4)
             return cardCodes;
-        
+
         PlayerPosition seat = PlayerPosition.values()[seatIdx];
         List<Card> hand = lesson.getHandForSeat(seat);
 
@@ -181,5 +188,23 @@ public class TutorialEngine {
             mistakeCount++;
             return false;
         }
+    }
+
+    private void startPlayPhase (){
+        // get the player who starts the first trick
+        PlayerPosition openingLeader = lesson.getOpeningLeader();
+        if (openingLeader != null)
+            this.leaderSeat = openingLeader;
+        else // sets West as default if openingLeader is null
+            this.leaderSeat = PlayerPosition.WEST;
+    }
+
+    private static Player[] buildPlayers(Lesson lesson){
+        Player south = new Player("South", new PlayerHand(PlayerPosition.SOUTH), PlayerPosition.SOUTH);
+        Player west  = new Player("West",  new PlayerHand(PlayerPosition.WEST),  PlayerPosition.WEST);
+        Player north = new Player("North", new PlayerHand(PlayerPosition.NORTH), PlayerPosition.NORTH);
+        Player east  = new Player("East",  new PlayerHand(PlayerPosition.EAST),  PlayerPosition.EAST);
+        // order MUST match PlayerPosition.values(): SOUTH, WEST, NORTH, EAST
+        return new Player[]{south, west, north, east};
     }
 }
