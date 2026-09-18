@@ -63,6 +63,12 @@ public class TutorialGateway {
         return "";
     }
 
+    public String getExpectedCardCode() {
+        if (engine != null)
+            return engine.getExpectedCardCode();
+        return "";
+    }
+
     public boolean loadLessonText(String filePath) {
         try {
             String rawText = Files.readString(Path.of(filePath));
