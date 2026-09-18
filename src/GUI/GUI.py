@@ -230,7 +230,9 @@ class GamePage(Frame):
                messagebox.showerror("Error", "Could not find user.")
                return
 
-          dealer = entry_point.getCurrentSeatIndex()
+          # Redeal a fresh hand in the backend so leaving a game (Menu -> Home)
+          # and starting a new one doesn't continue the abandoned game's cards/state.
+          dealer = entry_point.resetAfterPassedOut()
           self.game_id = create_game(user_id, dealer)
 
           if self.game_id is None:
@@ -241,7 +243,7 @@ class GamePage(Frame):
           self.bidding_phase = True
           self.current_level = 0
           self.selected_level = None
-          self.current_player = entry_point.getCurrentSeatIndex()
+          self.current_player = dealer
           self.trick_count = 0
           self.ns_tricks = 0
           self.ew_tricks = 0
@@ -269,6 +271,8 @@ class GamePage(Frame):
           # Reset level buttons
           for btn in self.level_btns:
                btn.config( relief="raised", state="normal" )
+          # Redraw hands for the freshly dealt cards
+          self.player_hands()
           # Show the GamePage
           self.controller.show_frame(GamePage)
           # Show bidding panel
@@ -659,8 +663,16 @@ class GamePage(Frame):
                  if entry_point.isPassedOut():
                      new_seat = entry_point.resetAfterPassedOut()
                      self.current_player = new_seat
+                     self.dummy = None
+                     self.bid_history_data = []
+                     self.current_level = 0
+                     self.selected_level = None
+                     self.clear_bids()
+                     self.contract.config(text="Current contract: None")
+                     for btn in self.level_btns:
+                          btn.config(relief="raised", state="normal")
+                     self.player_hands()
                      messagebox.showinfo("Passed out", "No bids made — redealing.")
-                     #passed out so reset game -- later
                  else:
                      self.finish_bidding()
                      declarer = entry_point.getDeclarerName()

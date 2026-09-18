@@ -5,7 +5,19 @@ import java.util.*;
 import logic.*;
 
 public class LessonParser {
+    /*public static List<Lesson> parseLessonFile (String rawText){
+        String [] lines = rawText.split("\\r?\\n"); //catch by reference
+        List<Integer> starts = new ArrayList<>();
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].trim().startsWith("Cards held:")) {
+                starts.add(i);
+            }
+        }
+        for (int i = 0; i <= starts.size(); i++) {
+            String [] chunkLines = Arrays.copyOfRange(lines, start)
+        }
 
+    }*/
     // reads the lesson text and creates a lesson object
     public static Lesson parseLessonText(String rawText) {
         Lesson lesson = new Lesson();
@@ -20,7 +32,7 @@ public class LessonParser {
         }
 
         // checking for correct start to text
-        if (lineIdx >= lines.length || !lines[lineIdx].trim().startsWith("Cards held:")) 
+        if (lineIdx >= lines.length || !lines[lineIdx].trim().startsWith("Cards held:"))
             throw new IllegalArgumentException("Invalid lesson file header: Expected 'Cards held:'");
         lineIdx++;
 
@@ -32,7 +44,7 @@ public class LessonParser {
 
             if (line.isEmpty()) // ignoring empty lines
                 continue;
-            
+
             parseHandLine(line, lesson);
             handCount++;
         }
@@ -43,15 +55,15 @@ public class LessonParser {
             lineIdx++;
             if (line.isEmpty()) // ignoring empty lines
                 continue;
-            
+
             // reading the dealer
-            if (line.startsWith("D:")) { 
+            if (line.startsWith("D:")) {
                 String seat = line.substring(2).trim();
                 lesson.dealer = parseSeat(seat);
-            } 
+            }
 
             // reading vulnerability
-            else if (line.endsWith("VUL"))  
+            else if (line.endsWith("VUL"))
                 lesson.vulnerability = line;
 
             // reading the contract for a play-only lesson
@@ -70,7 +82,7 @@ public class LessonParser {
             }
 
             // reading the outcome
-            else if (line.equalsIgnoreCase("claim")) 
+            else if (line.equalsIgnoreCase("claim"))
                 lesson.outcome = LessonOutcome.CLAIM;
 
             else if (line.equalsIgnoreCase("concede"))
@@ -118,7 +130,7 @@ public class LessonParser {
                     hand.add(card);
                 }
             }
-        }       
+        }
     }
 
     // reads the four cards in a trick
@@ -223,7 +235,7 @@ public class LessonParser {
         char suitChar = contractStr.charAt(contractStr.length() - 1);
         lesson.trumpSuit = parseSuitChar(suitChar);
     }
-    
+
     // For Mode 2 play-only lessons, Declarer is SOUTH by standard convention
     if (lesson.declarer == null) {
         lesson.declarer = PlayerPosition.SOUTH;
