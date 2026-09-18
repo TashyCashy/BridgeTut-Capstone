@@ -174,7 +174,7 @@ public class TutorialEngine {
         // only allow claim/concede after all listed tricks in the lesson are played
         boolean allTricksPlayed = (currentTrickIdx >= lesson.tricks.size());
 
-        if (lesson.outcome == LessonOutcome.CLAIM) { // does the lesson text expect a Claim
+        if (allTricksPlayed && lesson.outcome == LessonOutcome.CLAIM) { // does the lesson text expect a Claim
             isAutoComplete = true;
             finalOutcome = LessonOutcome.CLAIM;
             return true;
