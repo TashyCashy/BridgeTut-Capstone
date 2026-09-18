@@ -127,9 +127,10 @@ public class BiddingGateway {
     }
 
     /**
-     * Call when isPassedOut() is true. Replaces the internal manager with a
-     * freshly dealt one and returns the new starting seat index so Python
-     * can update whose turn it is.
+     * Replaces the internal manager with a freshly dealt one and returns the
+     * new starting seat index so Python can update whose turn it is. Called
+     * both when isPassedOut() is true and when starting a brand new game
+     * from the menu, so a leftover/abandoned game is never resumed.
      */
     public int resetAfterPassedOut() {
         this.manager = GameReset.resetGame(this.manager);
