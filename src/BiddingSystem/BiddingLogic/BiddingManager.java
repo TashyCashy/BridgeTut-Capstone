@@ -125,4 +125,11 @@ public class BiddingManager {
         currentSeat = currentSeat.previous();
         return true;
     }
+
+    public ContractBid getCurrentContractBid(){
+        if (biddingHistory.getLargestBid() == null){
+            return null;
+        }
+        else return (ContractBid)biddingHistory.getLargestBid().getAction();
+    }
 }

@@ -5,19 +5,25 @@ import java.util.*;
 import logic.*;
 
 public class LessonParser {
-    /*public static List<Lesson> parseLessonFile (String rawText){
-        String [] lines = rawText.split("\\r?\\n"); //catch by reference
+    public static List<Lesson> parseLessonFile (String rawText){
+        String [] lines = rawText.split("\\r?\\n");
         List<Integer> starts = new ArrayList<>();
         for (int i = 0; i < lines.length; i++) {
             if (lines[i].trim().startsWith("Cards held:")) {
                 starts.add(i);
             }
         }
-        for (int i = 0; i <= starts.size(); i++) {
-            String [] chunkLines = Arrays.copyOfRange(lines, start)
-        }
 
-    }*/
+        List<Lesson> lessons = new ArrayList<>();
+        for (int i = 0; i < starts.size(); i++) {
+            int start = starts.get(i);
+            int end = (i + 1 < starts.size()) ? starts.get(i + 1) : lines.length;
+            String[] chunkLines = Arrays.copyOfRange(lines, start, end);
+            String chunkText = String.join("\n", chunkLines);
+            lessons.add(parseLessonText(chunkText));
+        }
+        return lessons;
+    }
     // reads the lesson text and creates a lesson object
     public static Lesson parseLessonText(String rawText) {
         Lesson lesson = new Lesson();
