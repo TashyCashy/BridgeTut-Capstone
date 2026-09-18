@@ -6,6 +6,15 @@ from py4j.java_gateway import JavaGateway
 
 #gets the textfile
 LESSON_DIR = os.path.dirname(os.path.abspath(__file__))
+##for conversion
+SUIT_SYMBOL_TO_STRAIN = {
+    "♣": "CLUBS",
+    "♦": "DIAMONDS",
+    "♥": "HEARTS",
+    "♠": "SPADES",
+    "NT": "NO_TRUMP",
+}
+STRAIN_TO_SUIT_SYMBOL = {v: k for k, v in SUIT_SYMBOL_TO_STRAIN.items()}
 
 class TutorialPage(Frame):
     """Class which displays the tutorial version of the game"""
@@ -132,14 +141,18 @@ class TutorialGamePage(Frame):
         self.bid_history_data = []
         self.clear_bids()
 
+        # FIX: reset the trick display BEFORE loading the lesson - load_tutorial()
+        # can immediately trigger play_computer_card(), which would otherwise get
+        # wiped out by a clear_trick() that used to run after it
+        self.trick_play_count = 0
+        self.clear_trick()
+
         if mode == "Bidding":
             self.bidding.grid()
         else:
             self.bidding.grid_remove()
 
         self.load_tutorial()
-        self.trick_play_count = 0
-        self.clear_trick()
 
     def load_tutorial(self):
         """Loads the tutorial lesson file for the selected mode."""
@@ -161,36 +174,20 @@ class TutorialGamePage(Frame):
 
         self.lesson_loaded = True
 
-        self.south_cards = self.sort_cards(
-            list(self.tutorial_gateway.getHandForSeat(0))
-        )
-
-        self.west_cards = self.sort_cards(
-            list(self.tutorial_gateway.getHandForSeat(1))
-        )
-
-        self.north_cards = self.sort_cards(
-            list(self.tutorial_gateway.getHandForSeat(2))
-        )
-
-        self.east_cards = self.sort_cards(
-            list(self.tutorial_gateway.getHandForSeat(3))
-        )
-
-        print("South cards:", self.south_cards)
-        print("West cards:", self.west_cards)
-        print("North cards:", self.north_cards)
-        print("East cards:", self.east_cards)
+        self.south_cards = self.sort_cards(list(self.tutorial_gateway.getHandForSeat(0)))
+        self.west_cards = self.sort_cards(list(self.tutorial_gateway.getHandForSeat(1)))
+        self.north_cards = self.sort_cards(list(self.tutorial_gateway.getHandForSeat(2)))
+        self.east_cards = self.sort_cards(list(self.tutorial_gateway.getHandForSeat(3)))
 
         self.show_note(self.tutorial_gateway.getLessonNote())
 
         if self.mode == "Bidding":
-            # Only South's own hand is shown while bidding is in progress -
-            # the others are revealed once play starts.
+            #only display south's cards when bidding takes place
             self.player_hands(["South"])
             self.tutorial_phase = "BIDDING"
             self.show_feedback("Bidding tutorial started.")
             self.bidding.grid()
+            self.play_computer_bid()
         else:
             self.player_hands(["South", "North"])
             self.tutorial_phase = "PLAYING"
@@ -425,15 +422,29 @@ class TutorialGamePage(Frame):
             self.show_feedback("Bidding is not active right now.")
             return
 
-        seat = self.tutorial_gateway.getCurrentBidSeatIndex()
+        seat = self.tutorial_gateway.getCurrentBidTurnSeatIndex()
         if seat != 0:
             self.show_feedback("It is not your turn.")
             return
 
-        accepted = self.tutorial_gateway.submitBid(bid)
+        if bid == "Pass":
+            accepted = self.tutorial_gateway.submitPass(seat)
+        elif bid == "Double":
+            accepted = self.tutorial_gateway.submitDouble(seat)
+        elif bid == "Redouble":
+            accepted = self.tutorial_gateway.submitRedouble(seat)
+        else:
+            level = int(bid[0])
+            suit_symbol = bid[1:]
+            strain_name = SUIT_SYMBOL_TO_STRAIN.get(suit_symbol)
+            if strain_name is None:
+                self.show_feedback(f"Unkown bid: {bid}")
+                return
+
+            accepted = self.tutorial_gateway.submitBid(seat, level, strain_name)
+
         if not accepted:
             self.show_feedback("This is not the expected bid. Try again.")
-            return
 
         tutorial_players = ["South", "West", "North", "East"]
         player = tutorial_players[seat]
@@ -456,30 +467,56 @@ class TutorialGamePage(Frame):
             self.finish_tutorial_bidding()
             return
 
-        seat = self.tutorial_gateway.getCurrentBidSeatIndex()
+        seat = self.tutorial_gateway.getCurrentBidTurnSeatIndex()
 
         # South is the learner - stop and wait for their input
         if seat == 0:
             return
 
-        expected_bid = self.tutorial_gateway.getExpectedBid()
-        if expected_bid is None:
+        bid_type = self.tutorial_gateway.getExpectedBidType()
+        if bid_type == "":
             self.finish_tutorial_bidding()
             return
 
-        tutorial_players = ["South", "West", "North", "East"]
-        player = tutorial_players[seat]
+        level = None
+        strain_name = None
 
-        accepted = self.tutorial_gateway.submitBid(expected_bid)
+        if bid_type == "PASS":
+            accepted = self.tutorial_gateway.submitPass(seat)
+        elif bid_type == "DOUBLE":
+            accepted = self.tutorial_gateway.submitDouble(seat)
+        elif bid_type == "REDOUBLE":
+            accepted = self.tutorial_gateway.submitRedouble(seat)
+        else:  # "CONTRACT"
+            level = self.tutorial_gateway.getExpectedBidLevel()
+            strain_name = self.tutorial_gateway.getExpectedBidStrain()
+            accepted = self.tutorial_gateway.submitBid(seat, level, strain_name)
+
         if accepted:
-            self.bid_history_data.append((player, expected_bid))
-            self.display_bid(player, expected_bid)
-            self.show_feedback(f"{player} bids {expected_bid}")
+            display = self._format_bid_display(bid_type, level, strain_name)
+            tutorial_players = ["South", "West", "North", "East"]
+            player = tutorial_players[seat]
+
+            self.bid_history_data.append((player, display))
+            self.display_bid(player, display)
+            self.show_feedback(f"{player} bids {display}")
 
             if not self.tutorial_gateway.isBiddingPhase():
                 self.finish_tutorial_bidding()
             else:
                 self.after(500, self.play_computer_bid)
+
+    def _format_bid_display(self, bid_type, level=None, strain_name=None):
+        if bid_type == "PASS":
+            return "Pass"
+        if bid_type == "DOUBLE":
+            return "Double"
+        if bid_type == "REDOUBLE":
+            return "Redouble"
+        if bid_type == "CONTRACT":
+            symbol = STRAIN_TO_SUIT_SYMBOL.get(strain_name, strain_name)
+            return f"{level}{symbol}"
+        return ""
 
     def finish_tutorial_bidding(self):
         """Transitions from the bidding tutorial into card play."""
@@ -515,6 +552,13 @@ class TutorialGamePage(Frame):
         """Shows the card a player just played in the centre of the table."""
         card_path = os.path.join(LESSON_DIR, "png", f"{card_code}.png")
         img = self.resize_cards(card_path)
+
+        # FIX: resize_cards returns None if the file is missing - guard against
+        # it here the same way player_hands already does, instead of trying to
+        # set a Label's image to None
+        if img is None:
+            return
+
         self.card_images.append(img)
 
         lbl = self.trick_labels[player]

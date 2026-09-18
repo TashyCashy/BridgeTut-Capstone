@@ -23,6 +23,7 @@ SUIT_SYMBOL_TO_STRAIN = {
 class GUI(Tk):
     def __init__(self):
         super().__init__()
+        self.option_add("*Toplevel*Font", ("Arial", 18))
         self.title("Bridge: NiteMeh Edition")
         self.geometry("1400x900")
         self.minsize(1100, 750) #fixed minimum size which accomodates the playing table.
@@ -65,76 +66,93 @@ class GUI(Tk):
 class LoginPage(Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, background="#055341")
-        self.controller= controller
+        self.controller = controller
 
         Label(self,
               text="♣♦♥♠ BRIDGE: NiteMeh Edition ♣♦♥♠",
               font=("Georgia", 32, "bold"),
               bg="#055341",
-              fg="#C9A42C").pack(pady=(80,5))
+              fg="#C9A42C").pack(pady=(80, 5))
 
         Label(self,
               text="Becoming a pro, one game at a time",
-              font=("Georgia", 26, "italic"),
-              fg="#C9A42C").pack(pady=(0,35))
+              font=("Georgia", 16, "italic"),
+              bg="#055341",
+              fg="#C9A42C").pack(pady=(0, 35))
 
-        #Creating the login panel
-        login= Frame(self, background="#123f35")
+        # Login panel
+        login = Frame(self, background="#123f35", highlightbackground="#C9A42C",
+                       highlightthickness=1)
         login.pack(ipadx=50, ipady=40)
 
-        Label(login,
-              text="Username",
-              font=("Arial", 11, "bold")).pack(anchor="w", padx=30)
+        Label(login, text="Username", font=("Arial", 11, "bold"),
+              bg="#123f35", fg="white").pack(anchor="w", padx=30)
 
-        self.username=Entry(login, font=("Arial",13), width=35)
-        self.username.pack(fill="x", padx=60, ipady=8, pady=(5,20))
+        self.username = Entry(login, font=("Arial", 13), width=35,
+                               relief="flat", bg="#0d2e27", fg="white",
+                               insertbackground="white")
+        self.username.pack(fill="x", padx=60, ipady=8, pady=(5, 20))
 
-        Label(login,
-              text="Password",
-              font=("Arial", 11, "bold")).pack(anchor="w", padx=30)
+        Label(login, text="Password", font=("Arial", 11, "bold"),
+              bg="#123f35", fg="white").pack(anchor="w", padx=30)
 
-        self.password=Entry(login, font=("Arial",13),width=35, show="*")
-        self.password.pack(fill="x", padx=60, ipady=8, pady=(5,30))
+        self.password = Entry(login, font=("Arial", 13), width=35, show="*",
+                               relief="flat", bg="#0d2e27", fg="white",
+                               insertbackground="white")
+        self.password.pack(fill="x", padx=60, ipady=8, pady=(5, 30))
 
-        Button(login,
-               text="Sign up",
-               font=("Arial",12,"bold"),
-               bg="#C9A42C",
-               fg="#055341",
-               relief="flat",
-               command=self.sign_up).pack(side="left", padx=10, ipady=10, ipadx=20)
-
+        # Primary action — Log in only
         Button(login,
                text="Log in",
-               font=("Arial",12,"bold"),
+               font=("Arial", 12, "bold"),
                bg="#C9A42C",
                fg="#055341",
                relief="flat",
-               command=self.log_in).pack(side="left", padx=10, ipady=10, ipadx=20)
+               cursor="hand2",
+               command=self.log_in).pack(fill="x", padx=60, ipady=10)
+
+        # Secondary — text-style link, not a competing button
+        signup_row = Frame(login, background="#123f35")
+        signup_row.pack(pady=(20, 0))
+
+        Label(signup_row, text="Don't have an account?",
+              font=("Arial", 10), bg="#123f35", fg="#cccccc").pack(side="left")
+
+        signup_link = Label(signup_row, text=" Sign up",
+                             font=("Arial", 10, "bold", "underline"),
+                             bg="#123f35", fg="#C9A42C", cursor="hand2")
+        signup_link.pack(side="left")
+        signup_link.bind("<Button-1>", lambda e: self.sign_up())
 
     def sign_up(self):
-          username= self.username.get()
-          password= self.password.get()
-          if create_user(username, password):
-                self.controller.current_username = username
-                messagebox.showinfo("Success","Account added.")
-                self.controller.show_frame(HomePage)
-          else:
-                messagebox.showinfo("Sign up failed", "Try again. Username may be already taken")
+        username = self.username.get().strip()
+        password = self.password.get().strip()
 
-
+        if not username or not password:
+             messagebox.showinfo("Missing information", "Please enter a username and password.")
+             return
+        
+        if create_user(username, password):
+            self.controller.current_username = username
+            messagebox.showinfo("Success", "Account added.")
+            self.controller.show_frame(HomePage)
+        else:
+            messagebox.showinfo("Sign up failed", "Try again. Username may be already taken")
 
     def log_in(self):
-          username= self.username.get()
-          password= self.password.get()
-          if verify_user(username, password):
-                self.controller.current_username = username
-                messagebox.showinfo("Login Successful!", "Welcome!")
-                self.controller.show_frame(HomePage)
-          else:
-                messagebox.showinfo("Login failed","Incorrect username or password")
+        username = self.username.get().strip()
+        password = self.password.get().strip()
 
-
+        if not username or not password:
+             messagebox.showinfo("Missing information", "Please enter a username and password.")
+             return
+        
+        if verify_user(username, password):
+            self.controller.current_username = username
+            messagebox.showinfo("Login Successful!", "Welcome!")
+            self.controller.show_frame(HomePage)
+        else:
+            messagebox.showinfo("Login failed", "Incorrect username or password")
 
 class HomePage(Frame):
      def __init__(self, parent, controller):
@@ -177,6 +195,26 @@ class HomePage(Frame):
                  fg="white",
                  relief="flat",
                  command=lambda: controller.show_frame(ResultPage)).pack(fill="x",pady=18, ipady=10)
+
+          Button(menu,
+                 text="Log out",
+                 font=("Arial", 13, "bold"),
+                 bg="#8B3A3A",
+                 width=40,
+                 fg="white",
+                 relief="flat",
+                 command=self.log_out).pack(fill="x", pady=18, ipady=10)
+
+     def log_out(self):
+          # Clear session state
+          self.controller.current_username = None
+
+          # Clear whatever's left in the LoginPage's entry fields
+          login_page = self.controller.frames[LoginPage]
+          login_page.username.delete(0, "end")
+          login_page.password.delete(0, "end")
+
+          self.controller.show_frame(LoginPage)
 
 
 class GamePage(Frame):
@@ -260,6 +298,8 @@ class GamePage(Frame):
           self.trick_label.config(text="North/South tricks: 0   East/West tricks: 0")
           self.declarer_label.config(text="Declarer: -")
           self.bid_label.config(text="Bid: -")
+          self.update_turn_label() 
+          self.update_bidding_headers(dealer)
 
           # Claim and concede are not available during bidding
           self.claim_button.config(state="disabled")
@@ -309,6 +349,13 @@ class GamePage(Frame):
                                     bg="darkgreen",
                                     fg="white")
              self.bid_label.pack(side="left", padx=20)
+             #Displays whose turn it is
+             self.turn_label = Label(header,
+                               text="Turn: -",
+                               font=("Arial", 12, "bold"),
+                               bg="#C9A42C",
+                               fg="#055341")
+             self.turn_label.pack(side="left", padx=20)
 
              Button(header,
                     text="View Bids",
@@ -360,9 +407,22 @@ class GamePage(Frame):
                                    command= lambda: self.controller.show_frame(ResultPage))
 
              drop_down.add_command(label="Logout",
-                                   command= lambda: self.controller.show_frame(LoginPage))
+                                   command= self.log_out)
 
              menu_button.config(menu=drop_down)
+
+     def log_out(self):
+          self.controller.current_username = None
+          login_page = self.controller.frames[LoginPage]
+          login_page.username.delete(0, "end")
+          login_page.password.delete(0, "end")
+          
+          self.controller.show_frame(LoginPage)
+
+     def update_turn_label(self):
+          """Updates the header to show whose turn it currently is"""
+          current_name = self.players[self.current_player]
+          self.turn_label.config(text=f"Turn: {current_name}")
 
      def claim_hand(self):
           """Allows player to claim remaining tricks"""
@@ -466,6 +526,12 @@ class GamePage(Frame):
                              x=offsets[player][0], y= offsets[player][1])
                    self.trick_labels[player]=lbl
 
+     def update_bidding_headers(self, dealer_index):
+      """Relabels the 4 existing header columns to start from the dealer."""
+      order = self.players[dealer_index:] + self.players[:dealer_index]
+      self.bidding_order = order
+      for col, name in enumerate(order):
+            self.header_labels[col].config(text=name)
 
      def bidding_panel(self):
              """ Creating bidding panel where bids take place"""
@@ -489,12 +555,15 @@ class GamePage(Frame):
                    self.players_frame.grid_columnconfigure(col, weight=1, uniform="playercol")
 
              #Adding player names to display which player made which bid
+             self.header_labels = []
              for col, p in enumerate(self.players):
-                  Label(self.players_frame,
+                  lbl=Label(self.players_frame,
                         text=p,
                         font=("Arial", 11, "bold"),
                         bg="#7B7D7E",
-                        fg="#055341").grid(row=0, column=col, sticky="w", padx=10)
+                        fg="#055341")
+                  lbl.grid(row=0, column=col, sticky="w", padx=10)
+                  self.header_labels.append(lbl)
 
              #storing the bidding history
              self.bid_history= Frame(self.bidding, bg="#7B7D7E")
@@ -658,6 +727,7 @@ class GamePage(Frame):
                    self.update_lvl()
 
              self.current_player = entry_point.getCurrentSeatIndex()
+             self.update_turn_label()
 
              if entry_point.checkBiddingOver():
                  if entry_point.isPassedOut():
@@ -690,7 +760,7 @@ class GamePage(Frame):
 
      def display_bid(self, player, bid):
            """Displays and stores bids made by players"""
-           player_idx=self.players.index(player)
+           player_idx=self.bidding_order.index(player)
            bid_num= len(self.bid_history_data)-1
            row= (bid_num // 4)+1
 
@@ -767,7 +837,7 @@ class GamePage(Frame):
                  self.display_bid(player, bid)
 
            self.current_player = entry_point.getCurrentSeatIndex()  # turn moved back a seat too
-
+           self.update_turn_label()
            last_bid = None
            for player, bid in reversed(self.bid_history_data):
                  if bid != "Pass":
@@ -802,6 +872,17 @@ class GamePage(Frame):
           visible_players = list (dict.fromkeys(visible_players))
           self.player_hands(visible_players)
 
+     def get_legal_plays(self, seat_index):
+          hand = self.play_gateway.getRemainingHandForSeat(seat_index)
+          if not self.current_trick_cards:
+               # this seat is leading the trick — anything goes
+               return set(hand)
+          led_suit = self.current_trick_cards[0][0]  # first char = suit letter
+          same_suit = [c for c in hand if c[0] == led_suit]
+          if same_suit:
+               return set(same_suit)  # must follow suit
+          return set(hand)  # can't follow suit — anything goes
+
      def player_hands(self, visible_players=None):
            """Displays player hands"""
            #Clear cards being displayed
@@ -818,6 +899,12 @@ class GamePage(Frame):
            n = 13
            step = (frame_height - card_height) / (n - 1)
            self.card_images=[]
+
+           #Finding cards that can be played
+           legal_cards = set()
+           if self.play_gateway is not None and not self.bidding_phase:
+                current_turn = self.play_gateway.getCurrentTurnSeatIndex()
+                legal_cards = self.get_legal_plays(current_turn)
 
            #seats
            seat_positions = [(0, self.south_frame, "South", "left"),
@@ -840,10 +927,18 @@ class GamePage(Frame):
                     img = self.resize_cards(f"png/{card_code}.png")
                     #add the relevant card image for the card in cardcodes
                     self.card_images.append(img)
-
+                    is_legal = (not legal_cards) or (card_code in legal_cards)
                     btn = Button(frame, image=img, borderwidth=0)
                     btn.config(command=lambda image=img, b=btn, n=name, s=seat_index, c=card_code: self.play_card(image, n, s, c, b))
 
+                    #displays which cards are legal
+                    if is_legal:
+                         btn.config(highlightbackground="#C9A42C", highlightthickness=3,
+                              command=lambda image=img, b=btn, n=name, s=seat_index, c=card_code: self.play_card(image, n, s, c, b))
+                    else:
+                         btn.config(highlightbackground="#0f4d3f", highlightthickness=0,
+                                    state="disabled")
+                         
                     if layout == "left":
                          btn.pack(side="left", padx=3)
                     else:
@@ -883,6 +978,7 @@ class GamePage(Frame):
 
         # update current player index directly from Java backend
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
+        self.update_turn_label()
         self.update_visible_hands()
 
         # checks if trick has been completed
@@ -953,6 +1049,7 @@ class GamePage(Frame):
 
            self.play_gateway = entry_point.startPlayPhase()
            self.current_player = (self.play_gateway.getCurrentTurnSeatIndex())
+           self.update_turn_label()
 
            self.update_visible_hands()
            self.claim_button.config(state="normal")
