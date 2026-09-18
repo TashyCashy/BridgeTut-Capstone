@@ -15,5 +15,20 @@ public enum Suit {
             case SPADES: return "S";
             default: throw new IllegalStateException();
         }
-    } 
+    }
+
+    public Strain toStrain() {
+        switch (this) {
+            case CLUBS:
+                return Strain.CLUBS;
+            case DIAMONDS:
+                return Strain.DIAMONDS;
+            case HEARTS:
+                return Strain.HEARTS;
+            case SPADES:
+                return Strain.SPADES;
+            default:
+                throw new IllegalStateException();
+        }
+    }
 }

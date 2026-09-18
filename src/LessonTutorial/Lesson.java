@@ -1,5 +1,6 @@
 package LessonTutorial;
 
+import BiddingSystem.BiddingData.Actions.PlayerAction;
 import java.util.*;
 import logic.*;
 
@@ -11,7 +12,7 @@ public class Lesson {
 
     public PlayerPosition dealer;
     public String vulnerability;
-    public List<String> rawAuction = new ArrayList<>();
+    public List<PlayerAction> rawAuction = new ArrayList<>();
     public PlayerPosition declarer;
     public Suit trumpSuit;
 

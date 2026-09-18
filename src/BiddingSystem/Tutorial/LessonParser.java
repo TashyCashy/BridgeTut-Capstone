@@ -1,5 +1,6 @@
 package BiddingSystem.Tutorial;
 
+import BiddingSystem.BiddingData.Actions.*;
 import LessonTutorial.*;
 import java.util.*;
 import logic.*;
@@ -84,7 +85,11 @@ public class LessonParser {
                 String auction = line;
                 if (auction.endsWith("."))
                     auction = auction.substring(0, auction.length()-1);
-                lesson.rawAuction = Arrays.asList(auction.split(";"));
+                List<PlayerAction> auctionActions = new ArrayList<>();
+                for (String token : auction.split(";")) {
+                    auctionActions.add(parseBidToken(token));
+                }
+                lesson.rawAuction = auctionActions;
             }
 
             // reading the outcome
@@ -245,6 +250,34 @@ public class LessonParser {
     // For Mode 2 play-only lessons, Declarer is SOUTH by standard convention
     if (lesson.declarer == null) {
         lesson.declarer = PlayerPosition.SOUTH;
+    }
+}
+
+private static PlayerAction parseBidToken (String token) {
+        token = token.trim().toUpperCase();
+    if (token.equals("P")) {
+        return new PassAction();
+    }
+    else if (token.equals("DBL")) {
+        return new DoubleAction();
+    }
+    else if (token.equals("RDBL")) {
+        return new RedoubleAction();
+    }
+    else{
+        Strain strain = null;
+        //it's a contract bid so we need to extract rank, suit, and
+        //first value is the rank of the card
+        int level = Character.getNumericValue(token.charAt(0));
+        //the rest of it is the strain, woulf us
+        if (token.endsWith("NT") || token.endsWith("N")) {
+            strain = Strain.NO_TRUMP;
+        }
+        else {
+            //tash's function already does this for us :)
+            strain = parseSuitChar(token.charAt(1)).toStrain();
+        }
+        return new ContractBid(level, strain);
     }
 }
 }
