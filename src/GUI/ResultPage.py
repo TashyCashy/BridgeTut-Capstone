@@ -210,14 +210,17 @@ class ResultPage(Frame):
         style = ttk.Style()
         style.theme_use("clam")
 
-        style.configure(
-            "Classy.TCombobox",
-            fieldbackground=BG_CARD,
-            background=BG_CARD,
-            foreground=TEXT_LIGHT,
-            arrowcolor=ACCENT,
-            bordercolor=ACCENT_DARK,
-            padding=6)
+        style.configure("TCombobox",
+                fieldbackground="white",
+                background="#c9a227",      # the arrow button
+                foreground="black",
+                arrowcolor="#123f36")
+
+        style.map("TCombobox",
+          fieldbackground=[("readonly", "white")],
+          foreground=[("readonly", "black")],
+          selectbackground=[("readonly", "white")],   # removes the gray highlight
+          selectforeground=[("readonly", "black")])
 
         style.configure(
             "Tab.TButton",
@@ -399,7 +402,7 @@ class ResultPage(Frame):
             self.clear_results()
             return
 
-        game_texts = [f"Game {g[3]} (Dealer: {g[1]})"
+        game_texts = [f"Game {g[3]}"
             for g in self.games]
         self.game_combo["values"] = game_texts
         self.game_combo.current(0)
@@ -597,7 +600,7 @@ class ResultPage(Frame):
                 tricks[trick_id]["East"] = card
 
         rows = []
-        for trick_id, trick in sorted(tricks.items()):
+        for trick_number, (trick_id, trick) in enumerate(sorted(tricks.items()), start=1):
             # Highlight the card belonging to the winning partnership
             if trick["Winner"] == "NORTH_SOUTH": 
                 if trick["North"]: 
@@ -606,7 +609,7 @@ class ResultPage(Frame):
             elif trick["Winner"] == "EAST_WEST": 
                 if trick["East"]: trick["East"] = "★ " + trick["East"] 
                 if trick["West"]: trick["West"] = "★ " + trick["West"]
-            rows.append((trick_id,
+            rows.append((trick_number,
                          trick["South"],
                          trick["West"],
                          trick["North"],
