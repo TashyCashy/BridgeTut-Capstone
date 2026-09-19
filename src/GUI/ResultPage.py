@@ -331,11 +331,12 @@ class ResultPage(Frame):
     def _trick_totals(self, game_id):
         """Displays amount of tricks won"""
         tricks = get_game_tricks(game_id)
+
         ns_tricks = sum( 1 for _, _, winner in tricks
-            if winner in ("North", "South"))
+            if winner == "NORTH_SOUTH")
 
         ew_tricks = sum(1 for _, _, winner in tricks
-            if winner in ("East", "West"))
+            if winner == "EAST_WEST")
 
         return ns_tricks, ew_tricks
     
@@ -500,26 +501,44 @@ class ResultPage(Frame):
                   fg=TEXT_LIGHT).pack(anchor="w",padx=12,pady=(0, 5))
 
     def show_bidding(self):
-        """Displays bidding history from bidding table"""
+        """Displays bidding history in the same layout as the actual game"""
         self.clear_results()
+        
         if self.selected_game_id is None:
             self._empty_state("Please select a game.")
             return
-
+        
         self._section_title("Bidding History")
-
-        bids = get_bidding_hist( self.selected_game_id)
-
-        if not bids:
-            self._empty_state(
-                "No bids recorded for this game.")
+        
+        selected_game = next(
+            (g for g in self.games if g[0] == self.selected_game_id),
+            None)
+        
+        if selected_game is None:
             return
-
-        tree = self._make_treeview( ("Position", "Bid"))
-
-        self._insert_rows(tree,
-            [(position, bid_value)
-             for bid_value, position in bids])
+        
+        game_id, dealer, declarer, seq_num, attempt_num = selected_game
+        
+        bids = get_bidding_hist(self.selected_game_id)
+        
+        if not bids:
+            self._empty_state("No bids recorded for this game.")
+            return
+        
+        # Same player order as the live bidding
+        bidding_order = PLAYER_NAMES[dealer:] + PLAYER_NAMES[:dealer]
+        tree = self._make_treeview(tuple(bidding_order))
+        rows = []
+        
+        for i, (bid_value, position) in enumerate(bids):
+            row_number = i // 4
+            if row_number >= len(rows):
+                rows.append(["", "", "", ""])
+        
+            column = bidding_order.index(position)
+            rows[row_number][column] = bid_value
+        
+        self._insert_rows(tree, rows)
 
     def show_tricks(self):
         """Displays tricks made from tricks table"""
@@ -579,6 +598,14 @@ class ResultPage(Frame):
 
         rows = []
         for trick_id, trick in sorted(tricks.items()):
+            # Highlight the card belonging to the winning partnership
+            if trick["Winner"] == "NORTH_SOUTH": 
+                if trick["North"]: 
+                    trick["North"] = "★ " + trick["North"] 
+                if trick["South"]: trick["South"] = "★ " + trick["South"]
+            elif trick["Winner"] == "EAST_WEST": 
+                if trick["East"]: trick["East"] = "★ " + trick["East"] 
+                if trick["West"]: trick["West"] = "★ " + trick["West"]
             rows.append((trick_id,
                          trick["South"],
                          trick["West"],
