@@ -4,10 +4,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Command-line test harness demonstrating full-hand generation, dealing, turn validation,
+ * and automated trick simulation for the Bridge engine.
+ */
 public class Main {
 
+    /**
+     * Execution entry point for running engine simulation tests.
+     *
+     * @param args Command-line execution arguments.
+     */
     public static void main(String[] args) {
-        // build a full 52-card deck manually and shuffle it
         List<Card> deck = new ArrayList<>();
         for (Suit suit : Suit.values()) {
             for (Rank rank : Rank.values()) {
@@ -16,12 +24,10 @@ public class Main {
         }
         Collections.shuffle(deck);
 
-        // set up the game: SOUTH is declarer, SPADES is trump
         PlayerPosition declarer = PlayerPosition.SOUTH;
         Suit trumpSuit = Suit.SPADES;
         GameState game = new GameState(declarer, trumpSuit);
 
-        // deal 13 cards to each player, in seat order
         PlayerPosition[] seats = { PlayerPosition.SOUTH, PlayerPosition.WEST, PlayerPosition.NORTH, PlayerPosition.EAST };
         int cardIndex = 0;
         for (PlayerPosition seat : seats) {
@@ -32,19 +38,17 @@ public class Main {
 
         System.out.println("=== Deal complete ===");
         for (PlayerPosition seat : seats) {
-            System.out.println(seat + " hand size: " + game.getHand(seat).getHand().size()); // expect 13 each
+            System.out.println(seat + " hand size: " + game.getHand(seat).getHand().size());
         }
-        System.out.println("Opening leader: " + game.getCurrentPlayerTurn()); // should be declarer.next()
+        System.out.println("Opening leader: " + game.getCurrentPlayerTurn());
 
-        // sanity check: try an illegal move first (pick a card NOT in hand)
         System.out.println("\n=== Testing an illegal move ===");
         PlayerPosition firstPlayer = game.getCurrentPlayerTurn();
         Card notInHand = findCardNotInHand(game, firstPlayer);
         boolean illegalResult = game.playCard(firstPlayer, notInHand);
         System.out.println("Playing a card " + firstPlayer + " doesn't hold: " + notInHand
-                + " -> accepted? " + illegalResult); // expect false
+                + " -> accepted? " + illegalResult);
 
-        // now play a full first trick legally
         System.out.println("\n=== Playing trick 1 ===");
         for (int i = 0; i < 4; i++) {
             PlayerPosition current = game.getCurrentPlayerTurn();
@@ -52,26 +56,26 @@ public class Main {
             boolean result = game.playCard(current, cardToPlay);
             System.out.println(current + " plays " + cardToPlay + " -> accepted? " + result);
         }
-        System.out.println("Tricks completed so far: " + game.getCompletedTricks().size()); // expect 1
+        System.out.println("Tricks completed so far: " + game.getCompletedTricks().size());
         System.out.println("Next leader (trick winner): " + game.getCurrentPlayerTurn());
 
-        // play out the rest of the hand automatically
         System.out.println("\n=== Playing remaining tricks ===");
         while (!game.isHandComplete()) {
             PlayerPosition current = game.getCurrentPlayerTurn();
             Card cardToPlay = pickLegalCard(game, current);
             game.playCard(current, cardToPlay);
         }
-        System.out.println("Hand complete? " + game.isHandComplete()); // expect true
-        System.out.println("Total tricks played: " + game.getCompletedTricks().size()); // expect 13
+        System.out.println("Hand complete? " + game.isHandComplete());
+        System.out.println("Total tricks played: " + game.getCompletedTricks().size());
 
-        // final sanity check: every hand should now be empty
         for (PlayerPosition seat : seats) {
-            System.out.println(seat + " remaining cards: " + game.getHand(seat).getHand().size()); // expect 0 each
+            System.out.println(seat + " remaining cards: " + game.getHand(seat).getHand().size());
         }
     }
 
-    // walks the player's hand and returns the first card that's a legal play right now
+    /**
+     * Walks a player's hand to find the first legal card playable for the active trick.
+     */
     private static Card pickLegalCard(GameState game, PlayerPosition player) {
         PlayerHand hand = game.getHand(player);
         Trick trick = game.getCurrentTrick();
@@ -83,7 +87,9 @@ public class Main {
         throw new IllegalStateException("No legal card found - this shouldn't happen if isLegitPlay is correct");
     }
 
-    // finds any card the given player does NOT currently hold, for testing illegal plays
+    /**
+     * Finds a card that a given player does not hold for testing illegal plays.
+     */
     private static Card findCardNotInHand(GameState game, PlayerPosition player) {
         List<Card> theirHand = game.getHand(player).getHand();
         for (Suit suit : Suit.values()) {

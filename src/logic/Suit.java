@@ -1,11 +1,16 @@
 package logic;
 
+/**
+ * Enumerates the four standard card suits in Bridge (Clubs, Diamonds, Hearts, Spades).
+ */
 public enum Suit {
     CLUBS, DIAMONDS, HEARTS, SPADES;
 
     /**
-     * helps to determine "strength" of card for trick determination
-     * @return suit associated with card
+     * Returns the 1-character letter symbol representing this suit.
+     * Used for card code generation and GUI image file mapping (e.g., "C", "D", "H", "S").
+     *
+     * @return Single-character string code of the suit.
      */
     public String getSuitLetter() {
         switch (this) {
@@ -13,10 +18,15 @@ public enum Suit {
             case DIAMONDS: return "D";
             case HEARTS: return "H";
             case SPADES: return "S";
-            default: throw new IllegalStateException();
+            default: throw new IllegalStateException("Unknown suit value: " + this);
         }
     }
 
+    /**
+     * Converts this card suit into its corresponding bidding {@link Strain}.
+     *
+     * @return The matching bidding {@link Strain}.
+     */
     public Strain toStrain() {
         switch (this) {
             case CLUBS:
@@ -28,7 +38,7 @@ public enum Suit {
             case SPADES:
                 return Strain.SPADES;
             default:
-                throw new IllegalStateException();
+                throw new IllegalStateException("Unknown suit value: " + this);
         }
     }
 }
