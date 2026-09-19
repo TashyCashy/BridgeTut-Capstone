@@ -2,13 +2,10 @@ package DoubleDummySolverSystem;
 
 import logic.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class DoubleDummySolver {
+    static Map<String, Integer> tpTable = new HashMap<>();
 
     static int solve(GameState state){
         int alpha = -1;
@@ -20,6 +17,14 @@ public class DoubleDummySolver {
     static int solve (GameState state, int alpha, int beta){
         //base case
         if (state.isHandComplete()) { return 0;}
+        if (state.getCurrentTrick().getPlayedCards().isEmpty()){
+           String stateKey = generateKey(state);
+           if (tpTable.containsKey(stateKey)){
+               return tpTable.get(stateKey);
+               //we already have this game in our memery and thus know it plays out so skip computing it
+           }
+        }
+        boolean cuttoff = false;
         //given a gamestate do the double dummy analysis
         PlayerPosition currentPlayer = state.getCurrentPlayerTurn();
         boolean MAX = playerIsMax(currentPlayer, state);
@@ -45,6 +50,7 @@ public class DoubleDummySolver {
             nextState.playCard(currentPlayer, card); //play and shift mover
             int afterPlay = nextState.getCompletedTricks().size(); //use to compare if a trick was completed
             if (afterPlay > beforePlay){ //we have a winner for a trick
+                //do we store the key here?
                 if (playerIsMax(nextState.getCurrentPlayerTurn(), nextState)) { //finishTrick ends on getCurrentPlayerTurn meaning that is the winner
                     bonus = 1;
                 }
@@ -56,13 +62,18 @@ public class DoubleDummySolver {
                 bonus = 0;// bonus stays zero if trick is not over
             }
             //value of child node, kicks off recursion
+            //Add key to the hashmap?
             childValue = bonus + solve(nextState, alpha - bonus, beta - bonus);
             bestValue = (MAX) ? Math.max(bestValue,childValue) : Math.min(bestValue,childValue);
 
             if (MAX) { alpha = Math.max(alpha, bestValue); }
             else { beta = Math.min(beta, bestValue); }
-            if (alpha >= beta) break;
+            if (alpha >= beta) { cuttoff = true; break; }
         }
+        if (state.getCurrentTrick().getPlayedCards().isEmpty() && !cuttoff){
+            tpTable.put(generateKey(state), bestValue);
+        }
+
         return bestValue;
     }
     //check if player is on the max side or the min side, true if max, false if min
@@ -125,5 +136,19 @@ public class DoubleDummySolver {
             }
         }
         return null; // shouldn't happen coz mine was built from these same legalCards
+    }
+
+    private static String generateKey (GameState state){
+        StringBuilder key = new StringBuilder();
+        key.append(state.getCurrentPlayerTurn());
+        key.append(" | ");
+        for (PlayerPosition position : PlayerPosition.values()){
+           List<Card> hand =  state.getHand(position).getHand();
+           for (Card card : hand){
+               key.append(card.toString());
+               key.append(" | ");
+           }
+        }
+        return key.toString();
     }
 }
