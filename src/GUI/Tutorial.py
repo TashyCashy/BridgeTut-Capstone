@@ -19,7 +19,7 @@ STRAIN_TO_SUIT_SYMBOL = {v: k for k, v in SUIT_SYMBOL_TO_STRAIN.items()}
 # milliseconds between computer card plays (raise this to slow them down further) 
 COMPUTER_DELAY = 2200 
 # how long a finished trick stays on the table (keep this below COMPUTER_DELAY) 
-TRICK_CLEAR_DELAY = 1800 
+TRICK_CLEAR_DELAY = 2200
  
 class TutorialPage(Frame): 
     """Class which displays the tutorial version of the game""" 
@@ -740,13 +740,13 @@ class TutorialGamePage(Frame):
             self.update_tutorial() 
             return 
  
-        seat = self.tutorial_gateway.getCurrentTurnSeatIndex() 
+        seat = self.tutorial_gateway.getCurrentTurnSeatIndex()
  
         # South is the learner - stop and wait for their input 
         if seat == 0: 
             return 
  
-        expected_card = self.tutorial_gateway.getExpectedCardCode() 
+        expected_card = self.tutorial_gateway.getExpectedCardCode()
         if not expected_card: 
             self.update_tutorial() 
             return 
