@@ -309,7 +309,11 @@ class GamePage(Frame):
           self.declarer_label.config(text="Declarer: -")
           self.bid_label.config(text="Bid: -")
           self.optimal_tricks_label.config(text="Declarer's optimal tricks: -")
+<<<<<<< HEAD
           self.update_turn_label()
+=======
+          self.update_turn_label() 
+>>>>>>> 5cf330ed63230587211939a54df1ad7709439620
           self.update_bidding_headers(dealer)
 
           # Claim and concede are not available during bidding
