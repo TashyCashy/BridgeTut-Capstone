@@ -105,6 +105,7 @@ class TutorialGamePage(Frame):
         self.high_bid = None 
         self.learner_decided = False 
         self.complete_frame = None 
+        self.highlighted = set()
  
         # bidding-panel UI state 
         self.selected_level = None 
@@ -292,6 +293,15 @@ class TutorialGamePage(Frame):
                                      relief="flat", 
                                      command=self.concede_hand) 
         self.concede_button.pack(side="right", padx=5) 
+
+        self.hint_button = Button(header,
+                          text="Hint",
+                          font=("Arial", 13, "bold"),
+                          bg="#055341",
+                          fg="white",
+                          relief="flat",
+                          command=self.show_hint)
+        self.hint_button.pack(side="right", padx=5)
  
         menu_button = Menubutton(header, 
                                  text="Menu", 
@@ -667,6 +677,7 @@ class TutorialGamePage(Frame):
  
         #keeps track of norths cards since cards gets displayed but computer plays it 
         self.north_cards_widgets = {} 
+        self.south_cards_btn ={}
  
         for frame, name in seat_positions: 
             if name not in visible_players: 
@@ -692,6 +703,7 @@ class TutorialGamePage(Frame):
                     btn = Button(frame, image=img, borderwidth=0) 
                     btn.config(command=lambda c=card_code, b=btn: self.select_card(c, b)) 
                     btn.pack(side="left", padx=1) 
+                    self.south_cards_btn[card_code] = btn
                 elif name == "North": 
                     card_label = Label(frame, image=img, borderwidth=0, bg="#055341") 
                     card_label.pack(side="left", padx=1) 
@@ -908,6 +920,65 @@ class TutorialGamePage(Frame):
         else: 
             self.show_feedback("Not the correct move to concede now.") 
             self.update_mistakes() 
+
+    def show_hint(self):
+        """Highlights the button the learner is expected to press next."""
+        if not self.lesson_loaded or self.tutorial_gateway.isTutorialComplete():
+            return
+        
+        if self.tutorial_phase == "BIDDING":
+            if self.tutorial_gateway.getCurrentBidTurnSeatIndex() != 0:
+                self.show_feedback("It is not your turn.")
+                return
+        
+            bid_type = self.tutorial_gateway.getExpectedBidType()
+            if bid_type == "CONTRACT":
+                level = self.tutorial_gateway.getExpectedBidLevel()
+                strain = self.tutorial_gateway.getExpectedBidStrain()
+                symbol = STRAIN_TO_SUIT_SYMBOL.get(strain, strain)
+        
+                self.highlight(self.level_btns[level - 1])
+                for btn in self.suits_btn:
+                    if btn.cget("text") == symbol:
+                        self.highlight(btn)
+            elif bid_type:
+                # "PASS" -> "Pass", "REDOUBLE" -> "Redouble", etc.
+                self.highlight(self.call_btns[bid_type.capitalize()])
+        
+        elif self.tutorial_phase == "PLAYING":
+            expected_card = self.tutorial_gateway.getExpectedCardCode()
+        
+            if expected_card:
+                if self.tutorial_gateway.getCurrentTurnSeatIndex() != 0:
+                    self.show_feedback("It is not your turn.")
+                    return
+                btn = self.south_cards_btn.get(expected_card)
+                if btn is not None:
+                    self.highlight(btn)
+            elif not self.learner_decided:
+                outcome = self.tutorial_gateway.getFinalOutcome()
+                if outcome == "CLAIM":
+                    self.highlight(self.claim_button)
+                elif outcome == "CONCEDE":
+                    self.highlight(self.concede_button)
+
+    def highlight(self, widget):
+        """Temporarily highlights a button in yellow."""
+        if widget in self.highlighted:
+            return
+        
+        self.highlighted.add(widget)
+        original = (widget.cget("bg"), widget.cget("fg"), widget.cget("borderwidth"))
+        widget.config(bg="yellow", fg="black", borderwidth=4)
+        self.after(2000, lambda: self.remove_highlight(widget, original))
+
+    def remove_highlight(self, widget, original):
+        """Restores a button's original look after a hint."""
+        self.highlighted.discard(widget)
+        try:
+            widget.config(bg=original[0], fg=original[1], borderwidth=original[2])
+        except TclError:
+            pass  # the button was destroyed (e.g. the card was already played)
  
     def resize_cards(self, card_path): 
         """Resizes a card image for display in hands and on the board.""" 
