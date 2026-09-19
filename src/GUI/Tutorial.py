@@ -19,7 +19,7 @@ STRAIN_TO_SUIT_SYMBOL = {v: k for k, v in SUIT_SYMBOL_TO_STRAIN.items()}
 # milliseconds between computer card plays (raise this to slow them down further) 
 COMPUTER_DELAY = 2200 
 # how long a finished trick stays on the table (keep this below COMPUTER_DELAY) 
-TRICK_CLEAR_DELAY = 2200
+TRICK_CLEAR_DELAY = 1800
  
 class TutorialPage(Frame): 
     """Class which displays the tutorial version of the game""" 
@@ -511,9 +511,8 @@ class TutorialGamePage(Frame):
             self.show_feedback("This is not the expected bid. Try again.") 
             self.update_mistakes() 
             return 
- 
-        tutorial_players = ["South", "West", "North", "East"] 
-        player = tutorial_players[seat] 
+        
+        player = self.tutorial_players[seat] 
  
         self.bid_history_data.append((player, bid)) 
         self.display_bid(player, bid) 
@@ -561,8 +560,7 @@ class TutorialGamePage(Frame):
  
         if accepted: 
             display = self._format_bid_display(bid_type, level, strain_name) 
-            tutorial_players = ["South", "West", "North", "East"] 
-            player = tutorial_players[seat] 
+            player = self.tutorial_players[seat] 
  
             self.bid_history_data.append((player, display)) 
             self.display_bid(player, display) 
@@ -640,7 +638,6 @@ class TutorialGamePage(Frame):
         self.trick_play_count += 1 
         if self.trick_play_count >= 4: 
             self.trick_play_count = 0 
-            self.after(TRICK_CLEAR_DELAY, self.clear_trick) 
  
     def player_hands(self, visible_players=None): 
         """Displays player hands. South's cards are clickable; others aren't.""" 
@@ -720,8 +717,11 @@ class TutorialGamePage(Frame):
             return 
  
         correct = self.tutorial_gateway.playCard(seat, card_code) 
- 
+
         if correct: 
+            if self.trick_play_count ==0:
+                self.clear_trick()
+
             self.show_feedback(f"Correct play: {card_code}") 
             button.destroy() 
             self.display_played_card("South", card_code) 
@@ -753,39 +753,38 @@ class TutorialGamePage(Frame):
  
         correct = self.tutorial_gateway.playCard(seat, expected_card) 
  
-        if correct: 
-            tutorial_players = ["South", "West", "North", "East"] 
-            player = tutorial_players[seat] 
- 
+        if correct:  
+            player = self.tutorial_players[seat] 
+
+            if self.trick_play_count == 0:
+                self.clear_trick()
             if seat == 2: 
                 self.remove_north_card(expected_card) 
  
             self.show_feedback(f"{player} plays {expected_card}") 
             self.display_played_card(player, expected_card) 
-            self._advance_trick_display() 
- 
-            self.after(COMPUTER_DELAY, self.play_computer_card) 
+            self._advance_trick_display()
+            self.update_tutorial() 
  
     def update_tutorial(self): 
         """Advances tutorial state after a card is played, or ends the lesson.""" 
  
-        if self.tutorial_gateway.isTutorialComplete(): 
+        if not self.tutorial_gateway.getExpectedCardCode(): 
             outcome = self.tutorial_gateway.getFinalOutcome() 
  
             # the lesson ends with Claim/Concede - wait for the learner to choose it 
             if outcome in ("CLAIM", "CONCEDE") and not self.learner_decided: 
                 self.show_feedback("All scripted cards played. Should you Claim or Concede?") 
                 return 
+
+            if self.tutorial_gateway.isTutorialComplete():
+                self.show_feedback(f"Tutorial complete: {outcome}") 
+                self.claim_button.config(state="disabled") 
+                self.concede_button.config(state="disabled") 
+                self.after(1500, self.show_complete_prompt) 
+                return 
  
-            self.show_feedback(f"Tutorial complete: {outcome}") 
-            self.claim_button.config(state="disabled") 
-            self.concede_button.config(state="disabled") 
-            self.after(1500, self.show_complete_prompt) 
-            return 
- 
-        self.show_note( 
-            self.tutorial_gateway.getLessonNote() 
-        ) 
+        self.show_note( self.tutorial_gateway.getLessonNote() ) 
  
         seat = self.tutorial_gateway.getCurrentTurnSeatIndex() 
  
