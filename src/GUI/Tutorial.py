@@ -275,7 +275,14 @@ class TutorialGamePage(Frame):
                                     text="Mistakes: 0", 
                                     font=("Arial", 12, "bold"), 
                                     bg="darkgreen", fg="white") 
-        self.mistakes_label.pack(side="left", padx=20) 
+        self.mistakes_label.pack(side="left", padx=20)
+
+        self.turn_label = Label(header,
+                                text="Turn: South",
+                                font=("Arial", 16, "bold"),
+                                bg="#0f4d3f",
+                                fg="white")
+        self.turn_label.pack(side="left", padx=20)
  
         self.claim_button = Button(header, text="Claim", 
                                    font=("Arial", 13, "bold"), 
@@ -315,7 +322,20 @@ class TutorialGamePage(Frame):
         drop_down.add_command(label="Home", command=self.controller.show_home) 
         drop_down.add_command(label="Tutorials", command=self.controller.show_tutorials) 
         menu_button.config(menu=drop_down) 
- 
+
+    def update_turn_lbl(self):
+        seat = self.tutorial_gateway.getCurrentTurnSeatIndex()
+
+        if seat == 0:
+            player = "South"
+        elif seat == 1:
+            player = "West"
+        elif seat == 2:
+            player="North"
+        else:
+            player = "East"
+
+        self.turn_label.config(text=f"Turn: {player}")
     def update_mistakes(self): 
         """Refreshes the mistake counter from the Java engine.""" 
         count = self.tutorial_gateway.getMistakeCount() 
@@ -705,9 +725,10 @@ class TutorialGamePage(Frame):
                     btn.pack(side="left", padx=1) 
                     self.south_cards_btn[card_code] = btn
                 elif name == "North": 
-                    card_label = Label(frame, image=img, borderwidth=0, bg="#055341") 
-                    card_label.pack(side="left", padx=1) 
-                    self.north_cards_widgets[card_code] = card_label 
+                    btn = Button(frame, image=img, borderwidth=0) 
+                    btn.config(command=lambda c=card_code, b=btn: self.select_card(c, b)) 
+                    btn.pack(side="left", padx=1) 
+                    self.north_cards_widgets[card_code] = btn 
                 else: 
                     Label(frame, image=img, borderwidth=0, bg="#055341").pack(side="left", padx=1) 
  
@@ -724,20 +745,27 @@ class TutorialGamePage(Frame):
             return 
  
         seat = self.tutorial_gateway.getCurrentTurnSeatIndex() 
-        if seat != 0: 
+        if seat not in (0,2): 
             self.show_feedback("It is not your turn.") 
             return 
  
         correct = self.tutorial_gateway.playCard(seat, card_code) 
 
         if correct: 
+            player = self.tutorial_players[seat]
             if self.trick_play_count ==0:
                 self.clear_trick()
 
             self.show_feedback(f"Correct play: {card_code}") 
             button.destroy() 
-            self.display_played_card("South", card_code) 
+
+            if seat == 0:
+                self.south_cards_btn.pop(card_code, None)
+            elif seat == 2:
+                self.north_cards_widgets.pop(card_code, None)
+            self.display_played_card(player, card_code) 
             self._advance_trick_display() 
+            self.update_turn_lbl()
             self.update_tutorial() 
         else: 
             self.show_feedback("That is not the expected play. Try again.") 
@@ -754,8 +782,8 @@ class TutorialGamePage(Frame):
  
         seat = self.tutorial_gateway.getCurrentTurnSeatIndex()
  
-        # South is the learner - stop and wait for their input 
-        if seat == 0: 
+        # South and north is the learner - stop and wait for their input 
+        if seat in (0,2): 
             return 
  
         expected_card = self.tutorial_gateway.getExpectedCardCode()
@@ -776,6 +804,7 @@ class TutorialGamePage(Frame):
             self.show_feedback(f"{player} plays {expected_card}") 
             self.display_played_card(player, expected_card) 
             self._advance_trick_display()
+            self.update_turn_lbl()
             self.update_tutorial() 
  
     def update_tutorial(self): 
@@ -800,7 +829,7 @@ class TutorialGamePage(Frame):
  
         seat = self.tutorial_gateway.getCurrentTurnSeatIndex() 
  
-        if seat != 0: 
+        if seat not in (0,2): 
             self.after(COMPUTER_DELAY, self.play_computer_card) 
  
     def show_complete_prompt(self): 
@@ -949,10 +978,14 @@ class TutorialGamePage(Frame):
             expected_card = self.tutorial_gateway.getExpectedCardCode()
         
             if expected_card:
-                if self.tutorial_gateway.getCurrentTurnSeatIndex() != 0:
+                seat = self.tutorial_gateway.getCurrentTurnSeatIndex()
+                if self.tutorial_gateway.getCurrentTurnSeatIndex() not in (0,2):
                     self.show_feedback("It is not your turn.")
                     return
-                btn = self.south_cards_btn.get(expected_card)
+                if seat ==0:
+                    btn = self.south_cards_btn.get(expected_card)
+                else:
+                    btn = self.north_cards_widgets.get(expected_card)
                 if btn is not None:
                     self.highlight(btn)
             elif not self.learner_decided:
