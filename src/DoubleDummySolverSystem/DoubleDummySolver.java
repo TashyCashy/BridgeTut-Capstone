@@ -6,7 +6,7 @@ import java.util.*;
 
 public class DoubleDummySolver {
     //Transposition table to skip positions that we've already encountered, adds speed
-    static Map<String, Integer> tpTable = new HashMap<>();
+    static Map<String, TTEntry> tpTable = new HashMap<>();
 
     static int solve(GameState state){
         int alpha = -1;
@@ -21,8 +21,31 @@ public class DoubleDummySolver {
         if (state.getCurrentTrick().getPlayedCards().isEmpty()){
            String stateKey = generateKey(state);
            if (tpTable.containsKey(stateKey)){
-               return tpTable.get(stateKey);
-               //we already have this game in our memery and thus know it plays out so skip computing it
+               TTEntry entry = tpTable.get(stateKey);
+               //check what bound it is:
+               if (entry.boundType == BoundType.EXACT){
+                   //we know for sure this is the best option we have, return it.
+                   return entry.value;
+               }
+               else if (entry.boundType == BoundType.LOWER_BOUND){
+                    //the value is at least entry.value, and if entry.value is >= beta the position is already settled no matter what
+                   if (entry.value >= beta){
+                       return entry.value;
+                   }
+                   else {
+                       alpha = Math.max(alpha, entry.value);
+                   }
+               }
+               else if (entry.boundType == BoundType.UPPER_BOUND){
+                   //if entry.value is <= alpha return early, else lower beta down to entry.value
+                   if (entry.value <= alpha){
+                       return entry.value;
+                   }
+                   else{
+                       beta = Math.min(beta, entry.value);
+                   }
+
+               }
            }
         }
         boolean cuttoff = false;
@@ -75,8 +98,17 @@ public class DoubleDummySolver {
             else { beta = Math.min(beta, bestValue); }
             if (alpha >= beta) { cuttoff = true; break; }
         }
-        if (state.getCurrentTrick().getPlayedCards().isEmpty() && !cuttoff){
-            tpTable.put(generateKey(state), bestValue);
+        if (state.getCurrentTrick().getPlayedCards().isEmpty()) {
+            BoundType boundType = null;
+            if (!cuttoff) {
+                boundType = BoundType.EXACT; }
+            else if (MAX) {
+                boundType = BoundType.LOWER_BOUND;
+            }
+            else if (!MAX){
+                boundType = BoundType.UPPER_BOUND;
+            }
+            tpTable.put(generateKey(state), new TTEntry(bestValue, boundType));
         }
 
         return bestValue;
@@ -155,5 +187,19 @@ public class DoubleDummySolver {
            }
         }
         return key.toString();
+    }
+
+    private enum BoundType {
+        EXACT, LOWER_BOUND, UPPER_BOUND
+    }
+
+    private static class TTEntry {
+        int value;
+        BoundType boundType;
+
+        TTEntry(int value, BoundType boundType) {
+            this.value = value;
+            this.boundType = boundType;
+        }
     }
 }
