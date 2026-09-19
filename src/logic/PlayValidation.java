@@ -1,8 +1,20 @@
 package logic;
+
 import java.util.Map;
 
+/**
+ * Utility class executing official Bridge rules for card play legality and trick winner evaluation.
+ */
 public class PlayValidation {
 
+    /**
+     * Validates whether playing a specific card from a hand complies with the follow-suit rule.
+     *
+     * @param hand  The {@link PlayerHand} containing available cards.
+     * @param card  The {@link Card} attempting to be played.
+     * @param trick The active {@link Trick} being played into.
+     * @return {@code true} if the move follows suit or if the player cannot follow suit; {@code false} if illegal.
+     */
     public static boolean isLegitPlay(PlayerHand hand, Card card, Trick trick) {
         if (trick.getLedSuit() == null)
             return true;
@@ -11,19 +23,25 @@ public class PlayValidation {
         return true;
     }
 
-    // evaluate the four cards in a completed trick, taking into account the led suit and any trump suit played
+    /**
+     * Evaluates all four played cards in a completed trick to determine the winning seat position.
+     * Correctly prioritizes trump suit cards over high cards of the led suit.
+     *
+     * @param trick     The completed {@link Trick} containing 4 played cards.
+     * @param trumpSuit The active trump {@link Suit} (or {@code null} for No-Trump contracts).
+     * @return The {@link PlayerPosition} seat that won the trick.
+     */
     public static PlayerPosition pickWinner(Trick trick, Suit trumpSuit) {
         PlayerPosition winner = null;
         Card winningCard = null;
 
-        for (Map.Entry<PlayerPosition, Card> entry: trick.getPlayedCards().entrySet()) {
+        for (Map.Entry<PlayerPosition, Card> entry : trick.getPlayedCards().entrySet()) {
             PlayerPosition player = entry.getKey();
             Card card = entry.getValue();
             if (winningCard == null) {
                 winner = player;
                 winningCard = card;
-            }
-            else {
+            } else {
                 if (wins(card, winningCard, trick.getLedSuit(), trumpSuit)) {
                     winner = player;
                     winningCard = card;
@@ -33,30 +51,30 @@ public class PlayValidation {
         return winner;
     }
 
+    /**
+     * Internal comparison helper determining if a new card beats the current winning card.
+     */
     private static boolean wins(Card newCard, Card winningCard, Suit ledSuit, Suit trumpSuit) {
         if (trumpSuit != null) {
-            // if the newCard is a trump card and the current winningCard is not a trump, newCard wins
+            // If newCard is a trump and winningCard is not, newCard wins
             if (newCard.getSuit() == trumpSuit && winningCard.getSuit() != trumpSuit) 
                 return true;
-            // if the winningCard is a trump card and newCard is not, the newCard loses
+            // If winningCard is a trump and newCard is not, newCard loses
             if (newCard.getSuit() != trumpSuit && winningCard.getSuit() == trumpSuit) 
                 return false;
-            // if they are both trump cards, compare their ranks
+            // If both are trump cards, compare ranks directly
             if (newCard.getSuit() == trumpSuit && winningCard.getSuit() == trumpSuit) {
                 return newCard.compareRank(winningCard) > 0;
             }
         }
 
-        // what if none of the cards are trump cards?
-        // a card that doesn't follow the led suit loses
+        // Non-trump card evaluation (only reached when neither card is a trump)
         if (newCard.getSuit() != ledSuit)
             return false;
         
-        // if the winningCard doesn't follow the led suit but the newCard does, newCard wins
         if (winningCard.getSuit() != ledSuit)
             return true;
         
-        // if both are led suits, compare their ranks
         return newCard.compareRank(winningCard) > 0;
     }
 }

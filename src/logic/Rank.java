@@ -1,11 +1,15 @@
 package logic;
 
+/**
+ * Enumerates the thirteen standard playing card ranks in ascending value order (TWO through ACE).
+ */
 public enum Rank {
     TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING, ACE;
 
     /**
-     * getting the card value
-     * @return ordinal of this enumeration constant (its position in its enum declaration, where the initial constant is assigned an ordinal of zero)
+     * Gets the standard 1-character letter/number symbol representing this rank.
+     *
+     * @return String representation (e.g., "2"-"10", "J", "Q", "K", "A").
      */
     public String getRankLetter() {
         switch (this) {
@@ -13,7 +17,7 @@ public enum Rank {
             case QUEEN: return "Q";
             case KING: return "K";
             case ACE: return "A";
-            default: return String.valueOf(ordinal()+2); 
+            default: return String.valueOf(ordinal() + 2); 
         }
     }
 }
