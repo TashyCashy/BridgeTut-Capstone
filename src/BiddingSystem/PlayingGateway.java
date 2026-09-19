@@ -167,4 +167,20 @@ public class PlayingGateway {
         }
         return count;
     }
+
+    /**
+     * Runs the double-dummy solver on the current position to find how many of
+     * the remaining tricks the declaring side (declarer + partner) is guaranteed
+     * to win with optimal play by both sides from here on.
+     *
+     * This is a blocking, potentially slow call (can take from milliseconds up
+     * to tens of seconds depending on how many cards remain) - callers should
+     * run it off their own main/UI thread rather than calling it directly from
+     * an event handler.
+     *
+     * @return Number of the remaining tricks the declaring side wins with perfect play.
+     */
+    public int getOptimalTricksForDeclaringSide() {
+        return DoubleDummySolverSystem.DoubleDummySolver.solve(gameState.copy());
+    }
 }

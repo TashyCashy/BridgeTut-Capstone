@@ -122,4 +122,35 @@ public class PlayerHand {
     public void clearHand() {
         hand.clear();
     }
+
+    /**
+     * Makes a copy of this hand, used by the double-dummy solver so it can
+     * explore hypothetical plays without mutating the real game state.
+     *
+     * @return A new {@link PlayerHand} with the same cards.
+     */
+    public PlayerHand copy() {
+        PlayerHand copy = new PlayerHand(this.position);
+        for (Card card : hand) {
+            copy.addCard(card);
+        }
+        return copy;
+    }
+
+    /**
+     * Gets the ranks this hand holds in a given suit, used by the double-dummy
+     * solver's equivalent-card pruning.
+     *
+     * @param suit The {@link Suit} to search for.
+     * @return List of {@link Rank}s held in that suit.
+     */
+    public List<Rank> getRanksOfSuit(Suit suit) {
+        List<Rank> ranks = new ArrayList<>();
+        for (Card card : hand) {
+            if (card.getSuit() == suit) {
+                ranks.add(card.getRank());
+            }
+        }
+        return ranks;
+    }
 }
