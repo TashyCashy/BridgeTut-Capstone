@@ -235,6 +235,7 @@ class GamePage(Frame):
              self.undo_hist=[]
              self.bidding_phase=True
              self.game_id = None
+             self.game_over_frame = None
 
              #variables to display in the header
              self.ns_tricks = 0
@@ -259,6 +260,10 @@ class GamePage(Frame):
              self.player_hands()
 
      def start_game(self):
+          if self.game_over_frame is not None:
+                self.game_over_frame.destroy()
+                self.game_over_frame = None
+
           if self.controller.current_username is None:
                messagebox.showerror("Error", "Please log in first.")
                return
@@ -435,7 +440,7 @@ class GamePage(Frame):
                return
 
           current_seat = self.play_gateway.getCurrentTurnSeatIndex()
-          confirm = messagebox.askyesno("Claim", "Are you want to claim remaining tricks?")
+          confirm = messagebox.askyesno("Claim", "Are sure that you want to claim remaining tricks?")
 
           if not confirm:
                return
@@ -454,7 +459,7 @@ class GamePage(Frame):
                return
           
           current_seat = self.play_gateway.getCurrentTurnSeatIndex()
-          confirm = messagebox.askyesno("Concede", "Are you want to concede the hand?")
+          confirm = messagebox.askyesno("Concede", "Are sure that you want to concede the hand?")
           
           if not confirm:
                return
@@ -789,7 +794,7 @@ class GamePage(Frame):
                        relief="ridge")
            hist.pack(fill="both", expand=True, padx=30, pady=10)
 
-           for column, player in enumerate(self.players):
+           for column, player in enumerate(self.bidding_order):
                  Label(hist,
                        text= player,
                        font=("Arial", 11, "bold"),
@@ -882,6 +887,35 @@ class GamePage(Frame):
           if same_suit:
                return set(same_suit)  # must follow suit
           return set(hand)  # can't follow suit — anything goes
+
+     def game_over(self):
+          """Displays home button when tricks are done"""
+          self.game_over_frame = Frame(self,
+                                       bg="#055341",
+                                       bd=3,
+                                       relief="solid")
+
+          self.game_over_frame.place(relx=0.5,rely=0.5,anchor="center",width=450,height=250)
+          Label(self.game_over_frame,
+                  text="GAME OVER",
+                  font=("Arial", 28, "bold"),
+                  bg="#055341",
+                  fg="white").pack(pady=30)
+          
+          Label(self.game_over_frame,
+              text="All 13 tricks have been played.",
+              font=("Arial", 14),
+              bg="#055341",
+              fg="white").pack(pady=5)
+          
+          Button(self.game_over_frame,
+              text="Home",
+              font=("Arial", 14, "bold"),
+              bg="#C9A42C",
+              fg="#055341",
+              relief="flat",
+              width=12,
+              command=lambda: self.controller.show_frame(HomePage)).pack(pady=25)
 
      def player_hands(self, visible_players=None):
            """Displays player hands"""
@@ -978,8 +1012,6 @@ class GamePage(Frame):
 
         # update current player index directly from Java backend
         self.current_player = self.play_gateway.getCurrentTurnSeatIndex()
-        self.update_turn_label()
-        self.update_visible_hands()
 
         # checks if trick has been completed
         completed_tricks = self.play_gateway.getCompletedTricksCount()
@@ -1011,9 +1043,12 @@ class GamePage(Frame):
              self.update_trick_score()
              #clears cards for next trick
              self.current_trick_cards = []
-
+        self.update_visible_hands()
+        self.update_turn_label()
         if self.play_gateway.isHandComplete():
-             messagebox.showinfo("Hand complete", "All 13 tricks played")
+             self.game_over()
+        else:
+             self.update_visible_hands()
 
      def clear_trick(self):
            """board gets cleared once all 4 players have played """
