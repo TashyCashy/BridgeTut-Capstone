@@ -7,7 +7,7 @@ import java.util.Map;
  * Represents a single trick during the play phase of a Bridge hand, tracking the opening lead,
  * led suit, and card plays from all four player positions.
  */
-public class Trick {   
+public class Trick {
     private Suit ledSuit;
     private final Map<PlayerPosition, Card> playedCards = new LinkedHashMap<>();
     private final PlayerPosition lead;
@@ -79,5 +79,19 @@ public class Trick {
      */
     public boolean done() {
         return playedCards.size() == 4;
+    }
+
+    /**
+     * Makes a copy of this trick, used by the double-dummy solver so it can
+     * explore hypothetical plays without mutating the real game state.
+     *
+     * @return A new {@link Trick} with the same lead, led suit, and played cards.
+     */
+    public Trick copy(){
+        Trick copy = new Trick(lead);
+        //copy every entry already recorderd
+        copy.playedCards.putAll(this.playedCards);
+        copy.ledSuit = this.ledSuit;
+        return copy;
     }
 }

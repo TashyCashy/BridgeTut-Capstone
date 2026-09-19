@@ -32,54 +32,64 @@ public class TutorialGateway {
         this.engine = engine;
     }
 
+    /** Seat index whose turn it is to play a card during the play phase. */
     public int getCurrentTurnSeatIndex() {
         if (engine != null)
             return engine.getCurrentTurnSeatIndex();
-        else 
+        else
             return -1;
     }
 
+    /** Seat index that led the current trick. */
     public int getLeaderSeatIndex() {
         if (engine != null)
             return engine.getLeaderSeatIndex();
         return -1;
     }
 
+    /** Number of wrong bids/cards South has submitted so far in this lesson. */
     public int getMistakeCount() {
         if (engine != null)
             return engine.getMistakeCount();
         return 0;
     }
 
+    /** True once every listed trick in the lesson has been played. */
     public boolean isTutorialComplete() {
         return (engine != null) && engine.isTutorialComplete();
     }
 
+    /** Attempts to play a card for the given seat; only accepted if it matches the lesson's script. */
     public boolean playCard(int seatIdx, String cardCode) {
         return (engine != null) && engine.playCard(seatIdx, cardCode);
     }
 
+    /** Claims the remaining tricks; only accepted if the lesson's outcome is Claim. */
     public boolean claimTricks() {
         return (engine != null) && engine.claim();
     }
 
+    /** Concedes the remaining tricks; only accepted if the lesson's outcome is Concede. */
     public boolean concedeTricks() {
         return (engine != null) && engine.concede();
     }
 
+    /** "CLAIM", "CONCEDE", or "IN_PROGRESS" if the lesson hasn't concluded yet. */
     public String getFinalOutcome() {
-        if (engine != null && engine.getFinalOutcome() != null) 
+        if (engine != null && engine.getFinalOutcome() != null)
             return engine.getFinalOutcome().name();
         else
             return "IN_PROGRESS";
     }
 
+    /** The lesson's teaching note, shown once it concludes. */
     public String getLessonNote() {
-        if (engine != null) 
+        if (engine != null)
             return engine.getLessonNote();
         return "";
     }
 
+    /** The card South is expected to play next, per the lesson script. */
     public String getExpectedCardCode() {
         if (engine != null)
             return engine.getExpectedCardCode();
@@ -127,14 +137,17 @@ public class TutorialGateway {
         }
     }
 
+    /** Number of lessons loaded from the last loadLessonFile() call. */
     public int getLessonCount() {
         return lessons.size();
     }
 
+    /** Index of the lesson currently active, or -1 if none is loaded. */
     public int getCurrentLessonIndex() {
         return currentLessonIndex;
     }
 
+    /** Switches to a different lesson already loaded via loadLessonFile(), restarting it from the top. */
     public boolean selectLesson(int index) {
         if (index < 0 || index >= lessons.size())
             return false;
@@ -143,22 +156,26 @@ public class TutorialGateway {
         return true;
     }
 
+    /** Card codes currently held by the given seat in the active lesson. */
     public List<String> getHandForSeat(int seatIdx) {
         if (engine != null)
             return engine.getHandForSeat(seatIdx);
         return new ArrayList<>();
     }
 
+    /** True while the lesson's auction is still being replayed (mode 1 lessons only). */
     public boolean isBiddingPhase() {
         return engine != null && engine.isBiddingPhase();
     }
 
+    /** Seat index whose turn it is to bid during the auction replay. */
     public int getCurrentBidTurnSeatIndex() {
         if (engine != null)
             return engine.getCurrentBidTurnSeatIndex();
         return -1;
     }
 
+    /** "PASS"/"DOUBLE"/"REDOUBLE"/"CONTRACT" for the next expected bid, or "" if bidding's over. */
     public String getExpectedBidType() {
         PlayerAction expected = (engine != null) ? engine.getExpectedBidAction() : null;
         if (expected == null) return "";
@@ -169,16 +186,19 @@ public class TutorialGateway {
         return "";
     }
 
+    /** Level of the next expected bid; only meaningful when getExpectedBidType() is "CONTRACT". */
     public int getExpectedBidLevel() {
         PlayerAction expected = (engine != null) ? engine.getExpectedBidAction() : null;
         return (expected instanceof ContractBid cb) ? cb.getLevel() : 0;
     }
 
+    /** Strain of the next expected bid; only meaningful when getExpectedBidType() is "CONTRACT". */
     public String getExpectedBidStrain() {
         PlayerAction expected = (engine != null) ? engine.getExpectedBidAction() : null;
         return (expected instanceof ContractBid cb) ? cb.getStrain().name() : "";
     }
 
+    /** Submits a contract bid for the given seat; only accepted if it matches the lesson's next scripted bid. */
     public boolean submitBid(int seatIdx, int level, String strainName) {
         if (engine == null || strainName == null)
             return false;
@@ -193,18 +213,22 @@ public class TutorialGateway {
         return engine.submitBidAction(seatIdx, new ContractBid(level, strain));
     }
 
+    /** Submits a pass for the given seat; only accepted if it matches the lesson's next scripted bid. */
     public boolean submitPass(int seatIdx) {
         return engine != null && engine.submitBidAction(seatIdx, new PassAction());
     }
 
+    /** Submits a double for the given seat; only accepted if it matches the lesson's next scripted bid. */
     public boolean submitDouble(int seatIdx) {
         return engine != null && engine.submitBidAction(seatIdx, new DoubleAction());
     }
 
+    /** Submits a redouble for the given seat; only accepted if it matches the lesson's next scripted bid. */
     public boolean submitRedouble(int seatIdx) {
         return engine != null && engine.submitBidAction(seatIdx, new RedoubleAction());
     }
 
+    /** True once all listed tricks are played and the lesson is waiting on a Claim/Concede decision. */
     public boolean isAwaitingClaimConcede() {
         return (engine != null) && engine.isAwaitingClaimConcede();
     }

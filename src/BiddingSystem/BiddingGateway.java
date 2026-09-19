@@ -51,7 +51,7 @@ public class BiddingGateway {
         return new BiddingManager(players[new Random().nextInt(4)].getSeatPosition(), players);
     }
 
-    // expose TutorialGateway to python through py4j
+    /** Returns the shared TutorialGateway instance, exposed to Python via Py4J. */
     public TutorialGateway getTutorialGateway() {
         if (tutorialGateway == null)
             tutorialGateway = new TutorialGateway();
@@ -79,12 +79,15 @@ public class BiddingGateway {
         return manager.ActionPlayed(new ContractBid(level, strain));
     }
 
+    /** Submits a pass for whoever's turn it currently is. */
     public boolean submitPass() {
         return manager.ActionPlayed(new PassAction());
     }
 
+    /** Doubles the current highest bid; rejected if there's no bid yet or it's your own side's. */
     public boolean submitDouble (){ return manager.ActionPlayed(new DoubleAction());}
 
+    /** Redoubles a doubled contract; rejected unless the current bid is doubled and it's your side's. */
     public boolean submitRedouble (){ return manager.ActionPlayed(new RedoubleAction());}
 
     /** Index into PlayerPosition.values() order: SOUTH=0, WEST=1, NORTH=2, EAST=3 */
@@ -92,14 +95,17 @@ public class BiddingGateway {
         return manager.getCurrentPlayer().getSeatPosition().ordinal();
     }
 
+    /** Name of whoever's turn it currently is. */
     public String getCurrentPlayerName() {
         return manager.getCurrentPlayer().getUsername();
     }
 
+    /** True once the auction has ended, either with a contract or a pass-out. Call after every accepted action. */
     public boolean checkBiddingOver() {
         return manager.checkBiddingOver();
     }
 
+    /** True if the auction ended in a pass-out (4 passes, no bid). Only meaningful once checkBiddingOver() is true. */
     public boolean isPassedOut() {
         return manager.isPassedOut();
     }
@@ -109,6 +115,7 @@ public class BiddingGateway {
         return manager.getDeclarer().getUsername();
     }
 
+    /** Seat index of the final declarer. Only meaningful after checkBiddingOver() is true and isPassedOut() is false. */
     public int getDeclarerSeatIndex() {
         return manager.getDeclarer().getSeatPosition().ordinal();
     }
@@ -137,18 +144,18 @@ public class BiddingGateway {
         return getCurrentSeatIndex();
     }
 
-    //Live doubling state
+    /** Live doubling state ("UNDOUBLED"/"DOUBLED"/"REDOUBLED") as the auction progresses. */
     public String getCurrentDoublingState(){
         //py4j can only pass primitive types (String/int/boolean), so convert the enum to its name
         return manager.getCurrentDoublingState().name();
     }
 
-    //Doubling state of final auction
+    /** Doubling state locked in once the auction ends. */
     public String getFinalDoublingState(){
         return manager.getFinalDoublingState().name();
     }
 
-    //Kept my implementation when merging, still works the same way
+    /** Declarer-so-far by name, live during the auction, or "" if no contract bid has been made yet. */
     public String getCurrentDeclarerSeatIndex() {
         PlayerPosition currentDeclarer = manager.getCurrentDeclarer();
         if (currentDeclarer == null) return "";
@@ -157,7 +164,7 @@ public class BiddingGateway {
         }
     }
 
-    //for getting the rigth cards shown on the gui
+    /** Card codes (e.g. "SA", "D10") currently held by the given seat. */
     public List<String> getHandForSeat(int seatIndex) {
         Player p = manager.getPlayers()[seatIndex];
         List<String> cardCodes = new ArrayList<>();
@@ -190,6 +197,7 @@ public class BiddingGateway {
 
 
 
+    /** Undoes the most recent bid and steps the turn back a seat. False if there's nothing to undo. */
     public boolean undoLastBid(){
         return manager.undoLastBid();
     }
