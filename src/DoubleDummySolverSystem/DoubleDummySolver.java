@@ -5,6 +5,7 @@ import logic.*;
 import java.util.*;
 
 public class DoubleDummySolver {
+    //Transposition table to skip positions that we've already encountered, adds speed
     static Map<String, Integer> tpTable = new HashMap<>();
 
     static int solve(GameState state){
@@ -42,6 +43,10 @@ public class DoubleDummySolver {
             }
         }
         legalCards = collapseEquivalentCards(legalCards, state); // skip cards that are provably interchangeable right now
+        legalCards.sort(Card::compareRank);
+        //reverse the sort order, so we try out better(higher value) cards, this is to try optimise alpha-beta pruning,
+        // higher value pathways may eliminate more branches to check making the overall process faster, might make smaller trials slower however but valid tradeoff
+        legalCards = legalCards.reversed();
         int bestValue = (MAX) ? 0 : 13;
 
         for (Card card : legalCards){

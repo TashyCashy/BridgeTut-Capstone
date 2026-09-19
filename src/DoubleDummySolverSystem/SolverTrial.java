@@ -27,13 +27,13 @@ public class SolverTrial {
         System.out.println("=== Trial 3: four cards each, two suits ===");
         runTrial(fourCardsEach());*/
 
-        //System.out.println();
-        //System.out.println("=== Trial 4: full 52-card shuffled deck ===");
-        //GameState fullDeck = fullShuffledDeck();
-        //runTrial(fullDeck);
+        System.out.println();
+        System.out.println("=== Trial 4: full 52-card shuffled deck ===");
+        GameState fullDeck = fullShuffledDeck();
+        runTrial(fullDeck);
 
-        System.out.println("=== Trial 5: 7 cards each, real shuffled deal ===");
-        runTrial(sevenCardsEachShuffled());
+        /*System.out.println("=== Trial 5: 7 cards each, real shuffled deal ===");
+        runTrial(sevenCardsEachShuffled());*/
     }
 
     private static void runTrial(GameState state) {
