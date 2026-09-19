@@ -9,14 +9,25 @@ import java.util.ArrayList;
 import java.util.List;
 import logic.Strain;
 
+/**
+ * Py4J gateway exposing interactive tutorial management to Python[cite: 3, 24].
+ * Translates lesson states, script validation, and bidding actions across the language boundary[cite: 24].
+ */
 public class TutorialGateway {
     private TutorialEngine engine;
     private List<Lesson> lessons = new ArrayList<>();
     private int currentLessonIndex = -1;
 
-    // default constructor for py4j entry point creation
-    public TutorialGateway () {}
+    /**
+     * Default constructor required for Py4J entry point creation[cite: 24].
+     */
+    public TutorialGateway() {}
 
+    /**
+     * Constructs a TutorialGateway wrapping an active engine[cite: 24].
+     *
+     * @param engine Active {@link TutorialEngine}[cite: 24].
+     */
     public TutorialGateway(TutorialEngine engine) {
         this.engine = engine;
     }
@@ -75,6 +86,12 @@ public class TutorialGateway {
         return "";
     }
 
+    /**
+     * Loads a single lesson from a text file path[cite: 24].
+     *
+     * @param filePath File path string[cite: 24].
+     * @return {@code true} if successfully loaded; {@code false} on error[cite: 24].
+     */
     public boolean loadLessonText(String filePath) {
         try {
             String rawText = Files.readString(Path.of(filePath));
@@ -83,13 +100,17 @@ public class TutorialGateway {
             return true;
         } catch (IOException | IllegalArgumentException e) {
             System.err.println("Failed to load lesson file: " + e.getMessage());
-            engine = null; // ensure engine is null on failure
+            engine = null;
             return false;
         }
     }
 
-    // loads every lesson out of a file that may contain more than one (e.g. exampleBidAndPlay.txt),
-    // and starts on the first one. Returns how many lessons were loaded, or -1 on failure.
+    /**
+     * Loads multiple lessons out of a text archive file[cite: 24].
+     *
+     * @param filePath File path string[cite: 24].
+     * @return Count of lessons loaded, or -1 on failure[cite: 24].
+     */
     public int loadLessonFile(String filePath) {
         try {
             String rawText = Files.readString(Path.of(filePath));
@@ -114,7 +135,6 @@ public class TutorialGateway {
         return currentLessonIndex;
     }
 
-    // switches to a different lesson already loaded via loadLessonFile, restarting it from the top
     public boolean selectLesson(int index) {
         if (index < 0 || index >= lessons.size())
             return false;
@@ -123,7 +143,6 @@ public class TutorialGateway {
         return true;
     }
 
-    // expose hand card codes for a seat to python through py4j
     public List<String> getHandForSeat(int seatIdx) {
         if (engine != null)
             return engine.getHandForSeat(seatIdx);
@@ -140,7 +159,6 @@ public class TutorialGateway {
         return -1;
     }
 
-    // "PASS" / "DOUBLE" / "REDOUBLE" / "CONTRACT" / "" (bidding over or no lesson loaded)
     public String getExpectedBidType() {
         PlayerAction expected = (engine != null) ? engine.getExpectedBidAction() : null;
         if (expected == null) return "";
@@ -151,22 +169,16 @@ public class TutorialGateway {
         return "";
     }
 
-    // only meaningful when getExpectedBidType() == "CONTRACT"
     public int getExpectedBidLevel() {
         PlayerAction expected = (engine != null) ? engine.getExpectedBidAction() : null;
         return (expected instanceof ContractBid cb) ? cb.getLevel() : 0;
     }
 
-    // only meaningful when getExpectedBidType() == "CONTRACT"
     public String getExpectedBidStrain() {
         PlayerAction expected = (engine != null) ? engine.getExpectedBidAction() : null;
         return (expected instanceof ContractBid cb) ? cb.getStrain().name() : "";
     }
 
-    /**
-     * Attempts a contract bid for the given seat. Returns false on a wrong/illegal
-     * bid OR bad input (unknown strain name, out-of-range level) rather than throwing.
-     */
     public boolean submitBid(int seatIdx, int level, String strainName) {
         if (engine == null || strainName == null)
             return false;
@@ -174,7 +186,7 @@ public class TutorialGateway {
         try {
             strain = Strain.valueOf(strainName);
         } catch (IllegalArgumentException e) {
-            return false; // unknown strain name from Python side
+            return false;
         }
         if (level < 1 || level > 7)
             return false;
