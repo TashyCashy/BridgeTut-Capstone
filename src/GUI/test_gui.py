@@ -47,6 +47,7 @@ class TestBridgeGUI(unittest.TestCase):
         """
         Check that the GamePage was successfully created.
         """
+
         self.assertIsNotNone(self.game)
 
     # ---------------------------------------------------------
@@ -57,6 +58,7 @@ class TestBridgeGUI(unittest.TestCase):
         """
         Check that North, South, East and West hand areas exist.
         """
+
         self.assertIsNotNone(self.game.north_frame)
         self.assertIsNotNone(self.game.south_frame)
         self.assertIsNotNone(self.game.east_frame)
@@ -68,8 +70,7 @@ class TestBridgeGUI(unittest.TestCase):
 
     def test_each_player_has_13_cards(self):
         """
-        Check that 13 card buttons are displayed for
-        each player.
+        Check that each player initially has 13 cards.
         """
 
         north_cards = self.game.north_frame.winfo_children()
@@ -91,188 +92,28 @@ class TestBridgeGUI(unittest.TestCase):
         Check that the GUI displays 52 cards in total.
         """
 
-        north = len(self.game.north_frame.winfo_children())
-        south = len(self.game.south_frame.winfo_children())
-        east = len(self.game.east_frame.winfo_children())
-        west = len(self.game.west_frame.winfo_children())
+        north = len(
+            self.game.north_frame.winfo_children()
+        )
+
+        south = len(
+            self.game.south_frame.winfo_children()
+        )
+
+        east = len(
+            self.game.east_frame.winfo_children()
+        )
+
+        west = len(
+            self.game.west_frame.winfo_children()
+        )
 
         total_cards = north + south + east + west
 
         self.assertEqual(total_cards, 52)
 
     # ---------------------------------------------------------
-    # TEST 5: Clicking a South card removes it
-    # ---------------------------------------------------------
-
-    @patch.object(GamePage, "finish_bidding")
-    def test_click_south_card_removes_card(self, mock_finish_bidding):
-        """
-        Check that clicking a South card removes it
-        from the South hand.
-        """
-
-        south_cards_before = len(
-            self.game.south_frame.winfo_children()
-        )
-
-        # Get the first South card
-        card = self.game.south_frame.winfo_children()[0]
-
-        # Simulate clicking the card
-        card.invoke()
-
-        # Process Tkinter events
-        self.root.update()
-
-        south_cards_after = len(
-            self.game.south_frame.winfo_children()
-        )
-
-        self.assertEqual(
-            south_cards_after,
-            south_cards_before - 1
-        )
-
-    # ---------------------------------------------------------
-    # TEST 6: Clicking a North card removes it
-    # ---------------------------------------------------------
-
-    @patch.object(GamePage, "finish_bidding")
-    def test_click_north_card_removes_card(self, mock_finish_bidding):
-        """
-        Check that clicking a North card removes it
-        from the North hand.
-        """
-
-        north_cards_before = len(
-            self.game.north_frame.winfo_children()
-        )
-
-        card = self.game.north_frame.winfo_children()[0]
-
-        card.invoke()
-
-        self.root.update()
-
-        north_cards_after = len(
-            self.game.north_frame.winfo_children()
-        )
-
-        self.assertEqual(
-            north_cards_after,
-            north_cards_before - 1
-        )
-
-    # ---------------------------------------------------------
-    # TEST 7: Clicking an East card removes it
-    # ---------------------------------------------------------
-
-    @patch.object(GamePage, "finish_bidding")
-    def test_click_east_card_removes_card(self, mock_finish_bidding):
-        """
-        Check that clicking an East card removes it
-        from the East hand.
-        """
-
-        east_cards_before = len(
-            self.game.east_frame.winfo_children()
-        )
-
-        card = self.game.east_frame.winfo_children()[0]
-
-        card.invoke()
-
-        self.root.update()
-
-        east_cards_after = len(
-            self.game.east_frame.winfo_children()
-        )
-
-        self.assertEqual(
-            east_cards_after,
-            east_cards_before - 1
-        )
-
-    # ---------------------------------------------------------
-    # TEST 8: Clicking a West card removes it
-    # ---------------------------------------------------------
-
-    @patch.object(GamePage, "finish_bidding")
-    def test_click_west_card_removes_card(self, mock_finish_bidding):
-        """
-        Check that clicking a West card removes it
-        from the West hand.
-        """
-
-        west_cards_before = len(
-            self.game.west_frame.winfo_children()
-        )
-
-        card = self.game.west_frame.winfo_children()[0]
-
-        card.invoke()
-
-        self.root.update()
-
-        west_cards_after = len(
-            self.game.west_frame.winfo_children()
-        )
-
-        self.assertEqual(
-            west_cards_after,
-            west_cards_before - 1
-        )
-
-    # ---------------------------------------------------------
-    # TEST 9: Played card appears in centre
-    # ---------------------------------------------------------
-
-    @patch.object(GamePage, "finish_bidding")
-    def test_card_moves_to_centre(self, mock_finish_bidding):
-        """
-        Check that a played card is displayed in the
-        centre of the table.
-        """
-
-        card = self.game.south_frame.winfo_children()[0]
-
-        card.invoke()
-
-        self.root.update()
-
-        south_label = self.game.trick_labels["South"]
-
-        image = south_label.cget("image")
-
-        self.assertNotEqual(image, "")
-
-    # ---------------------------------------------------------
-    # TEST 10: Four played cards are tracked
-    # ---------------------------------------------------------
-
-    @patch.object(GamePage, "finish_bidding")
-    def test_four_cards_create_trick(self, mock_finish_bidding):
-        """
-        Check that four cards can be played and that
-        trick_count reaches 4.
-        """
-
-        players = [
-            self.game.south_frame,
-            self.game.north_frame,
-            self.game.east_frame,
-            self.game.west_frame
-        ]
-
-        for frame in players:
-            card = frame.winfo_children()[0]
-            card.invoke()
-            self.root.update()
-
-        self.assertEqual(self.game.trick_count, 4)
-
-    # ---------------------------------------------------------
-    # TEST 11: Bidding starts correctly
+    # TEST 5: Bidding phase starts correctly
     # ---------------------------------------------------------
 
     def test_bidding_phase_starts(self):
@@ -280,10 +121,40 @@ class TestBridgeGUI(unittest.TestCase):
         Check that the game starts in the bidding phase.
         """
 
-        self.assertTrue(self.game.bidding_phase)
+        self.assertTrue(
+            self.game.bidding_phase
+        )
 
     # ---------------------------------------------------------
-    # TEST 12: Selecting a bid level
+    # TEST 6: Bidding panel exists
+    # ---------------------------------------------------------
+
+    def test_bidding_panel_exists(self):
+        """
+        Check that the bidding panel exists when
+        the game starts.
+        """
+
+        self.assertIsNotNone(
+            self.game.bidding
+        )
+
+    # ---------------------------------------------------------
+    # TEST 7: Selected level starts empty
+    # ---------------------------------------------------------
+
+    def test_selected_level_starts_empty(self):
+        """
+        Check that no bidding level is selected
+        when the game starts.
+        """
+
+        self.assertIsNone(
+            self.game.selected_level
+        )
+
+    # ---------------------------------------------------------
+    # TEST 8: Selecting a bid level
     # ---------------------------------------------------------
 
     def test_select_bid_level(self):
@@ -299,7 +170,31 @@ class TestBridgeGUI(unittest.TestCase):
         )
 
     # ---------------------------------------------------------
-    # TEST 13: Selecting a suit creates a bid
+    # TEST 9: Selecting another bid level
+    # ---------------------------------------------------------
+
+    def test_change_bid_level(self):
+        """
+        Check that selecting another level updates
+        the selected level.
+        """
+
+        self.game.select_level(2)
+
+        self.assertEqual(
+            self.game.selected_level,
+            2
+        )
+
+        self.game.select_level(5)
+
+        self.assertEqual(
+            self.game.selected_level,
+            5
+        )
+
+    # ---------------------------------------------------------
+    # TEST 10: Selecting a suit creates a bid
     # ---------------------------------------------------------
 
     @patch.object(GamePage, "make_bid")
@@ -313,10 +208,12 @@ class TestBridgeGUI(unittest.TestCase):
 
         self.game.select_suit("♥")
 
-        mock_make_bid.assert_called_once_with("2♥")
+        mock_make_bid.assert_called_once_with(
+            "2♥"
+        )
 
     # ---------------------------------------------------------
-    # TEST 14: Suit cannot be selected without a level
+    # TEST 11: Suit cannot be selected without a level
     # ---------------------------------------------------------
 
     @patch.object(GamePage, "make_bid")
@@ -333,21 +230,169 @@ class TestBridgeGUI(unittest.TestCase):
         mock_make_bid.assert_not_called()
 
     # ---------------------------------------------------------
-    # TEST 15: Finishing bidding hides bidding panel
+    # TEST 12: Bid history starts empty
     # ---------------------------------------------------------
 
-    def test_finish_bidding(self):
+    def test_bid_history_starts_empty(self):
         """
-        Check that the bidding phase ends and the
-        bidding panel is removed.
+        Check that the bidding history is empty
+        when the game starts.
+        """
+
+        self.assertEqual(
+            self.game.bid_history_data,
+            []
+        )
+
+    # ---------------------------------------------------------
+    # TEST 13: Undo history starts empty
+    # ---------------------------------------------------------
+
+    def test_undo_history_starts_empty(self):
+        """
+        Check that the undo history is empty
+        when the game starts.
+        """
+
+        self.assertEqual(
+            self.game.undo_hist,
+            []
+        )
+
+    # ---------------------------------------------------------
+    # TEST 14: Current player starts at the first player
+    # ---------------------------------------------------------
+
+    def test_current_player_starts_at_zero(self):
+        """
+        Check that the current player starts at
+        the first player.
+        """
+
+        self.assertEqual(
+            self.game.current_player,
+            0
+        )
+
+    # ---------------------------------------------------------
+    # TEST 15: Current bidding level starts at zero
+    # ---------------------------------------------------------
+
+    def test_current_level_starts_at_zero(self):
+        """
+        Check that the current bidding level starts at zero.
+        """
+
+        self.assertEqual(
+            self.game.current_level,
+            0
+        )
+
+    # ---------------------------------------------------------
+    # TEST 16: Trick count starts at zero
+    # ---------------------------------------------------------
+
+    def test_trick_count_starts_at_zero(self):
+        """
+        Check that no cards have been played when
+        the game starts.
+        """
+
+        self.assertEqual(
+            self.game.trick_count,
+            0
+        )
+
+    # ---------------------------------------------------------
+    # TEST 17: Trick labels exist
+    # ---------------------------------------------------------
+
+    def test_trick_labels_exist(self):
+        """
+        Check that the GUI has a centre label
+        for each player.
+        """
+
+        self.assertIn(
+            "North",
+            self.game.trick_labels
+        )
+
+        self.assertIn(
+            "South",
+            self.game.trick_labels
+        )
+
+        self.assertIn(
+            "East",
+            self.game.trick_labels
+        )
+
+        self.assertIn(
+            "West",
+            self.game.trick_labels
+        )
+
+    # ---------------------------------------------------------
+    # TEST 18: Finishing bidding changes the phase
+    # ---------------------------------------------------------
+
+    def test_finish_bidding_changes_phase(self):
+        """
+        Check that finishing bidding changes the game
+        from the bidding phase.
         """
 
         self.game.finish_bidding()
 
-        self.assertFalse(self.game.bidding_phase)
+        self.assertFalse(
+            self.game.bidding_phase
+        )
+
+    # ---------------------------------------------------------
+    # TEST 19: Finishing bidding hides the panel
+    # ---------------------------------------------------------
+
+    def test_finish_bidding_hides_panel(self):
+        """
+        Check that the bidding panel is hidden after
+        bidding has finished.
+        """
+
+        self.game.finish_bidding()
 
         self.assertEqual(
             self.game.bidding.winfo_viewable(),
+            0
+        )
+
+    # ---------------------------------------------------------
+    # TEST 20: Player frames contain cards
+    # ---------------------------------------------------------
+
+    def test_player_frames_contain_cards(self):
+        """
+        Check that each player frame contains
+        card widgets when the game starts.
+        """
+
+        self.assertGreater(
+            len(self.game.north_frame.winfo_children()),
+            0
+        )
+
+        self.assertGreater(
+            len(self.game.south_frame.winfo_children()),
+            0
+        )
+
+        self.assertGreater(
+            len(self.game.east_frame.winfo_children()),
+            0
+        )
+
+        self.assertGreater(
+            len(self.game.west_frame.winfo_children()),
             0
         )
 

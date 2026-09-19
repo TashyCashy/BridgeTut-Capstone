@@ -405,9 +405,6 @@ class GamePage(Frame):
              drop_down.add_command(label="Home",
                                    command= lambda: self.controller.show_frame(HomePage))
 
-             drop_down.add_command(label="Instructions",
-                                    command= lambda: self.controller.show_instructions())
-
              drop_down.add_command(label="History",
                                    command= lambda: self.controller.show_frame(ResultPage))
 
