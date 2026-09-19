@@ -2,12 +2,12 @@ package BiddingSystem.Tutorial;
 
 import BiddingSystem.BiddingData.Actions.*;
 import LessonTutorial.Lesson;
-import logic.Strain;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import logic.Strain;
 
 public class TutorialGateway {
     private TutorialEngine engine;
@@ -191,5 +191,9 @@ public class TutorialGateway {
 
     public boolean submitRedouble(int seatIdx) {
         return engine != null && engine.submitBidAction(seatIdx, new RedoubleAction());
+    }
+
+    public boolean isAwaitingClaimConcede() {
+        return (engine != null) && engine.isAwaitingClaimConcede();
     }
 }
