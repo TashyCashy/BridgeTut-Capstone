@@ -7,7 +7,6 @@ import LessonTutorial.Lesson;
 import LessonTutorial.LessonOutcome;
 import java.util.*;
 import logic.*;
-import BiddingSystem.*;
 
 public class TutorialEngine {
     private Lesson lesson;
@@ -55,7 +54,16 @@ public class TutorialEngine {
 
     // checks if all tricks have been played
     public boolean isTutorialComplete() {
-        return (isAutoComplete || currentTrickIdx >= lesson.tricks.size());
+        return isAutoComplete;
+    }
+
+    // tells the GUI "no more scripted card - prompt for claim/concede now"
+    private boolean hasMoreScriptedCards() {
+        return currentTrickIdx < lesson.tricks.size();
+    }
+
+    public boolean isAwaitingClaimConcede() {
+        return !isAutoComplete && !hasMoreScriptedCards();
     }
 
     // checks if the lesson is still in its bidding phase (mode 1 only)
@@ -65,7 +73,7 @@ public class TutorialEngine {
 
     // get card to be played next
     public String getExpectedCardCode() {
-        if (isTutorialComplete())
+        if (isTutorialComplete() || !hasMoreScriptedCards())
             return null;
         Card card = lesson.tricks.get(currentTrickIdx).get(currentPlayInTrick);
         String suit = card.getSuit().getSuitLetter();
@@ -75,7 +83,7 @@ public class TutorialEngine {
 
     // name of the current player
     public PlayerPosition getCurrentTurnSeat() {
-        if (isTutorialComplete()) {
+        if (isTutorialComplete() || !hasMoreScriptedCards()) {
             return null;
         }
 
@@ -101,7 +109,7 @@ public class TutorialEngine {
 
     // checks if the card is played correctly
     public boolean playCard(int seatIdx, String cardCode) {
-        if (isTutorialComplete())
+        if (isTutorialComplete() || !hasMoreScriptedCards())
             return false;
 
         // check it's the right player playing
@@ -127,11 +135,6 @@ public class TutorialEngine {
             List<Card> cards = lesson.tricks.get(currentTrickIdx); // who won the trick
             leaderSeat = calculateTrickWinner(cards);
             currentTrickIdx++;
-        }
-
-        if (currentTrickIdx >= lesson.tricks.size() && lesson.outcome != null) {
-            this.isAutoComplete = true;
-            this.finalOutcome = lesson.outcome;
         }
     }
 
@@ -172,9 +175,9 @@ public class TutorialEngine {
             return false;
 
         // only allow claim/concede after all listed tricks in the lesson are played
-        boolean allTricksPlayed = (currentTrickIdx >= lesson.tricks.size());
+        boolean allTricksPlayed = !hasMoreScriptedCards();
 
-        if (lesson.outcome == LessonOutcome.CLAIM) { // does the lesson text expect a Claim
+        if (allTricksPlayed && lesson.outcome == LessonOutcome.CLAIM) { // does the lesson text expect a Claim
             isAutoComplete = true;
             finalOutcome = LessonOutcome.CLAIM;
             return true;
