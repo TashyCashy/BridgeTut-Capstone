@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 import random
+import threading
 from PIL import Image, ImageTk
 import os
 from Tutorial import TutorialPage, TutorialGamePage
@@ -243,6 +244,9 @@ class GamePage(Frame):
              self.declarer = None
              self.trick_count = 0
              self.current_trick_cards = []
+             # bumped every time a new optimal-tricks calculation starts, so a slow
+             # calculation from an earlier trick can't overwrite a newer result
+             self.optimal_calc_seq = 0
 
              #grid layout for the board
              self.grid_rowconfigure(0, weight=0)
@@ -290,6 +294,7 @@ class GamePage(Frame):
           self.trick_count = 0
           self.ns_tricks = 0
           self.ew_tricks = 0
+          self.optimal_calc_seq += 1  # invalidate any in-flight calculation from the old game
 
           self.dummy = None
           self.declarer = None
@@ -303,6 +308,7 @@ class GamePage(Frame):
           self.trick_label.config(text="North/South tricks: 0   East/West tricks: 0")
           self.declarer_label.config(text="Declarer: -")
           self.bid_label.config(text="Bid: -")
+          self.optimal_tricks_label.config(text="Declarer's optimal tricks: -")
           self.update_turn_label() 
           self.update_bidding_headers(dealer)
 
@@ -361,6 +367,15 @@ class GamePage(Frame):
                                bg="#C9A42C",
                                fg="#055341")
              self.turn_label.pack(side="left", padx=20)
+
+             #Live double-dummy "optimal tricks remaining" indicator, only meaningful
+             #once enough cards have been played for the solver to run fast enough
+             self.optimal_tricks_label = Label(header,
+                               text="Declarer's optimal tricks: -",
+                               font=("Arial", 12, "bold"),
+                               bg="darkgreen",
+                               fg="white")
+             self.optimal_tricks_label.pack(side="left", padx=20)
 
              Button(header,
                     text="View Bids",
@@ -478,6 +493,28 @@ class GamePage(Frame):
       
           self.trick_label.config(text= f"North/South tricks: {self.ns_tricks}  "
                                          f"East/West tricks: {self.ew_tricks}")
+
+     def update_optimal_tricks_display(self):
+          """Kicks off a background double-dummy solve and updates the header
+          once it's done, without freezing the GUI. Can take anywhere from
+          under a second to well over a minute depending on the position, so
+          it must never run directly on the Tkinter main thread."""
+          self.optimal_calc_seq += 1
+          my_seq = self.optimal_calc_seq
+          play_gateway = self.play_gateway
+
+          self.optimal_tricks_label.config(text="Declarer's optimal tricks: calculating...")
+
+          def worker():
+               result = play_gateway.getOptimalTricksForDeclaringSide()
+               # only apply this result if no newer trick has started a fresher
+               # calculation in the meantime - otherwise a slow, stale result
+               # could land after (and overwrite) a more recent, correct one
+               if my_seq == self.optimal_calc_seq:
+                    self.after(0, lambda: self.optimal_tricks_label.config(
+                         text=f"Declarer's optimal tricks: {result}"))
+
+          threading.Thread(target=worker, daemon=True).start()
 
      def player_table(self):
              """Creates player table where games take place"""
@@ -1018,6 +1055,11 @@ class GamePage(Frame):
 
         if completed_tricks > self.trick_count:
              self.trick_count = completed_tricks
+
+             # from trick 2 onward there are 11 or fewer cards left per hand,
+             # which the solver handles fast enough to be usable live
+             if self.trick_count >= 2:
+                  self.update_optimal_tricks_display()
 
              winner = self.play_gateway.getLatestTrickwinner()
 

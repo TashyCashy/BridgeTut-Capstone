@@ -8,7 +8,7 @@ public class DoubleDummySolver {
     //Transposition table to skip positions that we've already encountered, adds speed
     static Map<String, TTEntry> tpTable = new HashMap<>();
 
-    static int solve(GameState state){
+    public static int solve(GameState state){
         int alpha = -1;
         int beta = 14;
         return solve(state, alpha, beta);
