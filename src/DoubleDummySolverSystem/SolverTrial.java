@@ -27,19 +27,25 @@ public class SolverTrial {
         System.out.println("=== Trial 3: four cards each, two suits ===");
         runTrial(fourCardsEach());*/
 
-        System.out.println();
+        /*System.out.println();
         System.out.println("=== Trial 4: full 52-card shuffled deck ===");
         GameState fullDeck = fullShuffledDeck();
-        runTrial(fullDeck);
+        runTrial(fullDeck);*/
 
         /*System.out.println("=== Trial 5: 7 cards each, real shuffled deal ===");
         runTrial(sevenCardsEachShuffled());*/
+
+        System.out.println("=== Trial 6: 12 cards each, real shuffled deal ===");
+        runTrial(twelveCardsEachShuffled());
     }
 
     private static void runTrial(GameState state) {
         printSetup(state);
+        long start = System.nanoTime();
         int result = DoubleDummySolver.solve(state);
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
         System.out.println("solve() says declaring side takes: " + result);
+        System.out.println("time taken: " + elapsedMs + "ms");
     }
 
     private static void printSetup(GameState state) {
@@ -140,6 +146,24 @@ public class SolverTrial {
         for (PlayerPosition seat : seats) {
             List<Card> hand = new java.util.ArrayList<>();
             for (int i = 0; i < 7; i++) {
+                hand.add(deck.drawCard());
+            }
+            state.dealHand(seat, hand);
+        }
+        return state;
+    }
+
+    // A real shuffled deck, 12 cards each (48 of the 52 cards used) - one
+    // size up from the 7-card trial, to see how far the transposition table
+    // + move ordering + alpha-beta actually push the solver now.
+    private static GameState twelveCardsEachShuffled() {
+        Deck deck = new Deck();
+        deck.shuffle();
+        PlayerPosition[] seats = { PlayerPosition.SOUTH, PlayerPosition.WEST, PlayerPosition.NORTH, PlayerPosition.EAST };
+        GameState state = new GameState(PlayerPosition.SOUTH, Suit.SPADES);
+        for (PlayerPosition seat : seats) {
+            List<Card> hand = new java.util.ArrayList<>();
+            for (int i = 0; i < 12; i++) {
                 hand.add(deck.drawCard());
             }
             state.dealHand(seat, hand);
