@@ -72,14 +72,10 @@ Restart **both** after any Java-side change — Py4J does not hot-reload.
 
 ## Tests
 
-JUnit 5 tests live in both `test/` (the current convention) and a few remaining `src/**/tests` locations for classes without a `test/` equivalent yet (`BiddingManagerTest`, `BiddingGatewayTest`, `CopyTest`). No build tool is configured in this repo — compile and run them with `javac`/`java` against the JUnit Platform jars, or via your IDE's test runner.
+JUnit 5 tests live in the `test/` (the current convention) location. No build tool is configured in this repo — compile and run them with `javac`/`java` against the JUnit Platform jars, or via your IDE's test runner.
 
 ## Known Issues / Not Yet Implemented
 
-- **Claim/Concede can be blocked from ever succeeding in the tutorial engine.** `TutorialEngine.claim()`/`concede()` both require `allTricksPlayed`, but `isTutorialComplete()` already returns `true` under that same condition and is checked first — so the guard is unreachable once a lesson's listed tricks are fully played. Needs a design decision on what "tutorial complete" should mean relative to claim/concede.
-- **No persistence of passed-out hands.** `GameReset.resetGame()` discards the auction history on redeal (`"maybe should post the game history to the database beforehand"` — not implemented).
-- **Tutorial lesson file paths are placeholders.** `Tutorial.py`'s `load_tutorial()` points at `BiddingAndPlayTutorial.txt` / `PlayTutorial.txt`, which don't exist in the repo yet — needs real lesson files at those paths (or the paths updated to match wherever they end up).
-- **Database schema is unconfirmed** — needs confirming against the authoritative schema rather than what's been reverse-engineered from `db.py`'s queries to unblock local testing.
 - **Multiple Python interpreters on a dev machine can cause "unresolved import" errors in an IDE** even when packages are correctly `pip install`ed — verify the IDE's Python SDK path matches `sys.executable` from Terminal if this recurs.
 
 Double/Redouble bidding and the opening lead after bidding ends are both fully implemented (contrary to earlier notes in this doc's history) — `BiddingGateway.submitDouble()`/`submitRedouble()` are wired to the GUI's Dbl/Redbl buttons, and `Trick.startTrick()` correctly seats the opening leader to the declarer's left.
