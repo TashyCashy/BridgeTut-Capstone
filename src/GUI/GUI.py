@@ -303,13 +303,13 @@ class GamePage(Frame):
           self.bid_history_data = []
           self.undo_hist = []
           self.current_trick_cards = []
+          self.clear_trick()
 
           # Reset header
           self.trick_label.config(text="North/South tricks: 0   East/West tricks: 0")
           self.declarer_label.config(text="Declarer: -")
           self.bid_label.config(text="Bid: -")
           self.optimal_tricks_label.config(text="Declarer's optimal tricks: -")
-          self.update_turn_label()
           self.update_turn_label() 
           self.update_bidding_headers(dealer)
 
