@@ -1,10 +1,10 @@
-import logic.*;
-import BiddingSystem.Player;
-import BiddingSystem.DealCards;
 import BiddingSystem.BiddingData.Actions.ContractBid;
 import BiddingSystem.BiddingData.Actions.PassAction;
 import BiddingSystem.BiddingData.Actions.PlayerAction;
 import BiddingSystem.BiddingLogic.BiddingManager;
+import BiddingSystem.DealCards;
+import BiddingSystem.Player;
+import logic.*;
 
 // Ported from origin/integration-test's root-level Driver.java and updated to the
 // current BiddingManager API (getWinningStrain() was removed; the contract's
