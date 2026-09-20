@@ -143,10 +143,23 @@ public class GameState {
         return true;
     }
 
+    /**
+     * Gets the declarer position for the current game.
+     *
+     * @return the {@link PlayerPosition} of the declarer
+     */
     public PlayerPosition getDeclarer() {
         return declarer;
     }
 
+    /**
+     * Creates a deep copy of the current {@code GameState}.
+     * All mutable collections and objects (such as hands and the current trick)
+     * are explicitly copied so that external systems (like the Double Dummy Solver)
+     * can simulate move variations without mutating the active game state.
+     *
+     * @return a new, isolated {@code GameState} instance duplicate
+     */
     public GameState copy(){
         GameState copy = new GameState(declarer, trumpSuit);
         copy.hands = new HashMap<>(hands);
